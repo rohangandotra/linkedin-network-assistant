@@ -17,20 +17,40 @@ load_dotenv()
 def get_openai_api_key():
     """Get OpenAI API key from Streamlit secrets or environment variable"""
     # Try Streamlit Cloud secrets first
-    if hasattr(st, 'secrets') and 'OPENAI_API_KEY' in st.secrets:
-        return st.secrets["OPENAI_API_KEY"]
+    try:
+        if 'OPENAI_API_KEY' in st.secrets:
+            key = st.secrets["OPENAI_API_KEY"]
+            if key and len(key) > 20:  # Basic validation
+                return key
+    except Exception:
+        pass
+
     # Fall back to environment variable for local development
     api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        st.error("⚠️ OpenAI API key not found! Please add it to Streamlit Cloud secrets or your .env file.")
-        st.stop()
-    return api_key
+    if api_key and len(api_key) > 20:
+        return api_key
 
-client = OpenAI(
-    api_key=get_openai_api_key(),
-    timeout=30.0,  # 30 second timeout
-    max_retries=2  # Retry failed requests twice
-)
+    st.error("⚠️ OpenAI API key not found! Please check Streamlit Cloud secrets.")
+    st.stop()
+    return None
+
+# Initialize client lazily to avoid startup errors
+client = None
+
+def get_client():
+    """Get or create OpenAI client"""
+    global client
+    if client is None:
+        try:
+            client = OpenAI(
+                api_key=get_openai_api_key(),
+                timeout=30.0,
+                max_retries=2
+            )
+        except Exception as e:
+            st.error(f"Failed to initialize OpenAI client: {str(e)}")
+            st.stop()
+    return client
 
 # Generate session ID for tracking (persists for the session)
 if 'session_id' not in st.session_state:
@@ -521,7 +541,7 @@ BE INTELLIGENT:
 Return ONLY valid JSON, no other text."""
 
     try:
-        response = client.chat.completions.create(
+        response = get_client().chat.completions.create(
             model="gpt-4-turbo-preview",
             messages=[
                 {"role": "system", "content": system_prompt},
@@ -746,7 +766,7 @@ The email should:
 Return the email with a subject line."""
 
         try:
-            response = client.chat.completions.create(
+            response = get_client().chat.completions.create(
                 model="gpt-4-turbo-preview",
                 messages=[
                     {"role": "system", "content": "You are a helpful assistant that writes warm, personalized networking emails."},
