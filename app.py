@@ -26,7 +26,11 @@ def get_openai_api_key():
         st.stop()
     return api_key
 
-client = OpenAI(api_key=get_openai_api_key())
+client = OpenAI(
+    api_key=get_openai_api_key(),
+    timeout=30.0,  # 30 second timeout
+    max_retries=2  # Retry failed requests twice
+)
 
 # Generate session ID for tracking (persists for the session)
 if 'session_id' not in st.session_state:
@@ -811,7 +815,7 @@ def main():
                     # Show preview
                     with st.expander("👀 Preview contacts"):
                         display_cols = [col for col in ['full_name', 'position', 'company'] if col in df.columns]
-                        st.dataframe(df[display_cols].head(10), use_container_width=True)
+                        st.dataframe(df[display_cols].head(10), width="stretch")
                 else:
                     # Log failed upload
                     analytics.log_csv_upload(
@@ -884,7 +888,7 @@ def main():
             )
 
             # Submit button (triggered by Enter or click)
-            search_button = st.form_submit_button("🔍 Search", use_container_width=False, type="primary")
+            search_button = st.form_submit_button("🔍 Search", width="content", type="primary")
 
         if search_button and query:
             with st.spinner("Searching your network..."):
@@ -1029,7 +1033,7 @@ def main():
                     col1, col2, col3 = st.columns(3)
 
                     with col1:
-                        if st.button("📧 Generate Personalized Emails", use_container_width=True, type="primary"):
+                        if st.button("📧 Generate Personalized Emails", width="stretch", type="primary"):
                             # Get selected contacts by position
                             selected_positions = sorted(list(st.session_state['selected_contacts']))
                             selected_df = filtered_df.iloc[selected_positions]
@@ -1064,7 +1068,7 @@ def main():
                                     st.error(f"❌ Failed to generate emails: {str(e)}")
 
                     with col2:
-                        if st.button("📋 Copy Contact Info", use_container_width=True):
+                        if st.button("📋 Copy Contact Info", width="stretch"):
                             selected_positions = sorted(list(st.session_state['selected_contacts']))
                             selected_df = filtered_df.iloc[selected_positions]
                             contact_info = "\n".join([
@@ -1092,7 +1096,7 @@ def main():
                             data=csv,
                             file_name="selected_contacts.csv",
                             mime="text/csv",
-                            use_container_width=True
+                            width="stretch"
                         )
 
                 # Display generated email drafts with tabs
@@ -1182,7 +1186,7 @@ def main():
                         data=csv,
                         file_name="all_contacts.csv",
                         mime="text/csv",
-                        use_container_width=True
+                        width="stretch"
                     )
 
                 with col2:
@@ -1195,7 +1199,7 @@ def main():
                         data=text_output,
                         file_name="all_contacts.txt",
                         mime="text/plain",
-                        use_container_width=True
+                        width="stretch"
                     )
 
 if __name__ == "__main__":
