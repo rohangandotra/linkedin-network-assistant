@@ -530,9 +530,27 @@ Return ONLY valid JSON, no other text."""
         intent = json.loads(response.choices[0].message.content)
         return intent
     except Exception as e:
-        st.error(f"**Error calling OpenAI API:** {str(e)}")
-        st.error("Please check: 1) Your API key is valid, 2) You have credits in your OpenAI account, 3) Your internet connection is working")
-        st.info("💡 You may need to add a payment method to your OpenAI account at https://platform.openai.com/account/billing")
+        error_msg = str(e)
+        st.error(f"**OpenAI API Error:** {error_msg}")
+
+        # Provide specific guidance based on error type
+        if "insufficient_quota" in error_msg.lower():
+            st.error("❌ **Insufficient quota** - Your OpenAI credits have run out or billing is not set up.")
+            st.info("💡 Go to https://platform.openai.com/account/billing and add a payment method")
+        elif "invalid_api_key" in error_msg.lower():
+            st.error("❌ **Invalid API key** - The API key is incorrect or expired.")
+        elif "rate_limit" in error_msg.lower():
+            st.warning("⏱️ **Rate limit exceeded** - Too many requests. Please wait a moment and try again.")
+        elif "timeout" in error_msg.lower():
+            st.warning("⏱️ **Request timeout** - The API took too long to respond. Try again.")
+        else:
+            st.error("Please check: 1) Your API key is valid, 2) You have credits/billing set up, 3) Your internet connection")
+            st.info("💡 Check your OpenAI account: https://platform.openai.com/account/billing")
+
+        # Show full error in expander for debugging
+        with st.expander("🔍 Full error details (for debugging)"):
+            st.code(error_msg)
+
         return None
 
 def filter_contacts(df, intent):
