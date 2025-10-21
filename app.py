@@ -6,6 +6,8 @@ import os
 from dotenv import load_dotenv
 from io import StringIO
 import uuid
+import requests
+import traceback
 
 # Import analytics module
 import analytics
@@ -51,6 +53,87 @@ def get_client():
             st.error(f"Failed to initialize OpenAI client: {str(e)}")
             st.stop()
     return client
+
+def run_diagnostic_test():
+    """Run comprehensive diagnostic tests to identify connection issues"""
+    api_key = get_openai_api_key()
+
+    results = {
+        "api_key_loaded": False,
+        "direct_http_test": {"status": "pending", "details": ""},
+        "openai_sdk_test": {"status": "pending", "details": ""},
+        "network_info": {},
+    }
+
+    # Test 1: Check API key is loaded
+    if api_key and len(api_key) > 20:
+        results["api_key_loaded"] = True
+        results["api_key_format"] = f"{api_key[:10]}...{api_key[-4:]}"
+    else:
+        results["api_key_loaded"] = False
+        results["api_key_format"] = "Invalid or missing"
+        return results
+
+    # Test 2: Direct HTTP request to OpenAI API
+    try:
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+
+        payload = {
+            "model": "gpt-3.5-turbo",
+            "messages": [{"role": "user", "content": "Say 'test successful' in 2 words"}],
+            "max_tokens": 10
+        }
+
+        response = requests.post(
+            "https://api.openai.com/v1/chat/completions",
+            headers=headers,
+            json=payload,
+            timeout=30
+        )
+
+        results["direct_http_test"]["status_code"] = response.status_code
+
+        if response.status_code == 200:
+            results["direct_http_test"]["status"] = "success"
+            data = response.json()
+            results["direct_http_test"]["details"] = f"Response: {data['choices'][0]['message']['content']}"
+        else:
+            results["direct_http_test"]["status"] = "failed"
+            results["direct_http_test"]["details"] = f"Error: {response.status_code} - {response.text[:200]}"
+
+    except requests.exceptions.Timeout:
+        results["direct_http_test"]["status"] = "timeout"
+        results["direct_http_test"]["details"] = "Request timed out after 30 seconds"
+    except requests.exceptions.ConnectionError as e:
+        results["direct_http_test"]["status"] = "connection_error"
+        results["direct_http_test"]["details"] = f"Cannot connect to OpenAI API: {str(e)[:200]}"
+    except Exception as e:
+        results["direct_http_test"]["status"] = "error"
+        results["direct_http_test"]["details"] = f"{type(e).__name__}: {str(e)[:200]}"
+        results["direct_http_test"]["traceback"] = traceback.format_exc()[:500]
+
+    # Test 3: OpenAI SDK test
+    try:
+        test_client = OpenAI(api_key=api_key, timeout=30.0, max_retries=0)
+
+        response = test_client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": "Say 'test successful' in 2 words"}],
+            max_tokens=10
+        )
+
+        results["openai_sdk_test"]["status"] = "success"
+        results["openai_sdk_test"]["details"] = f"Response: {response.choices[0].message.content}"
+
+    except Exception as e:
+        results["openai_sdk_test"]["status"] = "error"
+        results["openai_sdk_test"]["details"] = f"{type(e).__name__}: {str(e)[:200]}"
+        results["openai_sdk_test"]["traceback"] = traceback.format_exc()[:500]
+
+    return results
 
 # Generate session ID for tracking (persists for the session)
 if 'session_id' not in st.session_state:
@@ -851,6 +934,55 @@ def main():
         st.markdown("- Who works in tech?")
         st.markdown("- Who is the most senior?")
         st.markdown("- Show me engineers")
+
+        # Diagnostic section for debugging connection issues
+        st.markdown("---")
+        st.markdown("### 🔧 Diagnostics")
+        if st.button("Run API Connection Test", key="diagnostic_button"):
+            with st.spinner("Running diagnostic tests..."):
+                diagnostic_results = run_diagnostic_test()
+                st.session_state['diagnostic_results'] = diagnostic_results
+
+        # Display diagnostic results if available
+        if 'diagnostic_results' in st.session_state:
+            results = st.session_state['diagnostic_results']
+
+            # API Key Status
+            if results['api_key_loaded']:
+                st.success(f"✅ API Key: Loaded ({results.get('api_key_format', 'N/A')})")
+            else:
+                st.error(f"❌ API Key: {results.get('api_key_format', 'Not loaded')}")
+
+            # Direct HTTP Test
+            http_status = results['direct_http_test']['status']
+            if http_status == 'success':
+                st.success(f"✅ Direct HTTP: {results['direct_http_test']['details']}")
+            elif http_status == 'pending':
+                st.info("⏳ Direct HTTP: Not tested")
+            else:
+                st.error(f"❌ Direct HTTP: {http_status}")
+                with st.expander("HTTP Error Details"):
+                    st.code(results['direct_http_test']['details'])
+                    if 'traceback' in results['direct_http_test']:
+                        st.code(results['direct_http_test']['traceback'])
+
+            # OpenAI SDK Test
+            sdk_status = results['openai_sdk_test']['status']
+            if sdk_status == 'success':
+                st.success(f"✅ OpenAI SDK: {results['openai_sdk_test']['details']}")
+            elif sdk_status == 'pending':
+                st.info("⏳ OpenAI SDK: Not tested")
+            else:
+                st.error(f"❌ OpenAI SDK: {sdk_status}")
+                with st.expander("SDK Error Details"):
+                    st.code(results['openai_sdk_test']['details'])
+                    if 'traceback' in results['openai_sdk_test']:
+                        st.code(results['openai_sdk_test']['traceback'])
+
+            # Clear results button
+            if st.button("Clear Diagnostic Results"):
+                del st.session_state['diagnostic_results']
+                st.rerun()
 
     # Main content area
     if 'contacts_df' not in st.session_state:
