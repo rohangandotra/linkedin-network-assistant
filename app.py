@@ -73,7 +73,7 @@ def run_diagnostic_test():
     # Test 1: Check API key is loaded
     if api_key and len(api_key) > 20:
         results["api_key_loaded"] = True
-        results["api_key_format"] = f"{api_key[:10]}...{api_key[-4:]}"
+        results["api_key_format"] = "Valid (hidden for security)"
     else:
         results["api_key_loaded"] = False
         results["api_key_format"] = "Invalid or missing"
