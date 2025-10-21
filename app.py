@@ -549,12 +549,35 @@ st.markdown("""
 def parse_linkedin_csv(uploaded_file):
     """Parse LinkedIn CSV export and return a dataframe"""
     try:
-        # Try to read the CSV with different encodings
+        # LinkedIn exports can have different formats, so we try multiple approaches
+        df = None
+
+        # Try 1: Standard CSV with UTF-8
         try:
-            df = pd.read_csv(uploaded_file, encoding='utf-8')
-        except:
+            df = pd.read_csv(uploaded_file, encoding='utf-8', on_bad_lines='skip')
+        except Exception as e1:
             uploaded_file.seek(0)
-            df = pd.read_csv(uploaded_file, encoding='latin-1')
+
+            # Try 2: Different encoding
+            try:
+                df = pd.read_csv(uploaded_file, encoding='latin-1', on_bad_lines='skip')
+            except Exception as e2:
+                uploaded_file.seek(0)
+
+                # Try 3: Skip initial rows (sometimes LinkedIn has header info)
+                try:
+                    df = pd.read_csv(uploaded_file, encoding='utf-8', skiprows=2, on_bad_lines='skip')
+                except Exception as e3:
+                    uploaded_file.seek(0)
+
+                    # Try 4: Auto-detect with different parameters
+                    try:
+                        df = pd.read_csv(uploaded_file, encoding='utf-8', skip_blank_lines=True, on_bad_lines='skip')
+                    except Exception as e4:
+                        raise Exception(f"Could not parse CSV. Errors: {str(e1)[:100]}, {str(e2)[:100]}")
+
+        if df is None or df.empty:
+            raise Exception("CSV file appears to be empty or invalid")
 
         # Common LinkedIn CSV columns (normalize case)
         df.columns = df.columns.str.strip().str.lower()
@@ -581,9 +604,20 @@ def parse_linkedin_csv(uploaded_file):
         # Fill NaN values
         df = df.fillna('')
 
+        # Validate we have at least one required column
+        required_cols = ['full_name', 'first_name', 'company', 'position']
+        if not any(col in df.columns for col in required_cols):
+            raise Exception(f"CSV doesn't contain expected LinkedIn columns. Found columns: {', '.join(df.columns.tolist()[:10])}")
+
         return df
     except Exception as e:
         st.error(f"Error parsing CSV: {str(e)}")
+        with st.expander("Debug Info"):
+            st.write("Please make sure you're uploading the Connections.csv file from LinkedIn.")
+            st.write("To download it:")
+            st.write("1. Go to linkedin.com/mypreferences/d/download-my-data")
+            st.write("2. Select 'Connections' only")
+            st.write("3. Download and extract the Connections.csv file")
         return None
 
 def extract_search_intent(query, contacts_df):
