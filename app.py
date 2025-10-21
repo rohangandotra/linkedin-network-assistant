@@ -13,8 +13,15 @@ import analytics
 # Load environment variables
 load_dotenv()
 
-# Initialize OpenAI client
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# Initialize OpenAI client - works both locally and on Streamlit Cloud
+try:
+    # Try Streamlit Cloud secrets first
+    api_key = st.secrets["OPENAI_API_KEY"]
+except (KeyError, FileNotFoundError):
+    # Fall back to environment variable for local development
+    api_key = os.getenv("OPENAI_API_KEY")
+
+client = OpenAI(api_key=api_key)
 
 # Generate session ID for tracking (persists for the session)
 if 'session_id' not in st.session_state:
