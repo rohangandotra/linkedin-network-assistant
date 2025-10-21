@@ -15,8 +15,9 @@ __pycache__/
 *.pyc
 *.py[cod]
 
-# Streamlit
-.streamlit/
+# Streamlit (but keep config.toml for deployment)
+.streamlit/*
+!.streamlit/config.toml
 
 # IDEs
 .vscode/
