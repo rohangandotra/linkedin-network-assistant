@@ -22,6 +22,8 @@ def get_openai_api_key():
     try:
         if 'OPENAI_API_KEY' in st.secrets:
             key = st.secrets["OPENAI_API_KEY"]
+            # CRITICAL: Strip whitespace and newlines that may be in TOML secrets
+            key = key.strip().replace('\n', '').replace('\r', '').replace(' ', '')
             if key and len(key) > 20:  # Basic validation
                 return key
     except Exception:
@@ -29,8 +31,11 @@ def get_openai_api_key():
 
     # Fall back to environment variable for local development
     api_key = os.getenv("OPENAI_API_KEY")
-    if api_key and len(api_key) > 20:
-        return api_key
+    if api_key:
+        # Also strip for consistency
+        api_key = api_key.strip().replace('\n', '').replace('\r', '').replace(' ', '')
+        if len(api_key) > 20:
+            return api_key
 
     st.error("⚠️ OpenAI API key not found! Please check Streamlit Cloud secrets.")
     st.stop()
