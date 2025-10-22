@@ -215,7 +215,7 @@ st.markdown("""
         color: #666666;
         font-size: 1.15rem;
         font-weight: 400;
-        margin-bottom: 3rem;
+        margin-bottom: 0.5rem;
         letter-spacing: -0.01em;
     }
 
@@ -1081,7 +1081,7 @@ def main():
         st.markdown('<p class="subtitle">Unlock the power of your network with AI-driven insights</p>', unsafe_allow_html=True)
 
     with col_toggle:
-        st.markdown("<div style='padding-top: 1rem;'></div>", unsafe_allow_html=True)  # Spacer to align with heading
+        st.markdown("<div style='padding-top: 2rem;'></div>", unsafe_allow_html=True)  # Spacer to align with heading
         dark_mode_toggle = st.toggle(
             "🌙",
             value=st.session_state.get('dark_mode', False),
