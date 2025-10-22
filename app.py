@@ -973,21 +973,6 @@ Return the email with a subject line."""
 
 # Main app
 def main():
-    # Dark mode toggle at the very top of main page
-    col1, col2, col3 = st.columns([6, 1, 1])
-    with col3:
-        dark_mode_toggle = st.toggle(
-            "🌙",
-            value=st.session_state.get('dark_mode', False),
-            key="dark_mode_toggle",
-            help="Toggle dark mode"
-        )
-
-        # Update dark mode state if toggle changed
-        if dark_mode_toggle != st.session_state.get('dark_mode', False):
-            st.session_state['dark_mode'] = dark_mode_toggle
-            st.rerun()
-
     # Apply dark mode CSS if enabled
     if st.session_state.get('dark_mode', False):
         st.markdown("""
@@ -1088,9 +1073,26 @@ def main():
         </style>
         """, unsafe_allow_html=True)
 
-    # Hero section with premium styling
-    st.markdown("<h1>LinkedIn Network Assistant</h1>", unsafe_allow_html=True)
-    st.markdown('<p class="subtitle">Unlock the power of your network with AI-driven insights</p>', unsafe_allow_html=True)
+    # Hero section with premium styling - heading and toggle in same row
+    col_heading, col_toggle = st.columns([10, 1])
+
+    with col_heading:
+        st.markdown("<h1 style='margin-top: 0;'>LinkedIn Network Assistant</h1>", unsafe_allow_html=True)
+        st.markdown('<p class="subtitle">Unlock the power of your network with AI-driven insights</p>', unsafe_allow_html=True)
+
+    with col_toggle:
+        st.markdown("<div style='padding-top: 1rem;'></div>", unsafe_allow_html=True)  # Spacer to align with heading
+        dark_mode_toggle = st.toggle(
+            "🌙",
+            value=st.session_state.get('dark_mode', False),
+            key="dark_mode_toggle",
+            help="Toggle dark mode"
+        )
+
+        # Update dark mode state if toggle changed
+        if dark_mode_toggle != st.session_state.get('dark_mode', False):
+            st.session_state['dark_mode'] = dark_mode_toggle
+            st.rerun()
 
     # Sidebar for CSV upload
     with st.sidebar:
@@ -1191,9 +1193,9 @@ def main():
 
     # Main content area
     if 'contacts_df' not in st.session_state:
-        # Empty state with examples
+        # Empty state with examples - use negative margin to reduce spacing
         st.markdown("""
-        <div style='text-align: center; padding: 0; margin: 0 0 2rem 0;'>
+        <div style='text-align: center; padding: 0; margin: -1rem 0 2rem 0;'>
             <h2 style='color: #718096; font-weight: 400; margin: 0; padding: 0;'>👈 Upload your LinkedIn contacts to get started</h2>
         </div>
         """, unsafe_allow_html=True)
