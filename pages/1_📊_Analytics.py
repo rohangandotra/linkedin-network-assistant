@@ -97,7 +97,7 @@ st.markdown(f"<p style='color: #666; font-size: 1.1rem;'>Real-time insights into
 # Refresh button
 col1, col2 = st.columns([6, 1])
 with col2:
-    if st.button("🔄 Refresh", width="stretch"):
+    if st.button("🔄 Refresh", use_container_width=True):
         st.rerun()
 
 st.markdown("<br>", unsafe_allow_html=True)

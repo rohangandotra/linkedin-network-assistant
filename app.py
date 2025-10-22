@@ -1079,6 +1079,27 @@ def main():
         </div>
         """, unsafe_allow_html=True)
 
+        # LinkedIn Download Instructions
+        st.markdown("### 📥 How to Get Your LinkedIn Data")
+        st.markdown("""
+        <div style='background: #f0f9ff; padding: 1.5rem; border-radius: 12px; border: 1px solid #7dd3fc; margin-bottom: 2rem;'>
+            <div style='color: #1a1a1a; font-weight: 600; font-size: 1.1rem; margin-bottom: 1rem;'>
+                Follow these simple steps:
+            </div>
+            <div style='color: #333; line-height: 1.8;'>
+                <strong>1.</strong> Go to <a href='https://www.linkedin.com/mypreferences/d/download-my-data' target='_blank' style='color: #0066cc;'>LinkedIn Data Download</a><br>
+                <strong>2.</strong> Click <strong>"Request archive"</strong> (the big button at the top)<br>
+                <strong>3.</strong> LinkedIn will email you in <strong>10-15 minutes</strong> when your data is ready<br>
+                <strong>4.</strong> Download the <strong>ZIP file</strong> from the email<br>
+                <strong>5.</strong> Extract/unzip it and find the <strong>Connections.csv</strong> file<br>
+                <strong>6.</strong> Upload that file here using the sidebar 👈
+            </div>
+            <div style='margin-top: 1rem; padding: 0.75rem; background: white; border-radius: 8px; color: #666; font-size: 0.9rem;'>
+                💡 <strong>Tip:</strong> The CSV file should have columns like "First Name", "Last Name", "Company", "Position"
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
         # Example queries in premium cards
         st.markdown("### ✨ What You Can Ask")
         col1, col2, col3 = st.columns(3)
@@ -1126,7 +1147,7 @@ def main():
             )
 
             # Submit button (triggered by Enter or click)
-            search_button = st.form_submit_button("🔍 Search", width="content", type="primary")
+            search_button = st.form_submit_button("🔍 Search", type="primary")
 
         if search_button and query:
             with st.spinner("Searching your network..."):
@@ -1172,12 +1193,38 @@ def main():
             if not filtered_df.empty:
                 st.markdown("<br>", unsafe_allow_html=True)
 
-                # Selection header with action buttons
-                col_header1, col_header2 = st.columns([2, 1])
+                # Pagination setup
+                contacts_per_page = 10
+                total_contacts = len(filtered_df)
+                total_pages = (total_contacts + contacts_per_page - 1) // contacts_per_page  # Ceiling division
+
+                # Initialize pagination state
+                if 'current_page' not in st.session_state:
+                    st.session_state['current_page'] = 1
+
+                # Reset to page 1 if we just did a new search
+                if 'last_search_query' not in st.session_state or st.session_state.get('last_search_query') != query:
+                    st.session_state['current_page'] = 1
+                    if query:
+                        st.session_state['last_search_query'] = query
+
+                current_page = st.session_state['current_page']
+
+                # Selection header with action buttons and pagination info
+                col_header1, col_header2, col_header3 = st.columns([2, 1, 1])
                 with col_header1:
                     st.markdown("### 📋 Select Contacts")
                 with col_header2:
-                    select_all = st.checkbox("Select All", key="select_all_checkbox")
+                    st.markdown(f"<div style='text-align: right; padding-top: 0.5rem; color: #666;'>Page {current_page} of {total_pages}</div>", unsafe_allow_html=True)
+                with col_header3:
+                    select_all_page = st.checkbox("Select All on Page", key="select_all_page_checkbox")
+
+                # Calculate pagination slice
+                start_idx = (current_page - 1) * contacts_per_page
+                end_idx = min(start_idx + contacts_per_page, total_contacts)
+
+                # Get contacts for current page
+                page_contacts = filtered_df.iloc[start_idx:end_idx]
 
                 # Display contacts with checkboxes
                 display_cols = []
@@ -1189,23 +1236,30 @@ def main():
                 if 'selected_contacts' not in st.session_state:
                     st.session_state['selected_contacts'] = set()
 
-                # Handle select all
-                if select_all:
-                    st.session_state['selected_contacts'] = set(range(len(filtered_df)))
-                elif not select_all and len(st.session_state['selected_contacts']) == len(filtered_df):
-                    st.session_state['selected_contacts'] = set()
+                # Handle select all on page
+                if select_all_page:
+                    for i in range(start_idx, end_idx):
+                        st.session_state['selected_contacts'].add(i)
+                elif not select_all_page:
+                    # Check if all on current page are selected, if so deselect
+                    all_on_page_selected = all(i in st.session_state['selected_contacts'] for i in range(start_idx, end_idx))
+                    if all_on_page_selected:
+                        for i in range(start_idx, end_idx):
+                            st.session_state['selected_contacts'].discard(i)
 
                 # Display each contact as a selectable card
-                for contact_idx, (idx, row) in enumerate(filtered_df.iterrows()):
-                    contact_selected = contact_idx in st.session_state['selected_contacts']
+                for page_idx, (contact_idx, (idx, row)) in enumerate(page_contacts.iterrows()):
+                    # Actual index in the full filtered_df
+                    actual_idx = start_idx + page_idx
+                    contact_selected = actual_idx in st.session_state['selected_contacts']
 
                     col1, col2 = st.columns([0.1, 0.9])
 
                     with col1:
-                        if st.checkbox("", key=f"contact_{contact_idx}_{idx}", value=contact_selected, label_visibility="collapsed"):
-                            st.session_state['selected_contacts'].add(contact_idx)
+                        if st.checkbox("", key=f"contact_{actual_idx}_{idx}", value=contact_selected, label_visibility="collapsed"):
+                            st.session_state['selected_contacts'].add(actual_idx)
                         else:
-                            st.session_state['selected_contacts'].discard(contact_idx)
+                            st.session_state['selected_contacts'].discard(actual_idx)
 
                     with col2:
                         name = row.get('full_name', 'No Name')
@@ -1227,6 +1281,40 @@ def main():
                             </div>
                         </div>
                         """, unsafe_allow_html=True)
+
+                # Pagination controls
+                if total_pages > 1:
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    col_prev, col_pages, col_next = st.columns([1, 3, 1])
+
+                    with col_prev:
+                        if st.button("⬅️ Previous", disabled=(current_page == 1), use_container_width=True):
+                            st.session_state['current_page'] = max(1, current_page - 1)
+                            st.rerun()
+
+                    with col_pages:
+                        # Show page numbers
+                        page_buttons = []
+                        # Show first page, current page -1, current page, current page +1, last page
+                        pages_to_show = {1, max(1, current_page - 1), current_page, min(total_pages, current_page + 1), total_pages}
+                        pages_to_show = sorted(pages_to_show)
+
+                        cols = st.columns(len(pages_to_show))
+                        for i, page_num in enumerate(pages_to_show):
+                            with cols[i]:
+                                if page_num == current_page:
+                                    st.markdown(f"<div style='text-align: center; padding: 0.5rem; background: #1a1a1a; color: white; border-radius: 8px; font-weight: 600;'>{page_num}</div>", unsafe_allow_html=True)
+                                else:
+                                    if st.button(str(page_num), key=f"page_{page_num}", use_container_width=True):
+                                        st.session_state['current_page'] = page_num
+                                        st.rerun()
+
+                    with col_next:
+                        if st.button("Next ➡️", disabled=(current_page == total_pages), use_container_width=True):
+                            st.session_state['current_page'] = min(total_pages, current_page + 1)
+                            st.rerun()
+
+                    st.markdown(f"<div style='text-align: center; color: #666; margin-top: 0.5rem; font-size: 0.9rem;'>Showing {start_idx + 1}-{end_idx} of {total_contacts} contacts</div>", unsafe_allow_html=True)
 
                 # Action buttons for selected contacts
                 if len(st.session_state['selected_contacts']) > 0:
