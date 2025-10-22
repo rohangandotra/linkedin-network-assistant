@@ -143,29 +143,76 @@ def log_contact_export(
 
 def get_analytics_summary() -> Dict[str, Any]:
     """
-    Generate summary analytics from logs
+    Generate comprehensive analytics summary from logs
 
     Returns:
-        Dictionary with analytics metrics
+        Dictionary with analytics metrics including engagement, conversion, and cost data
     """
     ensure_logs_directory()
 
     summary = {
+        # Core metrics
         "total_searches": 0,
         "total_emails_generated": 0,
         "total_uploads": 0,
         "total_exports": 0,
+
+        # Engagement metrics
+        "unique_sessions": 0,
+        "total_sessions": 0,
+        "avg_searches_per_session": 0,
+        "avg_emails_per_session": 0,
+
+        # Conversion metrics
+        "search_to_email_conversion": 0,
+        "avg_contacts_per_email_batch": 0,
+
+        # Cost metrics (estimated)
+        "total_api_calls": 0,
+        "estimated_cost_usd": 0,
+        "avg_cost_per_session": 0,
+
+        # Feature usage
         "popular_purposes": {},
         "popular_tones": {},
+        "popular_search_queries": [],
+
+        # Quality metrics
         "avg_results_per_search": 0,
-        "last_updated": datetime.now().isoformat()
+        "failed_uploads": 0,
+        "successful_uploads": 0,
+
+        # Time-based
+        "last_updated": datetime.now().isoformat(),
+        "first_activity": None,
+        "last_activity": None,
+        "days_active": 0
     }
+
+    all_timestamps = []
+    sessions_with_searches = set()
+    sessions_with_emails = set()
+    search_queries = []
+    api_calls = 0
+    total_contacts_in_emails = []
 
     # Read search queries
     if SEARCH_LOG_FILE.exists():
         with open(SEARCH_LOG_FILE, 'r', encoding='utf-8') as f:
             searches = [json.loads(line) for line in f if line.strip()]
             summary["total_searches"] = len(searches)
+
+            for search in searches:
+                all_timestamps.append(search["timestamp"])
+                if search.get("session_id"):
+                    sessions_with_searches.add(search["session_id"])
+                search_queries.append({
+                    "query": search["query"],
+                    "results": search["results_count"],
+                    "timestamp": search["timestamp"]
+                })
+                api_calls += 1  # Each search = 1 API call
+
             if searches:
                 summary["avg_results_per_search"] = sum(s["results_count"] for s in searches) / len(searches)
 
@@ -175,8 +222,17 @@ def get_analytics_summary() -> Dict[str, Any]:
             interactions = [json.loads(line) for line in f if line.strip()]
 
             for interaction in interactions:
+                all_timestamps.append(interaction["timestamp"])
+
                 if interaction["type"] == "email_generation":
                     summary["total_emails_generated"] += interaction["num_contacts"]
+                    total_contacts_in_emails.append(interaction["num_contacts"])
+
+                    if interaction.get("session_id"):
+                        sessions_with_emails.add(interaction["session_id"])
+
+                    # Each email generation = num_contacts API calls
+                    api_calls += interaction["num_contacts"]
 
                     purpose = interaction.get("email_purpose", "unknown")
                     summary["popular_purposes"][purpose] = summary["popular_purposes"].get(purpose, 0) + 1
@@ -186,10 +242,49 @@ def get_analytics_summary() -> Dict[str, Any]:
 
                 elif interaction["type"] == "csv_upload":
                     if interaction["success"]:
-                        summary["total_uploads"] += 1
+                        summary["successful_uploads"] += 1
+                    else:
+                        summary["failed_uploads"] += 1
 
                 elif interaction["type"] == "export":
                     summary["total_exports"] += 1
+
+    # Calculate session metrics
+    all_sessions = sessions_with_searches | sessions_with_emails
+    summary["unique_sessions"] = len(all_sessions)
+    summary["total_sessions"] = len(all_sessions)  # Can be enhanced later with page views
+
+    if all_sessions:
+        summary["avg_searches_per_session"] = summary["total_searches"] / len(all_sessions)
+        summary["avg_emails_per_session"] = summary["total_emails_generated"] / len(all_sessions)
+
+    # Conversion metrics
+    if summary["total_searches"] > 0:
+        summary["search_to_email_conversion"] = (len(sessions_with_emails) / len(sessions_with_searches) * 100) if sessions_with_searches else 0
+
+    if total_contacts_in_emails:
+        summary["avg_contacts_per_email_batch"] = sum(total_contacts_in_emails) / len(total_contacts_in_emails)
+
+    # Cost estimation (OpenAI pricing as of 2024)
+    # GPT-4-turbo: ~$0.01 per 1K input tokens, ~$0.03 per 1K output tokens
+    # Rough estimate: $0.02 per API call (conservative)
+    summary["total_api_calls"] = api_calls
+    summary["estimated_cost_usd"] = round(api_calls * 0.02, 2)
+    if all_sessions:
+        summary["avg_cost_per_session"] = round(summary["estimated_cost_usd"] / len(all_sessions), 2)
+
+    # Time-based metrics
+    if all_timestamps:
+        all_timestamps.sort()
+        summary["first_activity"] = all_timestamps[0]
+        summary["last_activity"] = all_timestamps[-1]
+
+        first_date = datetime.fromisoformat(all_timestamps[0])
+        last_date = datetime.fromisoformat(all_timestamps[-1])
+        summary["days_active"] = (last_date - first_date).days + 1
+
+    # Top search queries (last 10)
+    summary["popular_search_queries"] = search_queries[-10:]
 
     # Save summary
     with open(ANALYTICS_SUMMARY_FILE, 'w', encoding='utf-8') as f:
