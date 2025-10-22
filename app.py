@@ -1125,7 +1125,7 @@ def main():
                     # Show preview
                     with st.expander("👀 Preview contacts"):
                         display_cols = [col for col in ['full_name', 'position', 'company'] if col in df.columns]
-                        st.dataframe(df[display_cols].head(10), width="stretch")
+                        st.dataframe(df[display_cols].head(10), use_container_width=True)
                 else:
                     # Log failed upload
                     analytics.log_csv_upload(
@@ -1193,11 +1193,9 @@ def main():
 
     # Main content area
     if 'contacts_df' not in st.session_state:
-        # Empty state with examples - use negative margin to reduce spacing
+        # Empty state with examples
         st.markdown("""
-        <div style='text-align: center; padding: 0; margin: -1rem 0 2rem 0;'>
-            <h2 style='color: #718096; font-weight: 400; margin: 0; padding: 0;'>👈 Upload your LinkedIn contacts to get started</h2>
-        </div>
+        <h2 style='color: #718096; font-weight: 400; margin: 0; padding: 0;'>👈 Upload your LinkedIn contacts to get started</h2>
         """, unsafe_allow_html=True)
 
         # LinkedIn Download Instructions
@@ -1480,7 +1478,7 @@ def main():
                     col1, col2, col3 = st.columns(3)
 
                     with col1:
-                        if st.button("📧 Generate Personalized Emails", width="stretch", type="primary"):
+                        if st.button("📧 Generate Personalized Emails", use_container_width=True, type="primary"):
                             # Get selected contacts by position
                             selected_positions = sorted(list(st.session_state['selected_contacts']))
                             selected_df = filtered_df.iloc[selected_positions]
@@ -1515,7 +1513,7 @@ def main():
                                     st.error(f"❌ Failed to generate emails: {str(e)}")
 
                     with col2:
-                        if st.button("📋 Copy Contact Info", width="stretch"):
+                        if st.button("📋 Copy Contact Info", use_container_width=True):
                             selected_positions = sorted(list(st.session_state['selected_contacts']))
                             selected_df = filtered_df.iloc[selected_positions]
                             contact_info = "\n".join([
@@ -1543,7 +1541,7 @@ def main():
                             data=csv,
                             file_name="selected_contacts.csv",
                             mime="text/csv",
-                            width="stretch"
+                            use_container_width=True
                         )
 
                 # Display generated email drafts with tabs
@@ -1633,7 +1631,7 @@ def main():
                         data=csv,
                         file_name="all_contacts.csv",
                         mime="text/csv",
-                        width="stretch"
+                        use_container_width=True
                     )
 
                 with col2:
@@ -1646,7 +1644,7 @@ def main():
                         data=text_output,
                         file_name="all_contacts.txt",
                         mime="text/plain",
-                        width="stretch"
+                        use_container_width=True
                     )
 
 if __name__ == "__main__":
