@@ -549,47 +549,60 @@ st.markdown("""
 def parse_linkedin_csv(uploaded_file):
     """Parse LinkedIn CSV export and return a dataframe"""
     try:
-        # LinkedIn exports can have different formats, so we try multiple approaches
-        df = None
-
-        # First, let's peek at the file to understand its structure
-        uploaded_file.seek(0)
-        first_line = uploaded_file.readline().decode('utf-8', errors='ignore').strip()
+        # LinkedIn exports often have metadata at the top, so we need to find the real headers
         uploaded_file.seek(0)
 
-        # Strategy 1: Standard connections export (has proper headers)
-        try:
-            df = pd.read_csv(uploaded_file, encoding='utf-8', on_bad_lines='skip')
-        except Exception as e1:
-            uploaded_file.seek(0)
-
-            # Strategy 2: Try with latin-1 encoding
+        # Read the file line by line to find where the real headers are
+        lines = []
+        for i, line in enumerate(uploaded_file):
             try:
-                df = pd.read_csv(uploaded_file, encoding='latin-1', on_bad_lines='skip')
-            except Exception as e2:
-                uploaded_file.seek(0)
+                decoded_line = line.decode('utf-8', errors='ignore').strip()
+                lines.append(decoded_line)
+                if i >= 10:  # Only check first 10 lines
+                    break
+            except:
+                continue
 
-                # Strategy 3: Skip rows and try again (sometimes has metadata at top)
-                for skip_rows in [1, 2, 3]:
-                    try:
-                        uploaded_file.seek(0)
-                        df = pd.read_csv(uploaded_file, encoding='utf-8', skiprows=skip_rows, on_bad_lines='skip')
-                        if df is not None and not df.empty and len(df.columns) > 3:
-                            break
-                    except:
-                        continue
+        # Find the row that looks like LinkedIn headers
+        header_row = 0
+        linkedin_indicators = ['first name', 'last name', 'company', 'position', 'email']
 
-                if df is None or df.empty:
-                    raise Exception(f"Could not parse CSV. First line: {first_line[:100]}")
+        for i, line in enumerate(lines):
+            line_lower = line.lower()
+            # Check if this line contains multiple LinkedIn column indicators
+            matches = sum(1 for indicator in linkedin_indicators if indicator in line_lower)
+            if matches >= 2:  # If we find at least 2 LinkedIn column names, this is the header
+                header_row = i
+                st.info(f"🔍 Found LinkedIn headers at row {i + 1}")
+                break
+
+        # Now read the CSV with the correct header row
+        uploaded_file.seek(0)
+
+        try:
+            df = pd.read_csv(
+                uploaded_file,
+                encoding='utf-8',
+                skiprows=header_row,
+                on_bad_lines='skip'
+            )
+        except Exception:
+            uploaded_file.seek(0)
+            df = pd.read_csv(
+                uploaded_file,
+                encoding='latin-1',
+                skiprows=header_row,
+                on_bad_lines='skip'
+            )
 
         if df is None or df.empty:
-            raise Exception("CSV file appears to be empty or invalid")
+            raise Exception("CSV file appears to be empty or has no data rows")
 
         # Normalize column names
         df.columns = df.columns.str.strip().str.lower()
 
         # Debug: show what columns we found
-        st.info(f"📊 Found {len(df)} rows with columns: {', '.join(df.columns.tolist()[:10])}")
+        st.success(f"✅ Loaded {len(df)} connections with columns: {', '.join(df.columns.tolist()[:10])}")
 
         # Map common LinkedIn column names
         column_mapping = {
@@ -649,7 +662,7 @@ def parse_linkedin_csv(uploaded_file):
             - Email Address
             - Connected On
 
-            If you see columns like "Notes:", you might have uploaded the wrong file.
+            The app will automatically skip any metadata rows at the top of the file.
             """)
 
         return None
