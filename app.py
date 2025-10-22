@@ -882,7 +882,7 @@ def generate_summary(filtered_df, intent):
 
     return "\n".join(summary_parts)
 
-def generate_personalized_emails(selected_contacts, email_purpose="🤝 Just catching up / Reconnecting", email_tone="Friendly & Casual"):
+def generate_personalized_emails(selected_contacts, email_purpose="🤝 Just catching up / Reconnecting", email_tone="Friendly & Casual", additional_context=""):
     """Generate personalized outreach emails for each selected contact using AI"""
 
     # Map email purpose to specific instructions
@@ -917,6 +917,11 @@ def generate_personalized_emails(selected_contacts, email_purpose="🤝 Just cat
         company = row.get('company', 'Unknown company')
         email = row.get('email', 'No email')
 
+        # Build context section if additional context is provided
+        context_section = ""
+        if additional_context and additional_context.strip():
+            context_section = f"\n\nADDITIONAL CONTEXT ABOUT OUR RELATIONSHIP:\n{additional_context.strip()}\n\nIMPORTANT: Use this context to make the email more personal and authentic. Reference specific details if they're relevant to this person."
+
         # Use AI to generate a personalized email
         prompt = f"""Write a personalized outreach email to this person from my LinkedIn network:
 
@@ -925,16 +930,17 @@ Current Role: {position}
 Company: {company}
 
 EMAIL PURPOSE: {purpose_instruction}
-TONE: {tone_instruction}
+TONE: {tone_instruction}{context_section}
 
 The email should:
 1. Be brief and conversational (2-3 short paragraphs)
 2. Mention their current role/company naturally
 3. Align with the stated purpose above
 4. Match the specified tone perfectly
-5. Include a clear call-to-action appropriate for the purpose
-6. Be warm and genuine, not salesy or pushy
-7. Use placeholders like [YOUR NAME] and [YOUR COMPANY/ROLE] that I can fill in
+5. If additional context was provided, naturally weave in personal details to make the email more authentic
+6. Include a clear call-to-action appropriate for the purpose
+7. Be warm and genuine, not salesy or pushy
+8. Use placeholders like [YOUR NAME] and [YOUR COMPANY/ROLE] that I can fill in
 
 Return the email with a subject line."""
 
@@ -1474,6 +1480,16 @@ def main():
                             key="email_tone_selector"
                         )
 
+                    # Additional context text area
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    additional_context = st.text_area(
+                        "💡 Additional context (optional)",
+                        placeholder="e.g., 'We met at the Tech Conference 2023' or 'They mentored me during my internship' or 'We worked together on Project X'",
+                        help="Add any personal context about your relationship or what you know about these connections. This helps create more authentic emails.",
+                        height=100,
+                        key="additional_context_input"
+                    )
+
                     # Action buttons
                     col1, col2, col3 = st.columns(3)
 
@@ -1486,7 +1502,7 @@ def main():
                             # Generate personalized emails with loading spinner
                             with st.spinner(f"✨ AI is writing {len(selected_df)} personalized email(s)..."):
                                 try:
-                                    email_drafts = generate_personalized_emails(selected_df, email_purpose, email_tone)
+                                    email_drafts = generate_personalized_emails(selected_df, email_purpose, email_tone, additional_context)
                                     st.session_state['email_drafts'] = email_drafts
                                     # Initialize to show first contact's email
                                     if 'active_email_tab' not in st.session_state:
