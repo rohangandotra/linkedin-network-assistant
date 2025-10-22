@@ -1367,7 +1367,7 @@ def main():
                             st.session_state['selected_contacts'].discard(i)
 
                 # Display each contact as a selectable card
-                for page_idx, (contact_idx, (idx, row)) in enumerate(page_contacts.iterrows()):
+                for page_idx, (idx, row) in enumerate(page_contacts.iterrows()):
                     # Actual index in the full filtered_df
                     actual_idx = start_idx + page_idx
                     contact_selected = actual_idx in st.session_state['selected_contacts']
