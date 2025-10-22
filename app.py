@@ -172,7 +172,7 @@ st.markdown("""
 
     /* Content container */
     .block-container {
-        padding-top: 3rem;
+        padding-top: 1rem !important;
         padding-bottom: 2rem;
         max-width: 1200px;
     }
@@ -992,9 +992,15 @@ def main():
     if st.session_state.get('dark_mode', False):
         st.markdown("""
         <style>
-            /* Dark Mode Overrides */
-            .main {
+            /* Dark Mode Overrides - Target ALL background elements */
+            html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"], .main, .stApp {
+                background-color: #0a0a0a !important;
                 background: #0a0a0a !important;
+            }
+
+            /* Force block container background */
+            .block-container {
+                background-color: #0a0a0a !important;
             }
 
             h1 {
@@ -1009,7 +1015,7 @@ def main():
                 color: #e0e0e0 !important;
             }
 
-            .main .stMarkdown {
+            .main .stMarkdown, .stMarkdown p, .stMarkdown div {
                 color: #b0b0b0 !important;
             }
 
