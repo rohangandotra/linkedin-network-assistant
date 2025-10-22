@@ -12,6 +12,9 @@ import traceback
 # Import analytics module
 import analytics
 
+# Import authentication module
+import auth
+
 # Load environment variables
 load_dotenv()
 
@@ -977,8 +980,126 @@ Return the email with a subject line."""
 
     return emails
 
+# Authentication UI Functions
+def show_login_page():
+    """Display login page"""
+    st.markdown("<h1 style='text-align: center; margin-top: 2rem;'>🔐 Login to LinkedIn Network Assistant</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #666; margin-bottom: 3rem;'>Access your personalized network dashboard</p>", unsafe_allow_html=True)
+
+    # Center the login form
+    col1, col2, col3 = st.columns([1, 2, 1])
+
+    with col2:
+        with st.form("login_form"):
+            st.markdown("### Sign In")
+            email = st.text_input("Email", placeholder="your@email.com")
+            password = st.text_input("Password", type="password", placeholder="Enter your password")
+
+            submit = st.form_submit_button("🚀 Login", use_container_width=True)
+
+            if submit:
+                if not email or not password:
+                    st.error("Please enter both email and password")
+                else:
+                    with st.spinner("Logging in..."):
+                        result = auth.login_user(email, password)
+
+                        if result['success']:
+                            # Store user info in session
+                            st.session_state['authenticated'] = True
+                            st.session_state['user'] = result['user']
+                            st.success(f"Welcome back, {result['user']['full_name']}!")
+                            st.rerun()
+                        else:
+                            st.error(result['message'])
+
+        st.markdown("---")
+        st.markdown("<p style='text-align: center;'>Don't have an account?</p>", unsafe_allow_html=True)
+
+        if st.button("📝 Create New Account", use_container_width=True):
+            st.session_state['show_register'] = True
+            st.rerun()
+
+def show_register_page():
+    """Display registration page"""
+    st.markdown("<h1 style='text-align: center; margin-top: 2rem;'>📝 Create Your Account</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #666; margin-bottom: 3rem;'>Join LinkedIn Network Assistant today</p>", unsafe_allow_html=True)
+
+    # Center the registration form
+    col1, col2, col3 = st.columns([1, 2, 1])
+
+    with col2:
+        with st.form("register_form"):
+            st.markdown("### Create Account")
+            full_name = st.text_input("Full Name", placeholder="John Doe")
+            email = st.text_input("Email", placeholder="your@email.com")
+            password = st.text_input("Password", type="password", placeholder="Create a strong password")
+            password_confirm = st.text_input("Confirm Password", type="password", placeholder="Re-enter your password")
+
+            submit = st.form_submit_button("✨ Create Account", use_container_width=True)
+
+            if submit:
+                # Validation
+                if not all([full_name, email, password, password_confirm]):
+                    st.error("Please fill in all fields")
+                elif password != password_confirm:
+                    st.error("Passwords don't match")
+                elif len(password) < 6:
+                    st.error("Password must be at least 6 characters")
+                else:
+                    with st.spinner("Creating your account..."):
+                        result = auth.register_user(email, password, full_name)
+
+                        if result['success']:
+                            st.success(result['message'])
+                            st.info("✅ You can now log in with your credentials")
+                            st.session_state['show_register'] = False
+                            # Wait a moment then redirect to login
+                            import time
+                            time.sleep(2)
+                            st.rerun()
+                        else:
+                            st.error(result['message'])
+
+        st.markdown("---")
+        st.markdown("<p style='text-align: center;'>Already have an account?</p>", unsafe_allow_html=True)
+
+        if st.button("🔐 Back to Login", use_container_width=True):
+            st.session_state['show_register'] = False
+            st.rerun()
+
 # Main app
 def main():
+    # Initialize session state for authentication
+    if 'authenticated' not in st.session_state:
+        st.session_state['authenticated'] = False
+    if 'show_register' not in st.session_state:
+        st.session_state['show_register'] = False
+
+    # Authentication guard - show login/register if not authenticated
+    if not st.session_state['authenticated']:
+        if st.session_state['show_register']:
+            show_register_page()
+        else:
+            show_login_page()
+        return  # Stop here if not authenticated
+
+    # If authenticated, show logout button in sidebar
+    with st.sidebar:
+        st.markdown("---")
+        st.markdown(f"**👤 {st.session_state['user']['full_name']}**")
+        st.markdown(f"*{st.session_state['user']['email']}*")
+
+        if st.button("🚪 Logout", use_container_width=True):
+            # Clear session
+            st.session_state['authenticated'] = False
+            st.session_state['user'] = None
+            if 'contacts_df' in st.session_state:
+                del st.session_state['contacts_df']
+            st.success("Logged out successfully!")
+            st.rerun()
+
+
     # Apply dark mode CSS if enabled
     if st.session_state.get('dark_mode', False):
         st.markdown("""
