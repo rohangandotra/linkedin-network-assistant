@@ -144,6 +144,10 @@ def run_diagnostic_test():
 if 'session_id' not in st.session_state:
     st.session_state['session_id'] = str(uuid.uuid4())
 
+# Initialize dark mode state
+if 'dark_mode' not in st.session_state:
+    st.session_state['dark_mode'] = False
+
 # Page configuration
 st.set_page_config(
     page_title="LinkedIn Network Assistant",
@@ -545,6 +549,135 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
+
+# Dark mode CSS overrides (conditionally applied)
+if st.session_state.get('dark_mode', False):
+    st.markdown("""
+    <style>
+        /* Dark Mode Overrides */
+        .main {
+            background: #0a0a0a !important;
+        }
+
+        h1 {
+            color: #ffffff !important;
+        }
+
+        .subtitle {
+            color: #b0b0b0 !important;
+        }
+
+        h2, h3, h4 {
+            color: #e0e0e0 !important;
+        }
+
+        .main .stMarkdown {
+            color: #b0b0b0 !important;
+        }
+
+        /* Input fields */
+        .stTextInput > div > div > input {
+            background: #1a1a1a !important;
+            color: #e0e0e0 !important;
+            border-color: #2a2a2a !important;
+        }
+
+        .stTextInput > div > div > input:focus {
+            border-color: #4a4a4a !important;
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.05) !important;
+        }
+
+        .stTextInput > div > div > input::placeholder {
+            color: #666666 !important;
+        }
+
+        /* Buttons */
+        .stButton > button {
+            background: #ffffff !important;
+            color: #0a0a0a !important;
+        }
+
+        .stButton > button:hover {
+            background: #e0e0e0 !important;
+        }
+
+        .stFormSubmitButton > button {
+            background: #ffffff !important;
+            color: #0a0a0a !important;
+        }
+
+        .stFormSubmitButton > button:hover {
+            background: #e0e0e0 !important;
+        }
+
+        /* Download buttons */
+        .stDownloadButton > button {
+            background: #1a1a1a !important;
+            color: #e0e0e0 !important;
+            border-color: #4a4a4a !important;
+        }
+
+        .stDownloadButton > button:hover {
+            background: #2a2a2a !important;
+            color: #ffffff !important;
+        }
+
+        /* Cards and containers */
+        .results-summary {
+            background: #1a1a1a !important;
+            border-color: #2a2a2a !important;
+        }
+
+        .stDataFrame {
+            border-color: #2a2a2a !important;
+        }
+
+        /* Expanders */
+        .streamlit-expanderHeader {
+            background: #1a1a1a !important;
+            color: #e0e0e0 !important;
+            border-color: #2a2a2a !important;
+        }
+
+        /* Tabs */
+        .stTabs {
+            background: #1a1a1a !important;
+            border-color: #2a2a2a !important;
+        }
+
+        .stTabs [data-baseweb="tab-list"] {
+            background: #0a0a0a !important;
+        }
+
+        .stTabs [data-baseweb="tab"] {
+            background: #1a1a1a !important;
+            color: #b0b0b0 !important;
+        }
+
+        .stTabs [data-baseweb="tab"]:hover {
+            background: #2a2a2a !important;
+            color: #ffffff !important;
+        }
+
+        /* Success/Info boxes */
+        .stSuccess {
+            background: #1a3a1a !important;
+            border-color: #2a5a2a !important;
+            color: #86efac !important;
+        }
+
+        .stInfo {
+            background: #1a2a3a !important;
+            border-color: #2a4a5a !important;
+            color: #7dd3fc !important;
+        }
+
+        /* Dividers */
+        hr {
+            border-color: #2a2a2a !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
 
 def parse_linkedin_csv(uploaded_file):
     """Parse LinkedIn CSV export and return a dataframe"""
@@ -975,6 +1108,22 @@ def main():
 
     # Sidebar for CSV upload
     with st.sidebar:
+        # Dark mode toggle at the top
+        st.markdown("### 🎨 Appearance")
+        dark_mode_toggle = st.toggle(
+            "Dark Mode",
+            value=st.session_state.get('dark_mode', False),
+            key="dark_mode_toggle",
+            help="Toggle between light and dark mode"
+        )
+
+        # Update dark mode state if toggle changed
+        if dark_mode_toggle != st.session_state.get('dark_mode', False):
+            st.session_state['dark_mode'] = dark_mode_toggle
+            st.rerun()
+
+        st.markdown("---")
+
         st.markdown("### 📤 Upload Contacts")
         st.markdown("Export your LinkedIn contacts as CSV and upload here.")
         st.markdown("---")
@@ -1074,7 +1223,7 @@ def main():
     if 'contacts_df' not in st.session_state:
         # Empty state with examples
         st.markdown("""
-        <div style='text-align: center; padding: 3rem 0;'>
+        <div style='text-align: center; padding: 0.5rem 0 2rem 0;'>
             <h2 style='color: #718096; font-weight: 400;'>👈 Upload your LinkedIn contacts to get started</h2>
         </div>
         """, unsafe_allow_html=True)
