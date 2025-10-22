@@ -87,17 +87,76 @@ st.markdown("""
         gap: 1rem;
         margin: 2rem 0;
     }
+
+    /* Streamlit metric styling fixes */
+    [data-testid="stMetric"] {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        border: 1px solid #e0e0e0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    [data-testid="stMetricLabel"] {
+        color: #666666 !important;
+        font-size: 0.9rem !important;
+        font-weight: 500 !important;
+    }
+
+    [data-testid="stMetricValue"] {
+        color: #1a1a1a !important;
+        font-size: 2rem !important;
+        font-weight: 700 !important;
+    }
+
+    [data-testid="stMetricDelta"] {
+        font-size: 0.85rem !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
+# Password Protection
+if 'analytics_authenticated' not in st.session_state:
+    st.session_state['analytics_authenticated'] = False
+
+if not st.session_state['analytics_authenticated']:
+    st.markdown("<h1>🔒 Analytics Dashboard</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #666; font-size: 1.1rem;'>This page is password protected</p>", unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    password = st.text_input("Enter password:", type="password", key="analytics_password")
+
+    if st.button("Unlock Analytics"):
+        # Get password from Streamlit secrets or use default for local dev
+        try:
+            correct_password = st.secrets.get("ANALYTICS_PASSWORD", "admin123")
+        except:
+            correct_password = os.getenv("ANALYTICS_PASSWORD", "admin123")
+
+        if password == correct_password:
+            st.session_state['analytics_authenticated'] = True
+            st.success("✅ Access granted!")
+            st.rerun()
+        else:
+            st.error("❌ Incorrect password")
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.info("💡 **Note:** Set the `ANALYTICS_PASSWORD` in Streamlit Cloud secrets to change the password.")
+    st.stop()
+
 # Header
 st.markdown("<h1>📊 Analytics Dashboard</h1>", unsafe_allow_html=True)
-st.markdown(f"<p style='color: #666; font-size: 1.1rem;'>Real-time insights into your LinkedIn Network Assistant</p>", unsafe_allow_html=True)
+st.markdown(f"<p style='color: #666; font-size: 1.1rem;'>📈 Cumulative insights across ALL user sessions</p>", unsafe_allow_html=True)
 
-# Refresh button
-col1, col2 = st.columns([6, 1])
+# Refresh button and logout
+col1, col2, col3 = st.columns([5, 1, 1])
 with col2:
     if st.button("🔄 Refresh", use_container_width=True):
+        st.rerun()
+with col3:
+    if st.button("🔒 Lock", use_container_width=True):
+        st.session_state['analytics_authenticated'] = False
         st.rerun()
 
 st.markdown("<br>", unsafe_allow_html=True)
