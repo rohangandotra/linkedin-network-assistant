@@ -884,6 +884,39 @@ def generate_summary(filtered_df, intent):
 
     return "\n".join(summary_parts)
 
+def classify_query_type(query):
+    """
+    Determine if a query is a SEARCH (return people) or ANALYTICS (return insights)
+
+    Returns: "search" or "analytics"
+    """
+    query_lower = query.lower()
+
+    # Analytics keywords
+    analytics_keywords = [
+        'how many', 'what percentage', 'what percent', 'breakdown', 'distribution',
+        'summarize', 'summary', 'analyze', 'analysis', 'most common', 'least common',
+        'what industry', 'which industry', 'which companies', 'top companies',
+        'how diverse', 'composition', 'split between', 'ratio', 'compare'
+    ]
+
+    # Search keywords
+    search_keywords = [
+        'who', 'show me', 'find', 'list', 'get me', 'looking for',
+        'introduce me', 'connect me', 'know anyone'
+    ]
+
+    # Check for analytics keywords
+    if any(keyword in query_lower for keyword in analytics_keywords):
+        return "analytics"
+
+    # Check for search keywords
+    if any(keyword in query_lower for keyword in search_keywords):
+        return "search"
+
+    # Default to search (finding people is the primary use case)
+    return "search"
+
 def analyze_network_with_ai(query, contacts_df):
     """
     Use AI to analyze the user's network and answer analytical questions
@@ -1191,10 +1224,11 @@ def main():
             show_login_page()
         return  # Stop here if not authenticated
 
-    # If authenticated, show logout button in sidebar
+    # Sidebar - Restructured Layout
     with st.sidebar:
-        st.markdown("---")
-        st.markdown(f"**👤 {st.session_state['user']['full_name']}**")
+        # === TOP SECTION: User Info ===
+        st.markdown("### 👤 Account")
+        st.markdown(f"**{st.session_state['user']['full_name']}**")
         st.markdown(f"*{st.session_state['user']['email']}*")
 
         # Show contact count
@@ -1204,14 +1238,7 @@ def main():
         else:
             st.markdown("**📇 No contacts yet**")
 
-        if st.button("🚪 Logout", use_container_width=True):
-            # Clear session
-            st.session_state['authenticated'] = False
-            st.session_state['user'] = None
-            if 'contacts_df' in st.session_state:
-                del st.session_state['contacts_df']
-            st.success("Logged out successfully!")
-            st.rerun()
+        st.markdown("---")
 
 
     # Apply dark mode CSS if enabled
@@ -1335,7 +1362,7 @@ def main():
             st.session_state['dark_mode'] = dark_mode_toggle
             st.rerun()
 
-    # Sidebar for CSV upload
+    # === MIDDLE SECTION: CSV Upload ===
     with st.sidebar:
         st.markdown("### 📤 Upload Contacts")
         st.markdown("Export your LinkedIn contacts as CSV and upload here.")
@@ -1349,8 +1376,6 @@ def main():
             st.warning(f"⚠️ You already have contacts saved. Upload a new CSV to replace them.")
             replace_contacts = st.checkbox("Replace existing contacts", value=False,
                                          help="Check this to delete your current contacts and upload new ones")
-
-        st.markdown("---")
 
         uploaded_file = st.file_uploader(
             "Choose your LinkedIn CSV file",
@@ -1414,59 +1439,74 @@ def main():
                     )
 
         st.markdown("---")
-        st.markdown("💡 **Tip:** Try asking questions like:")
-        st.markdown("- Who works in tech?")
-        st.markdown("- Who is the most senior?")
-        st.markdown("- Show me engineers")
 
-        # Diagnostic section for debugging connection issues
+        # === BOTTOM SECTION: Logout & Navigation ===
+        # Prominent Logout Button
+        st.markdown("### 🚪 Account Actions")
+        if st.button("🚪 Logout", use_container_width=True, type="primary", key="logout_button"):
+            # Clear session
+            st.session_state['authenticated'] = False
+            st.session_state['user'] = None
+            if 'contacts_df' in st.session_state:
+                del st.session_state['contacts_df']
+            st.success("Logged out successfully!")
+            st.rerun()
+
         st.markdown("---")
-        st.markdown("### 🔧 Diagnostics")
-        if st.button("Run API Connection Test", key="diagnostic_button"):
-            with st.spinner("Running diagnostic tests..."):
-                diagnostic_results = run_diagnostic_test()
-                st.session_state['diagnostic_results'] = diagnostic_results
 
-        # Display diagnostic results if available
-        if 'diagnostic_results' in st.session_state:
-            results = st.session_state['diagnostic_results']
+        # Page Links
+        st.markdown("### 📊 Pages")
+        st.markdown("**[📈 Analytics](https://linkedin-network-assistant.streamlit.app/)** - View usage analytics")
+        st.markdown("**[🏠 App](https://linkedin-network-assistant.streamlit.app/)** - Main application")
 
-            # API Key Status
-            if results['api_key_loaded']:
-                st.success(f"✅ API Key: Loaded ({results.get('api_key_format', 'N/A')})")
-            else:
-                st.error(f"❌ API Key: {results.get('api_key_format', 'Not loaded')}")
+        # Diagnostic section (collapsed by default)
+        st.markdown("---")
+        with st.expander("🔧 Diagnostics", expanded=False):
+            if st.button("Run API Connection Test", key="diagnostic_button"):
+                with st.spinner("Running diagnostic tests..."):
+                    diagnostic_results = run_diagnostic_test()
+                    st.session_state['diagnostic_results'] = diagnostic_results
 
-            # Direct HTTP Test
-            http_status = results['direct_http_test']['status']
-            if http_status == 'success':
-                st.success(f"✅ Direct HTTP: {results['direct_http_test']['details']}")
-            elif http_status == 'pending':
-                st.info("⏳ Direct HTTP: Not tested")
-            else:
-                st.error(f"❌ Direct HTTP: {http_status}")
-                with st.expander("HTTP Error Details"):
-                    st.code(results['direct_http_test']['details'])
-                    if 'traceback' in results['direct_http_test']:
-                        st.code(results['direct_http_test']['traceback'])
+            # Display diagnostic results if available
+            if 'diagnostic_results' in st.session_state:
+                results = st.session_state['diagnostic_results']
 
-            # OpenAI SDK Test
-            sdk_status = results['openai_sdk_test']['status']
-            if sdk_status == 'success':
-                st.success(f"✅ OpenAI SDK: {results['openai_sdk_test']['details']}")
-            elif sdk_status == 'pending':
-                st.info("⏳ OpenAI SDK: Not tested")
-            else:
-                st.error(f"❌ OpenAI SDK: {sdk_status}")
-                with st.expander("SDK Error Details"):
-                    st.code(results['openai_sdk_test']['details'])
-                    if 'traceback' in results['openai_sdk_test']:
-                        st.code(results['openai_sdk_test']['traceback'])
+                # API Key Status
+                if results['api_key_loaded']:
+                    st.success(f"✅ API Key: Loaded ({results.get('api_key_format', 'N/A')})")
+                else:
+                    st.error(f"❌ API Key: {results.get('api_key_format', 'Not loaded')}")
 
-            # Clear results button
-            if st.button("Clear Diagnostic Results"):
-                del st.session_state['diagnostic_results']
-                st.rerun()
+                # Direct HTTP Test
+                http_status = results['direct_http_test']['status']
+                if http_status == 'success':
+                    st.success(f"✅ Direct HTTP: {results['direct_http_test']['details']}")
+                elif http_status == 'pending':
+                    st.info("⏳ Direct HTTP: Not tested")
+                else:
+                    st.error(f"❌ Direct HTTP: {http_status}")
+                    with st.expander("HTTP Error Details"):
+                        st.code(results['direct_http_test']['details'])
+                        if 'traceback' in results['direct_http_test']:
+                            st.code(results['direct_http_test']['traceback'])
+
+                # OpenAI SDK Test
+                sdk_status = results['openai_sdk_test']['status']
+                if sdk_status == 'success':
+                    st.success(f"✅ OpenAI SDK: {results['openai_sdk_test']['details']}")
+                elif sdk_status == 'pending':
+                    st.info("⏳ OpenAI SDK: Not tested")
+                else:
+                    st.error(f"❌ OpenAI SDK: {sdk_status}")
+                    with st.expander("SDK Error Details"):
+                        st.code(results['openai_sdk_test']['details'])
+                        if 'traceback' in results['openai_sdk_test']:
+                            st.code(results['openai_sdk_test']['traceback'])
+
+                # Clear results button
+                if st.button("Clear Diagnostic Results"):
+                    del st.session_state['diagnostic_results']
+                    st.rerun()
 
     # Main content area
     if 'contacts_df' not in st.session_state:
@@ -1533,91 +1573,114 @@ def main():
     else:
         contacts_df = st.session_state['contacts_df']
 
-        # Search interface with form for enter key support
-        with st.form(key='search_form', clear_on_submit=False):
+        # Unified Search Interface - handles both search and analytics
+        with st.form(key='unified_search_form', clear_on_submit=False):
             query = st.text_input(
                 "Ask anything about your network...",
-                placeholder='e.g., "Who in my network works in venture capital?"',
+                placeholder='e.g., "Who works in venture capital?" or "What industry do I have most contacts in?"',
                 label_visibility="collapsed",
-                key="search_query"
+                key="unified_search_query"
             )
 
             # Submit button (triggered by Enter or click)
             search_button = st.form_submit_button("🔍 Search", type="primary")
 
-        if search_button and query:
-            with st.spinner("Searching your network..."):
-                # Extract intent
-                intent = extract_search_intent(query, contacts_df)
-
-                if intent:
-                    st.session_state['last_intent'] = intent
-
-                    # Debug: Show what the AI understood
-                    with st.expander("🔍 Debug: What the AI understood from your query"):
-                        st.json(intent)
-
-                    # Filter contacts
-                    filtered_df = filter_contacts(contacts_df, intent)
-                    st.session_state['filtered_df'] = filtered_df
-
-                    # Generate summary
-                    summary = generate_summary(filtered_df, intent)
-                    st.session_state['summary'] = summary
-
-                    # Log search query
-                    analytics.log_search_query(
-                        query=query,
-                        results_count=len(filtered_df),
-                        intent=intent,
-                        session_id=st.session_state['session_id']
-                    )
-
-        # AI Analytics Section
-        st.markdown("---")
-        st.markdown("### 🤖 Ask AI About Your Network")
-        st.markdown("Get insights and analytics about your connections using AI")
-
+        # Example questions in expander
         with st.expander("💡 Example Questions", expanded=False):
             st.markdown("""
-            **Industry & Company Analysis:**
+            **Search for People:**
+            - Who works in venture capital?
+            - Show me people in tech companies
+            - Who is the most senior person?
+            - Find engineers at Google
+
+            **Network Analytics:**
             - What industry do I have most contacts in?
-            - Which companies are most represented in my network?
             - How many people work at tech companies?
-
-            **Role & Seniority Analysis:**
-            - How many engineers vs. managers do I have?
-            - Who are my most senior contacts?
-            - What's the most common job title?
-
-            **Network Composition:**
-            - Summarize my network for me
+            - Which companies are most represented?
             - What percentage of my contacts are in finance?
-            - How diverse is my network across industries?
+            - Summarize my network for me
             """)
 
-        with st.form(key='analytics_form', clear_on_submit=False):
-            analytics_query = st.text_input(
-                "Ask AI a question about your network...",
-                placeholder='e.g., "What industry do I have most contacts in?"',
-                label_visibility="collapsed",
-                key="analytics_query"
-            )
+        if search_button and query:
+            # Classify query type
+            query_type = classify_query_type(query)
 
-            analytics_button = st.form_submit_button("🧠 Analyze", type="secondary")
+            if query_type == "analytics":
+                # Handle analytics query
+                with st.spinner("🧠 AI is analyzing your network..."):
+                    result = analyze_network_with_ai(query, contacts_df)
 
-        if analytics_button and analytics_query:
-            with st.spinner("🧠 AI is analyzing your network..."):
-                result = analyze_network_with_ai(analytics_query, contacts_df)
+                    if result['success']:
+                        # Store analytics result
+                        st.session_state['analytics_result'] = result['answer']
 
-                if result['success']:
-                    st.markdown("#### 💡 AI Insights:")
-                    st.markdown(result['answer'])
-                else:
-                    st.error(f"❌ Analysis failed: {result.get('error', 'Unknown error')}")
+                        # Check if query might also want to see people (hybrid query)
+                        # Keywords like "how many people" suggest they might want the list too
+                        query_lower = query.lower()
+                        hybrid_keywords = ['how many people', 'how many contacts', 'who all']
+                        is_hybrid = any(keyword in query_lower for keyword in hybrid_keywords)
 
-        # Display search results
+                        if is_hybrid:
+                            # Also run search to get the people list
+                            intent = extract_search_intent(query, contacts_df)
+                            if intent:
+                                filtered_df = filter_contacts(contacts_df, intent)
+                                if not filtered_df.empty:
+                                    st.session_state['filtered_df'] = filtered_df
+                                    st.session_state['last_intent'] = intent
+                                    summary = generate_summary(filtered_df, intent)
+                                    st.session_state['summary'] = summary
+                    else:
+                        st.error(f"❌ Analysis failed: {result.get('error', 'Unknown error')}")
+            else:
+                # Handle search query (find people)
+                with st.spinner("🔍 Searching your network..."):
+                    # Extract intent
+                    intent = extract_search_intent(query, contacts_df)
+
+                    if intent:
+                        st.session_state['last_intent'] = intent
+
+                        # Clear any previous analytics result
+                        if 'analytics_result' in st.session_state:
+                            del st.session_state['analytics_result']
+
+                        # Debug: Show what the AI understood
+                        with st.expander("🔍 Debug: What the AI understood from your query"):
+                            st.json(intent)
+
+                        # Filter contacts
+                        filtered_df = filter_contacts(contacts_df, intent)
+                        st.session_state['filtered_df'] = filtered_df
+
+                        # Generate summary
+                        summary = generate_summary(filtered_df, intent)
+                        st.session_state['summary'] = summary
+
+                        # Log search query
+                        analytics.log_search_query(
+                            query=query,
+                            results_count=len(filtered_df),
+                            intent=intent,
+                            session_id=st.session_state['session_id']
+                        )
+
+        # Display results section
         st.markdown("---")
+
+        # Display AI analytics insights if available
+        if 'analytics_result' in st.session_state:
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown("### 💡 AI Insights")
+            st.markdown(f"""
+            <div class='results-summary'>
+                {st.session_state['analytics_result']}
+            </div>
+            """, unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
+
+        # Display search results (people list)
         if 'filtered_df' in st.session_state and 'summary' in st.session_state:
             st.markdown("<br>", unsafe_allow_html=True)
 
