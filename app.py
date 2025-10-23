@@ -1238,6 +1238,16 @@ def main():
         else:
             st.markdown("**📇 No contacts yet**")
 
+        # Hide auto-generated page navigation from top for everyone
+        st.markdown("""
+        <style>
+            /* Hide the auto-generated page navigation at top */
+            section[data-testid="stSidebarNav"] {
+                display: none !important;
+            }
+        </style>
+        """, unsafe_allow_html=True)
+
         st.markdown("---")
 
 
@@ -1440,8 +1450,7 @@ def main():
 
         st.markdown("---")
 
-        # === BOTTOM SECTION: Logout & Navigation ===
-        # Prominent Logout Button
+        # === BOTTOM SECTION: Logout Button ===
         st.markdown("### 🚪 Account Actions")
         if st.button("🚪 Logout", use_container_width=True, type="primary", key="logout_button"):
             # Clear session
@@ -1452,12 +1461,13 @@ def main():
             st.success("Logged out successfully!")
             st.rerun()
 
-        st.markdown("---")
-
-        # Page Links
-        st.markdown("### 📊 Pages")
-        st.markdown("**[📈 Analytics](https://linkedin-network-assistant.streamlit.app/)** - View usage analytics")
-        st.markdown("**[🏠 App](https://linkedin-network-assistant.streamlit.app/)** - Main application")
+        # Admin-only page navigation at bottom
+        admin_email = "rohan.gandotra19@gmail.com"
+        if st.session_state['user']['email'] == admin_email:
+            st.markdown("---")
+            st.markdown("### 📊 Pages")
+            st.page_link("app.py", label="🏠 Home", icon="🏠")
+            st.page_link("pages/Analytics.py", label="📈 Analytics", icon="📈")
 
         # Diagnostic section (collapsed by default)
         st.markdown("---")
