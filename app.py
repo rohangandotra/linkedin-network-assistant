@@ -1012,6 +1012,12 @@ def show_login_page():
                                 # Store user info in session
                                 st.session_state['authenticated'] = True
                                 st.session_state['user'] = result['user']
+
+                                # Load user's contacts from database
+                                contacts_df = auth.load_user_contacts(result['user']['id'])
+                                if contacts_df is not None:
+                                    st.session_state['contacts_df'] = contacts_df
+
                                 st.success(f"Welcome back, {result['user']['full_name']}!")
                                 st.rerun()
                             else:
@@ -1110,6 +1116,13 @@ def main():
         st.markdown("---")
         st.markdown(f"**👤 {st.session_state['user']['full_name']}**")
         st.markdown(f"*{st.session_state['user']['email']}*")
+
+        # Show contact count
+        contact_count = auth.get_contact_count(st.session_state['user']['id'])
+        if contact_count > 0:
+            st.markdown(f"**📇 {contact_count:,} contacts**")
+        else:
+            st.markdown("**📇 No contacts yet**")
 
         if st.button("🚪 Logout", use_container_width=True):
             # Clear session
@@ -1246,6 +1259,17 @@ def main():
     with st.sidebar:
         st.markdown("### 📤 Upload Contacts")
         st.markdown("Export your LinkedIn contacts as CSV and upload here.")
+
+        # Check if user already has contacts
+        user_has_contacts = auth.get_contact_count(st.session_state['user']['id']) > 0
+
+        # Show replace option if user has contacts
+        replace_contacts = False
+        if user_has_contacts:
+            st.warning(f"⚠️ You already have contacts saved. Upload a new CSV to replace them.")
+            replace_contacts = st.checkbox("Replace existing contacts", value=False,
+                                         help="Check this to delete your current contacts and upload new ones")
+
         st.markdown("---")
 
         uploaded_file = st.file_uploader(
@@ -1260,7 +1284,32 @@ def main():
                 df = parse_linkedin_csv(uploaded_file)
                 if df is not None:
                     st.session_state['contacts_df'] = df
-                    st.success(f"✅ Loaded {len(df)} contacts")
+                    user_id = st.session_state['user']['id']
+
+                    # Check if we need to replace contacts
+                    if user_has_contacts:
+                        if not replace_contacts:
+                            st.warning(f"⚠️ You already have contacts saved. Check 'Replace existing contacts' to upload new ones.")
+                            st.info(f"✅ Loaded {len(df)} contacts to current session (not saved to database)")
+                        else:
+                            # Delete old contacts first
+                            with st.spinner("Deleting old contacts..."):
+                                if auth.delete_user_contacts(user_id):
+                                    # Save new contacts
+                                    save_result = auth.save_contacts_to_db(user_id, df)
+                                    if save_result['success']:
+                                        st.success(f"✅ Replaced with {len(df)} new contacts!")
+                                    else:
+                                        st.error(f"❌ Error saving: {save_result['message']}")
+                                else:
+                                    st.error("❌ Error deleting old contacts")
+                    else:
+                        # No existing contacts, just save
+                        save_result = auth.save_contacts_to_db(user_id, df)
+                        if save_result['success']:
+                            st.success(f"✅ Loaded and saved {len(df)} contacts to your account!")
+                        else:
+                            st.warning(f"✅ Loaded {len(df)} contacts (saved to session only - DB error: {save_result['message']})")
 
                     # Log CSV upload
                     analytics.log_csv_upload(

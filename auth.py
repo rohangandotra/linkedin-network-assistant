@@ -330,3 +330,125 @@ def change_password(user_id: str, old_password: str, new_password: str) -> Dict[
             'success': False,
             'message': f'Error: {str(e)}'
         }
+
+# Contact Management Functions
+
+def save_contacts_to_db(user_id: str, contacts_df) -> Dict[str, Any]:
+    """
+    Save user's LinkedIn contacts to database
+
+    Args:
+        user_id: User's UUID
+        contacts_df: Pandas DataFrame with contacts
+
+    Returns:
+        dict with 'success' boolean and 'message' or count
+    """
+    supabase = get_supabase_client()
+
+    try:
+        # Convert DataFrame to list of dicts
+        contacts_list = contacts_df.to_dict('records')
+
+        # Add user_id to each contact
+        for contact in contacts_list:
+            contact['user_id'] = user_id
+            # Ensure all required fields are strings or None
+            contact['first_name'] = str(contact.get('first_name', '')) if contact.get('first_name') else None
+            contact['last_name'] = str(contact.get('last_name', '')) if contact.get('last_name') else None
+            contact['full_name'] = str(contact.get('full_name', '')) if contact.get('full_name') else None
+            contact['company'] = str(contact.get('company', '')) if contact.get('company') else None
+            contact['position'] = str(contact.get('position', '')) if contact.get('position') else None
+            contact['email'] = str(contact.get('email', '')) if contact.get('email') else None
+
+        # Insert contacts in batch
+        supabase.table('contacts').insert(contacts_list).execute()
+
+        # Track upload
+        supabase.table('csv_uploads').insert({
+            'user_id': user_id,
+            'contacts_count': len(contacts_list)
+        }).execute()
+
+        return {
+            'success': True,
+            'message': f'Successfully saved {len(contacts_list)} contacts',
+            'count': len(contacts_list)
+        }
+
+    except Exception as e:
+        return {
+            'success': False,
+            'message': f'Error saving contacts: {str(e)}'
+        }
+
+def load_user_contacts(user_id: str) -> Optional[Any]:
+    """
+    Load user's contacts from database
+
+    Args:
+        user_id: User's UUID
+
+    Returns:
+        Pandas DataFrame with contacts or None if no contacts found
+    """
+    import pandas as pd
+    supabase = get_supabase_client()
+
+    try:
+        response = supabase.table('contacts').select("*").eq('user_id', user_id).execute()
+
+        if response.data and len(response.data) > 0:
+            # Convert to DataFrame
+            df = pd.DataFrame(response.data)
+            # Remove internal columns for display
+            columns_to_drop = ['user_id', 'id', 'last_updated']
+            df = df.drop([col for col in columns_to_drop if col in df.columns], axis=1)
+
+            return df
+
+        return None
+
+    except Exception as e:
+        print(f"Error loading contacts: {e}")
+        return None
+
+def get_contact_count(user_id: str) -> int:
+    """
+    Get count of user's contacts
+
+    Args:
+        user_id: User's UUID
+
+    Returns:
+        Number of contacts
+    """
+    supabase = get_supabase_client()
+
+    try:
+        response = supabase.table('contacts').select("id", count='exact').eq('user_id', user_id).execute()
+        return response.count if hasattr(response, 'count') else 0
+
+    except Exception as e:
+        print(f"Error getting contact count: {e}")
+        return 0
+
+def delete_user_contacts(user_id: str) -> bool:
+    """
+    Delete all contacts for a user (for replacing CSV)
+
+    Args:
+        user_id: User's UUID
+
+    Returns:
+        True if successful, False otherwise
+    """
+    supabase = get_supabase_client()
+
+    try:
+        supabase.table('contacts').delete().eq('user_id', user_id).execute()
+        return True
+
+    except Exception as e:
+        print(f"Error deleting contacts: {e}")
+        return False
