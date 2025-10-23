@@ -17,6 +17,9 @@ import analytics
 
 # Import authentication module (needs env vars to be loaded)
 import auth
+
+# Import collaboration module
+import collaboration
 # Initialize OpenAI client - works both locally and on Streamlit Cloud
 def get_openai_api_key():
     """Get OpenAI API key from Streamlit secrets or environment variable"""
@@ -1160,6 +1163,7 @@ def show_register_page():
         with st.form("register_form"):
             st.markdown("### Create Account")
             full_name = st.text_input("Full Name", placeholder="John Doe")
+            organization = st.text_input("Organization (Optional)", placeholder="e.g., Acme Inc, Stanford University")
             email = st.text_input("Email", placeholder="your@email.com")
             password = st.text_input("Password", type="password", placeholder="Create a strong password")
             password_confirm = st.text_input("Confirm Password", type="password", placeholder="Re-enter your password")
@@ -1169,13 +1173,14 @@ def show_register_page():
             if submit:
                 # Strip whitespace from all inputs
                 full_name = full_name.strip() if full_name else ""
+                organization = organization.strip() if organization else None
                 email = email.strip() if email else ""
                 password = password.strip() if password else ""
                 password_confirm = password_confirm.strip() if password_confirm else ""
 
                 # Validation
                 if not all([full_name, email, password, password_confirm]):
-                    st.error("Please fill in all fields")
+                    st.error("Please fill in all required fields")
                 elif password != password_confirm:
                     st.error("Passwords don't match")
                 elif len(password) < 6:
@@ -1183,7 +1188,7 @@ def show_register_page():
                 else:
                     with st.spinner("Creating your account..."):
                         try:
-                            result = auth.register_user(email, password, full_name)
+                            result = auth.register_user(email, password, full_name, organization)
 
                             if result['success']:
                                 st.success(result['message'])
@@ -2050,6 +2055,180 @@ def main():
                         mime="text/plain",
                         use_container_width=True
                     )
+
+        # === EXTENDED NETWORK SEARCH ===
+        # Search in connected users' networks
+        st.markdown("<br><br>", unsafe_allow_html=True)
+        st.markdown("---")
+        st.markdown("## 🌐 Extended Network Search")
+        st.markdown("Search contacts in your connections' networks and request introductions")
+
+        # Get connections count
+        connections = collaboration.get_user_connections(user_id, status='accepted')
+        sharing_connections = [c for c in connections if c['network_sharing_enabled']]
+
+        if sharing_connections:
+            st.markdown(f"**Searching across {len(sharing_connections)} connected network(s)**")
+
+            # Extended search form
+            with st.form("extended_search_form"):
+                ext_query = st.text_input(
+                    "Search for people in extended network...",
+                    placeholder='e.g., "Sarah Chen" or "Partner at Sequoia Capital"',
+                    label_visibility="collapsed",
+                    key="extended_search_query"
+                )
+
+                ext_search_button = st.form_submit_button("🔍 Search Extended Network", type="secondary")
+
+            if ext_search_button and ext_query:
+                with st.spinner("🔍 Searching connected networks..."):
+                    # Get contacts from connected users
+                    extended_contacts_df = collaboration.get_contacts_from_connected_users(user_id)
+
+                    if not extended_contacts_df.empty:
+                        # Filter by query
+                        query_lower = ext_query.lower()
+                        mask = (
+                            extended_contacts_df['full_name'].fillna('').str.lower().str.contains(query_lower) |
+                            extended_contacts_df['company'].fillna('').str.lower().str.contains(query_lower) |
+                            extended_contacts_df['position'].fillna('').str.lower().str.contains(query_lower)
+                        )
+
+                        results = extended_contacts_df[mask]
+
+                        if not results.empty:
+                            st.success(f"✅ Found {len(results)} contact(s) in extended network!")
+
+                            # Display results
+                            for idx, row in results.head(20).iterrows():  # Limit to 20 for performance
+                                col1, col2 = st.columns([3, 1])
+
+                                with col1:
+                                    st.markdown(f"""
+                                    <div style='background: #f0f9ff; padding: 1.5rem; border-radius: 10px;
+                                                border-left: 4px solid #3b82f6; margin-bottom: 1rem;'>
+                                        <div style='font-weight: 600; font-size: 1.05rem; color: #1a1a1a; margin-bottom: 0.5rem;'>
+                                            {row.get('full_name', 'Unknown')}
+                                        </div>
+                                        <div style='color: #666666; font-size: 0.95rem; margin-bottom: 0.3rem;'>
+                                            {row.get('position', 'Position unknown')}
+                                        </div>
+                                        <div style='color: #999999; font-size: 0.9rem; margin-bottom: 0.8rem;'>
+                                            {row.get('company', 'Company unknown')}
+                                        </div>
+                                        <div style='background: white; padding: 0.5rem; border-radius: 6px;'>
+                                            <span style='color: #075985; font-size: 0.85rem; font-weight: 600;'>
+                                                📇 In {row.get('owner_name', 'Unknown')}'s network
+                                            </span>
+                                        </div>
+                                    </div>
+                                    """, unsafe_allow_html=True)
+
+                                with col2:
+                                    st.markdown("<br>", unsafe_allow_html=True)
+                                    # Request intro button
+                                    if st.button(f"📨 Request Intro", key=f"req_intro_{idx}", use_container_width=True):
+                                        # Store contact info in session state to show request form
+                                        st.session_state['intro_request_contact'] = {
+                                            'contact_id': row.get('id'),
+                                            'target_name': row.get('full_name', ''),
+                                            'target_company': row.get('company', ''),
+                                            'target_position': row.get('position', ''),
+                                            'target_email': row.get('email', ''),
+                                            'connector_id': row.get('owner_user_id'),
+                                            'connector_name': row.get('owner_name'),
+                                            'connector_email': row.get('owner_email')
+                                        }
+                                        st.rerun()
+
+                            if len(results) > 20:
+                                st.info(f"ℹ️ Showing first 20 of {len(results)} results. Refine your search for more specific matches.")
+
+                        else:
+                            st.info(f"No contacts found matching '{ext_query}' in extended network.")
+                    else:
+                        st.info("No contacts available in extended network yet.")
+
+            # Show intro request form if contact selected
+            if 'intro_request_contact' in st.session_state:
+                contact = st.session_state['intro_request_contact']
+
+                st.markdown("---")
+                st.markdown("### 📨 Request Introduction")
+
+                st.markdown(f"""
+                <div style='background: #fffbeb; padding: 1.5rem; border-radius: 10px; border: 1px solid #fbbf24; margin-bottom: 1.5rem;'>
+                    <div style='font-weight: 600; font-size: 1rem; color: #1a1a1a; margin-bottom: 0.5rem;'>
+                        Requesting intro to: <span style='color: #3b82f6;'>{contact['target_name']}</span>
+                    </div>
+                    <div style='color: #666; font-size: 0.9rem; margin-bottom: 0.3rem;'>
+                        {contact['target_position']} at {contact['target_company']}
+                    </div>
+                    <div style='color: #999; font-size: 0.85rem;'>
+                        Via: {contact['connector_name']} ({contact['connector_email']})
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+
+                with st.form("intro_request_form"):
+                    request_message = st.text_area(
+                        "Why do you want to meet this person? *",
+                        placeholder="e.g., I'm raising a seed round for my fintech startup and would love to get Sarah's advice on product-market fit...",
+                        height=150,
+                        help="This will be shown to the person you want to meet"
+                    )
+
+                    context_for_connector = st.text_area(
+                        "Additional context for your connection (optional)",
+                        placeholder="e.g., We met at the Tech Conference 2024. Remember we talked about my startup idea?",
+                        height=100,
+                        help="Private message to help your connection make the intro"
+                    )
+
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        submit_request = st.form_submit_button("📤 Send Request", type="primary", use_container_width=True)
+                    with col2:
+                        cancel_request = st.form_submit_button("❌ Cancel", use_container_width=True)
+
+                    if submit_request:
+                        if not request_message.strip():
+                            st.error("Please explain why you want this introduction")
+                        else:
+                            # Create intro request
+                            result = collaboration.create_intro_request(
+                                requester_id=user_id,
+                                connector_id=contact['connector_id'],
+                                target_contact_id=contact['contact_id'],
+                                target_name=contact['target_name'],
+                                target_company=contact['target_company'],
+                                target_position=contact['target_position'],
+                                target_email=contact['target_email'],
+                                request_message=request_message.strip(),
+                                context_for_connector=context_for_connector.strip() if context_for_connector.strip() else None
+                            )
+
+                            if result['success']:
+                                st.success(f"✅ Introduction request sent to {contact['connector_name']}!")
+                                del st.session_state['intro_request_contact']
+                                st.rerun()
+                            else:
+                                st.error(result['message'])
+
+                    if cancel_request:
+                        del st.session_state['intro_request_contact']
+                        st.rerun()
+
+        else:
+            st.info("👥 Connect with other users to search their networks and request introductions!")
+            st.markdown("""
+            **How to build your extended network:**
+            1. Go to the **Connections** page
+            2. Search for people by name or organization
+            3. Send connection requests
+            4. Once connected, you can search each other's networks!
+            """)
 
 if __name__ == "__main__":
     # Check for API key

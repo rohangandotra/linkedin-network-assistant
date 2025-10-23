@@ -101,7 +101,7 @@ def verify_password(password: str, hashed: str) -> bool:
     return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
 
 # User registration
-def register_user(email: str, password: str, full_name: str) -> Dict[str, Any]:
+def register_user(email: str, password: str, full_name: str, organization: str = None) -> Dict[str, Any]:
     """
     Register a new user
 
@@ -109,6 +109,7 @@ def register_user(email: str, password: str, full_name: str) -> Dict[str, Any]:
         email: User's email address
         password: Plain text password (will be hashed)
         full_name: User's full name
+        organization: User's organization (optional)
 
     Returns:
         dict with 'success' boolean and 'message' or 'user' data
@@ -129,14 +130,19 @@ def register_user(email: str, password: str, full_name: str) -> Dict[str, Any]:
         password_hash = hash_password(password)
 
         # Insert new user
-        response = supabase.table('users').insert({
+        user_data = {
             'email': email,
             'password_hash': password_hash,
             'full_name': full_name,
             'created_at': datetime.now().isoformat(),
             'is_verified': True,  # Auto-verify for MVP
             'plan_tier': 'free'
-        }).execute()
+        }
+
+        if organization:
+            user_data['organization'] = organization
+
+        response = supabase.table('users').insert(user_data).execute()
 
         if response.data and len(response.data) > 0:
             user = response.data[0]
@@ -146,7 +152,8 @@ def register_user(email: str, password: str, full_name: str) -> Dict[str, Any]:
                 'user': {
                     'id': user['id'],
                     'email': user['email'],
-                    'full_name': user['full_name']
+                    'full_name': user['full_name'],
+                    'organization': user.get('organization')
                 }
             }
         else:
