@@ -344,22 +344,34 @@ def save_contacts_to_db(user_id: str, contacts_df) -> Dict[str, Any]:
     Returns:
         dict with 'success' boolean and 'message' or count
     """
+    import pandas as pd
     supabase = get_supabase_client()
 
     try:
-        # Convert DataFrame to list of dicts
-        contacts_list = contacts_df.to_dict('records')
+        # Only keep columns that exist in database schema
+        db_columns = ['first_name', 'last_name', 'full_name', 'company', 'position', 'email', 'connected_on']
 
-        # Add user_id to each contact
+        # Filter DataFrame to only include columns we have in the DB
+        df_filtered = contacts_df[[col for col in db_columns if col in contacts_df.columns]].copy()
+
+        # Convert DataFrame to list of dicts
+        contacts_list = df_filtered.to_dict('records')
+
+        # Add user_id to each contact and ensure proper types
         for contact in contacts_list:
             contact['user_id'] = user_id
             # Ensure all required fields are strings or None
-            contact['first_name'] = str(contact.get('first_name', '')) if contact.get('first_name') else None
-            contact['last_name'] = str(contact.get('last_name', '')) if contact.get('last_name') else None
-            contact['full_name'] = str(contact.get('full_name', '')) if contact.get('full_name') else None
-            contact['company'] = str(contact.get('company', '')) if contact.get('company') else None
-            contact['position'] = str(contact.get('position', '')) if contact.get('position') else None
-            contact['email'] = str(contact.get('email', '')) if contact.get('email') else None
+            contact['first_name'] = str(contact.get('first_name', '')) if pd.notna(contact.get('first_name')) else None
+            contact['last_name'] = str(contact.get('last_name', '')) if pd.notna(contact.get('last_name')) else None
+            contact['full_name'] = str(contact.get('full_name', '')) if pd.notna(contact.get('full_name')) else None
+            contact['company'] = str(contact.get('company', '')) if pd.notna(contact.get('company')) else None
+            contact['position'] = str(contact.get('position', '')) if pd.notna(contact.get('position')) else None
+            contact['email'] = str(contact.get('email', '')) if pd.notna(contact.get('email')) else None
+            # connected_on can be None or a date string
+            if 'connected_on' in contact and pd.notna(contact.get('connected_on')):
+                contact['connected_on'] = str(contact['connected_on'])
+            else:
+                contact['connected_on'] = None
 
         # Insert contacts in batch
         supabase.table('contacts').insert(contacts_list).execute()
