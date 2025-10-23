@@ -1523,6 +1523,9 @@ def main():
                     del st.session_state['diagnostic_results']
                     st.rerun()
 
+    # Get user_id for use throughout the app
+    user_id = st.session_state['user']['id']
+
     # Main content area
     if 'contacts_df' not in st.session_state:
         # Empty state with examples
