@@ -884,6 +884,86 @@ def generate_summary(filtered_df, intent):
 
     return "\n".join(summary_parts)
 
+def analyze_network_with_ai(query, contacts_df):
+    """
+    Use AI to analyze the user's network and answer analytical questions
+
+    Examples:
+    - "What industry do I have most contacts in?"
+    - "How many engineers vs managers?"
+    - "Which companies are most represented?"
+    """
+
+    # Aggregate network data for GPT
+    total_contacts = len(contacts_df)
+
+    # Get company distribution
+    company_counts = contacts_df['company'].value_counts().head(20).to_dict()
+
+    # Get position distribution
+    position_counts = contacts_df['position'].value_counts().head(20).to_dict()
+
+    # Create summary for GPT
+    network_summary = {
+        "total_contacts": total_contacts,
+        "top_companies": company_counts,
+        "top_positions": position_counts
+    }
+
+    # Build prompt for GPT
+    prompt = f"""You are analyzing a professional's LinkedIn network. Answer their question using the network data provided.
+
+NETWORK DATA:
+- Total contacts: {total_contacts}
+
+Top Companies (with contact count):
+{chr(10).join([f"  - {company}: {count} contacts" for company, count in list(company_counts.items())[:15]])}
+
+Top Positions/Titles (with contact count):
+{chr(10).join([f"  - {position}: {count} contacts" for position, count in list(position_counts.items())[:15]])}
+
+USER'S QUESTION: {query}
+
+Analyze the data and provide a clear, insightful answer. Use your world knowledge to:
+- Categorize companies by industry (e.g., Google/Meta = Tech, Goldman Sachs = Finance)
+- Identify patterns in job roles and seniority
+- Provide percentages and specific numbers
+- Be concise but informative
+
+Answer:"""
+
+    try:
+        response = get_client().chat.completions.create(
+            model="gpt-4-turbo-preview",
+            messages=[
+                {"role": "system", "content": "You are an expert at analyzing professional networks and providing actionable insights."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.3,
+            max_tokens=600
+        )
+
+        answer = response.choices[0].message.content.strip()
+
+        # Log analytics query
+        analytics.log_search_query(
+            query=query,
+            results_count=0,  # Analytics queries don't return contacts
+            intent={"type": "analytics"},
+            session_id=st.session_state['session_id']
+        )
+
+        return {
+            'success': True,
+            'answer': answer
+        }
+
+    except Exception as e:
+        return {
+            'success': False,
+            'error': str(e)
+        }
+
 def generate_personalized_emails(selected_contacts, email_purpose="🤝 Just catching up / Reconnecting", email_tone="Friendly & Casual", additional_context=""):
     """Generate personalized outreach emails for each selected contact using AI"""
 
@@ -1493,7 +1573,51 @@ def main():
                         session_id=st.session_state['session_id']
                     )
 
-        # Display results
+        # AI Analytics Section
+        st.markdown("---")
+        st.markdown("### 🤖 Ask AI About Your Network")
+        st.markdown("Get insights and analytics about your connections using AI")
+
+        with st.expander("💡 Example Questions", expanded=False):
+            st.markdown("""
+            **Industry & Company Analysis:**
+            - What industry do I have most contacts in?
+            - Which companies are most represented in my network?
+            - How many people work at tech companies?
+
+            **Role & Seniority Analysis:**
+            - How many engineers vs. managers do I have?
+            - Who are my most senior contacts?
+            - What's the most common job title?
+
+            **Network Composition:**
+            - Summarize my network for me
+            - What percentage of my contacts are in finance?
+            - How diverse is my network across industries?
+            """)
+
+        with st.form(key='analytics_form', clear_on_submit=False):
+            analytics_query = st.text_input(
+                "Ask AI a question about your network...",
+                placeholder='e.g., "What industry do I have most contacts in?"',
+                label_visibility="collapsed",
+                key="analytics_query"
+            )
+
+            analytics_button = st.form_submit_button("🧠 Analyze", type="secondary")
+
+        if analytics_button and analytics_query:
+            with st.spinner("🧠 AI is analyzing your network..."):
+                result = analyze_network_with_ai(analytics_query, contacts_df)
+
+                if result['success']:
+                    st.markdown("#### 💡 AI Insights:")
+                    st.markdown(result['answer'])
+                else:
+                    st.error(f"❌ Analysis failed: {result.get('error', 'Unknown error')}")
+
+        # Display search results
+        st.markdown("---")
         if 'filtered_df' in st.session_state and 'summary' in st.session_state:
             st.markdown("<br>", unsafe_allow_html=True)
 
