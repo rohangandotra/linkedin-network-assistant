@@ -9,14 +9,18 @@ import uuid
 import requests
 import traceback
 
+# Load environment variables
+load_dotenv()
+
 # Import analytics module
 import analytics
 
 # Import authentication module
 import auth
 
-# Load environment variables
-load_dotenv()
+
+
+
 
 # Initialize OpenAI client - works both locally and on Streamlit Cloud
 def get_openai_api_key():
