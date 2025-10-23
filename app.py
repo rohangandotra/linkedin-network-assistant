@@ -9,19 +9,14 @@ import uuid
 import requests
 import traceback
 
-# Load environment variables
+# Load environment variables FIRST - before importing modules that need them
 load_dotenv()
 
 # Import analytics module
 import analytics
 
-# Import authentication module
+# Import authentication module (needs env vars to be loaded)
 import auth
-
-
-
-
-
 # Initialize OpenAI client - works both locally and on Streamlit Cloud
 def get_openai_api_key():
     """Get OpenAI API key from Streamlit secrets or environment variable"""
@@ -1002,20 +997,30 @@ def show_login_page():
             submit = st.form_submit_button("🚀 Login", use_container_width=True)
 
             if submit:
+                # Strip whitespace from inputs
+                email = email.strip() if email else ""
+                password = password.strip() if password else ""
+
                 if not email or not password:
                     st.error("Please enter both email and password")
                 else:
                     with st.spinner("Logging in..."):
-                        result = auth.login_user(email, password)
+                        try:
+                            result = auth.login_user(email, password)
 
-                        if result['success']:
-                            # Store user info in session
-                            st.session_state['authenticated'] = True
-                            st.session_state['user'] = result['user']
-                            st.success(f"Welcome back, {result['user']['full_name']}!")
-                            st.rerun()
-                        else:
-                            st.error(result['message'])
+                            if result['success']:
+                                # Store user info in session
+                                st.session_state['authenticated'] = True
+                                st.session_state['user'] = result['user']
+                                st.success(f"Welcome back, {result['user']['full_name']}!")
+                                st.rerun()
+                            else:
+                                st.error(result['message'])
+                        except Exception as e:
+                            st.error(f"❌ Login failed: {str(e)}")
+                            with st.expander("Technical Details"):
+                                st.code(str(e))
+                                st.caption("If this error persists, please contact support.")
 
         st.markdown("---")
         st.markdown("<p style='text-align: center;'>Don't have an account?</p>", unsafe_allow_html=True)
@@ -1043,6 +1048,12 @@ def show_register_page():
             submit = st.form_submit_button("✨ Create Account", use_container_width=True)
 
             if submit:
+                # Strip whitespace from all inputs
+                full_name = full_name.strip() if full_name else ""
+                email = email.strip() if email else ""
+                password = password.strip() if password else ""
+                password_confirm = password_confirm.strip() if password_confirm else ""
+
                 # Validation
                 if not all([full_name, email, password, password_confirm]):
                     st.error("Please fill in all fields")
@@ -1052,18 +1063,24 @@ def show_register_page():
                     st.error("Password must be at least 6 characters")
                 else:
                     with st.spinner("Creating your account..."):
-                        result = auth.register_user(email, password, full_name)
+                        try:
+                            result = auth.register_user(email, password, full_name)
 
-                        if result['success']:
-                            st.success(result['message'])
-                            st.info("✅ You can now log in with your credentials")
-                            st.session_state['show_register'] = False
-                            # Wait a moment then redirect to login
-                            import time
-                            time.sleep(2)
-                            st.rerun()
-                        else:
-                            st.error(result['message'])
+                            if result['success']:
+                                st.success(result['message'])
+                                st.info("✅ You can now log in with your credentials")
+                                st.session_state['show_register'] = False
+                                # Wait a moment then redirect to login
+                                import time
+                                time.sleep(2)
+                                st.rerun()
+                            else:
+                                st.error(result['message'])
+                        except Exception as e:
+                            st.error(f"❌ Registration failed: {str(e)}")
+                            with st.expander("Technical Details"):
+                                st.code(str(e))
+                                st.caption("If this error persists, please contact support.")
 
         st.markdown("---")
         st.markdown("<p style='text-align: center;'>Already have an account?</p>", unsafe_allow_html=True)

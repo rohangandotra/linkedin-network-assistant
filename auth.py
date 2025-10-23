@@ -15,12 +15,77 @@ load_dotenv()
 
 # Initialize Supabase client
 def get_supabase_client() -> Client:
-    """Get Supabase client instance"""
-    url = os.getenv("SUPABASE_URL")
-    key = os.getenv("SUPABASE_SERVICE_KEY")
+    """Get Supabase client instance - checks both Streamlit secrets and environment variables"""
+    url = None
+    key = None
 
+    # Debug: Print what we're checking
+    debug_info = []
+
+    # Try to import streamlit INSIDE the function to access current session's secrets
+    try:
+        import streamlit as st
+        has_streamlit = True
+        debug_info.append("Streamlit import successful")
+    except ImportError:
+        has_streamlit = False
+        debug_info.append("Streamlit not available (ImportError)")
+
+    # Try Streamlit secrets first (for Streamlit Cloud and local Streamlit runs)
+    if has_streamlit:
+        try:
+            # Check if st.secrets exists and is accessible
+            secrets_dict = dict(st.secrets) if hasattr(st, 'secrets') else {}
+            debug_info.append(f"st.secrets keys: {list(secrets_dict.keys())}")
+
+            if 'SUPABASE_URL' in secrets_dict:
+                url = str(secrets_dict["SUPABASE_URL"]).strip()
+                debug_info.append(f"Found SUPABASE_URL in st.secrets: {url[:30]}...")
+            else:
+                debug_info.append("SUPABASE_URL NOT in st.secrets")
+
+            if 'SUPABASE_SERVICE_KEY' in secrets_dict:
+                key = str(secrets_dict["SUPABASE_SERVICE_KEY"]).strip()
+                debug_info.append(f"Found SUPABASE_SERVICE_KEY in st.secrets (length: {len(key)})")
+            else:
+                debug_info.append("SUPABASE_SERVICE_KEY NOT in st.secrets")
+        except Exception as e:
+            debug_info.append(f"Error accessing st.secrets: {type(e).__name__}: {str(e)}")
+    else:
+        debug_info.append("Streamlit is NOT available")
+
+    # Fall back to environment variables
+    if not url:
+        url = os.getenv("SUPABASE_URL")
+        if url:
+            debug_info.append(f"Found SUPABASE_URL in os.getenv: {url[:30]}...")
+        else:
+            debug_info.append("SUPABASE_URL NOT in os.getenv")
+
+    if not key:
+        key = os.getenv("SUPABASE_SERVICE_KEY")
+        if key:
+            debug_info.append(f"Found SUPABASE_SERVICE_KEY in os.getenv (length: {len(key)})")
+        else:
+            debug_info.append("SUPABASE_SERVICE_KEY NOT in os.getenv")
+
+    # Only print debug info if we're missing credentials
     if not url or not key:
-        raise ValueError("Missing SUPABASE_URL or SUPABASE_SERVICE_KEY in environment")
+        print("\n🔍 SUPABASE CLIENT DEBUG INFO:")
+        for info in debug_info:
+            print(f"  - {info}")
+        print(f"  - Final URL: {'✅ Found' if url else '❌ Missing'}")
+        print(f"  - Final KEY: {'✅ Found' if key else '❌ Missing'}")
+        print()
+        error_msg = (
+            "Missing SUPABASE_URL or SUPABASE_SERVICE_KEY in environment.\n"
+            "Please check:\n"
+            "  1. .env file exists in project root\n"
+            "  2. .streamlit/secrets.toml exists with correct values\n"
+            "  3. Restart Streamlit completely (pkill -f streamlit)\n\n"
+            f"Debug info: {'; '.join(debug_info)}"
+        )
+        raise ValueError(error_msg)
 
     return create_client(url, key)
 
