@@ -1986,247 +1986,84 @@ def main():
     # Main content area
     if 'contacts_df' not in st.session_state:
         # Modern empty state with glassmorphism
-        st.markdown("""
-        <div style='text-align: center; padding: 3rem 2rem; margin: 2rem 0;
-                    background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
-                    border-radius: var(--radius-2xl);
-                    border: 2px dashed var(--primary-300);'>
-            <div style='font-size: 4rem; margin-bottom: 1rem;'>🚀</div>
-            <h2 style='background: linear-gradient(135deg, var(--primary-600) 0%, var(--secondary-500) 100%);
-                       -webkit-background-clip: text;
-                       -webkit-text-fill-color: transparent;
-                       background-clip: text;
-                       font-size: 2rem;
-                       font-weight: 700;
-                       margin-bottom: 0.75rem;'>
-                Get Started with Your Network
-            </h2>
-            <p style='color: var(--gray-600); font-size: 1.15rem; max-width: 600px; margin: 0 auto 1.5rem;'>
-                Upload your LinkedIn connections to unlock powerful AI-powered search and insights
-            </p>
-            <div style='display: inline-block; padding: 0.75rem 2rem;
-                        background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
-                        color: white; border-radius: var(--radius-xl);
-                        font-weight: 600; box-shadow: var(--shadow-lg), var(--glow-primary);'>
-                👈 Upload your contacts in the sidebar to begin
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("""<div style='text-align: center; padding: 3rem 2rem; margin: 2rem 0; background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%); border-radius: var(--radius-2xl); border: 2px dashed var(--primary-300);'>
+<div style='font-size: 4rem; margin-bottom: 1rem;'>🚀</div>
+<h2 style='background: linear-gradient(135deg, var(--primary-600) 0%, var(--secondary-500) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 2rem; font-weight: 700; margin-bottom: 0.75rem;'>Get Started with Your Network</h2>
+<p style='color: var(--gray-600); font-size: 1.15rem; max-width: 600px; margin: 0 auto 1.5rem;'>Upload your LinkedIn connections to unlock powerful AI-powered search and insights</p>
+<div style='display: inline-block; padding: 0.75rem 2rem; background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%); color: white; border-radius: var(--radius-xl); font-weight: 600; box-shadow: var(--shadow-lg), var(--glow-primary);'>👈 Upload your contacts in the sidebar to begin</div>
+</div>""", unsafe_allow_html=True)
 
         # LinkedIn Download Instructions - Modern card
         st.markdown("### 📥 How to Get Your LinkedIn Data")
-        st.markdown("""
-        <div class='card' style='
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(255, 255, 255, 1) 100%);
-            padding: var(--spacing-xl);
-            border-radius: var(--radius-2xl);
-            border: 2px solid var(--primary-200);
-            margin-bottom: 2rem;
-            box-shadow: var(--shadow-lg);'>
-
-            <div style='display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;'>
-                <div style='width: 48px; height: 48px; border-radius: 50%;
-                            background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
-                            display: flex; align-items: center; justify-content: center;
-                            font-size: 1.5rem; box-shadow: var(--shadow-md), var(--glow-primary);'>
-                    📥
-                </div>
-                <div style='font-size: 1.3rem; font-weight: 700; color: var(--gray-900);'>
-                    Simple 6-Step Process
-                </div>
-            </div>
-
-            <div style='display: grid; gap: 1rem;'>
-                <div style='display: flex; gap: 1rem; align-items: start;'>
-                    <div style='flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%;
-                                background: linear-gradient(135deg, var(--primary-500) 0%, var(--secondary-500) 100%);
-                                display: flex; align-items: center; justify-content: center;
-                                color: white; font-weight: 700; font-size: 0.9rem;
-                                box-shadow: var(--shadow-sm);'>
-                        1
-                    </div>
-                    <div style='flex: 1; padding-top: 0.25rem;'>
-                        Go to <a href='https://www.linkedin.com/mypreferences/d/download-my-data' target='_blank'
-                                style='color: var(--primary-600); font-weight: 600; text-decoration: none;
-                                       border-bottom: 2px solid var(--primary-300);'>
-                            LinkedIn Data Download
-                        </a>
-                    </div>
-                </div>
-
-                <div style='display: flex; gap: 1rem; align-items: start;'>
-                    <div style='flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%;
-                                background: linear-gradient(135deg, var(--primary-500) 0%, var(--secondary-500) 100%);
-                                display: flex; align-items: center; justify-content: center;
-                                color: white; font-weight: 700; font-size: 0.9rem;
-                                box-shadow: var(--shadow-sm);'>
-                        2
-                    </div>
-                    <div style='flex: 1; padding-top: 0.25rem; color: var(--gray-700);'>
-                        Click <strong style='color: var(--gray-900);'>"Request archive"</strong> (the big button at the top)
-                    </div>
-                </div>
-
-                <div style='display: flex; gap: 1rem; align-items: start;'>
-                    <div style='flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%;
-                                background: linear-gradient(135deg, var(--primary-500) 0%, var(--secondary-500) 100%);
-                                display: flex; align-items: center; justify-content: center;
-                                color: white; font-weight: 700; font-size: 0.9rem;
-                                box-shadow: var(--shadow-sm);'>
-                        3
-                    </div>
-                    <div style='flex: 1; padding-top: 0.25rem; color: var(--gray-700);'>
-                        LinkedIn will email you in <strong style='color: var(--gray-900);'>10-15 minutes</strong> when your data is ready
-                    </div>
-                </div>
-
-                <div style='display: flex; gap: 1rem; align-items: start;'>
-                    <div style='flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%;
-                                background: linear-gradient(135deg, var(--primary-500) 0%, var(--secondary-500) 100%);
-                                display: flex; align-items: center; justify-content: center;
-                                color: white; font-weight: 700; font-size: 0.9rem;
-                                box-shadow: var(--shadow-sm);'>
-                        4
-                    </div>
-                    <div style='flex: 1; padding-top: 0.25rem; color: var(--gray-700);'>
-                        Download the <strong style='color: var(--gray-900);'>ZIP file</strong> from the email
-                    </div>
-                </div>
-
-                <div style='display: flex; gap: 1rem; align-items: start;'>
-                    <div style='flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%;
-                                background: linear-gradient(135deg, var(--primary-500) 0%, var(--secondary-500) 100%);
-                                display: flex; align-items: center; justify-content: center;
-                                color: white; font-weight: 700; font-size: 0.9rem;
-                                box-shadow: var(--shadow-sm);'>
-                        5
-                    </div>
-                    <div style='flex: 1; padding-top: 0.25rem; color: var(--gray-700);'>
-                        Extract/unzip it and find the <strong style='color: var(--gray-900);'>Connections.csv</strong> file
-                    </div>
-                </div>
-
-                <div style='display: flex; gap: 1rem; align-items: start;'>
-                    <div style='flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%;
-                                background: linear-gradient(135deg, var(--success-500) 0%, var(--success-600) 100%);
-                                display: flex; align-items: center; justify-content: center;
-                                color: white; font-weight: 700; font-size: 0.9rem;
-                                box-shadow: var(--shadow-sm), var(--glow-success);'>
-                        6
-                    </div>
-                    <div style='flex: 1; padding-top: 0.25rem; color: var(--gray-700);'>
-                        Upload that file here using the sidebar 👈
-                    </div>
-                </div>
-            </div>
-
-            <div style='margin-top: 1.5rem; padding: 1rem;
-                        background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
-                        border-radius: var(--radius-lg); border-left: 4px solid var(--primary-500);'>
-                <div style='display: flex; align-items: center; gap: 0.5rem;'>
-                    <span style='font-size: 1.25rem;'>💡</span>
-                    <span style='color: var(--gray-700); font-weight: 500;'>
-                        <strong style='color: var(--gray-900);'>Tip:</strong>
-                        The CSV file should have columns like "First Name", "Last Name", "Company", "Position"
-                    </span>
-                </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("""<div class='card' style='background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(255, 255, 255, 1) 100%); padding: var(--spacing-xl); border-radius: var(--radius-2xl); border: 2px solid var(--primary-200); margin-bottom: 2rem; box-shadow: var(--shadow-lg);'>
+<div style='display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;'>
+<div style='width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; box-shadow: var(--shadow-md), var(--glow-primary);'>📥</div>
+<div style='font-size: 1.3rem; font-weight: 700; color: var(--gray-900);'>Simple 6-Step Process</div>
+</div>
+<div style='display: grid; gap: 1rem;'>
+<div style='display: flex; gap: 1rem; align-items: start;'>
+<div style='flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-500) 0%, var(--secondary-500) 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.9rem; box-shadow: var(--shadow-sm);'>1</div>
+<div style='flex: 1; padding-top: 0.25rem;'>Go to <a href='https://www.linkedin.com/mypreferences/d/download-my-data' target='_blank' style='color: var(--primary-600); font-weight: 600; text-decoration: none; border-bottom: 2px solid var(--primary-300);'>LinkedIn Data Download</a></div>
+</div>
+<div style='display: flex; gap: 1rem; align-items: start;'>
+<div style='flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-500) 0%, var(--secondary-500) 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.9rem; box-shadow: var(--shadow-sm);'>2</div>
+<div style='flex: 1; padding-top: 0.25rem; color: var(--gray-700);'>Click <strong style='color: var(--gray-900);'>"Request archive"</strong> (the big button at the top)</div>
+</div>
+<div style='display: flex; gap: 1rem; align-items: start;'>
+<div style='flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-500) 0%, var(--secondary-500) 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.9rem; box-shadow: var(--shadow-sm);'>3</div>
+<div style='flex: 1; padding-top: 0.25rem; color: var(--gray-700);'>LinkedIn will email you in <strong style='color: var(--gray-900);'>10-15 minutes</strong> when your data is ready</div>
+</div>
+<div style='display: flex; gap: 1rem; align-items: start;'>
+<div style='flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-500) 0%, var(--secondary-500) 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.9rem; box-shadow: var(--shadow-sm);'>4</div>
+<div style='flex: 1; padding-top: 0.25rem; color: var(--gray-700);'>Download the <strong style='color: var(--gray-900);'>ZIP file</strong> from the email</div>
+</div>
+<div style='display: flex; gap: 1rem; align-items: start;'>
+<div style='flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-500) 0%, var(--secondary-500) 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.9rem; box-shadow: var(--shadow-sm);'>5</div>
+<div style='flex: 1; padding-top: 0.25rem; color: var(--gray-700);'>Extract/unzip it and find the <strong style='color: var(--gray-900);'>Connections.csv</strong> file</div>
+</div>
+<div style='display: flex; gap: 1rem; align-items: start;'>
+<div style='flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--success-500) 0%, var(--success-600) 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.9rem; box-shadow: var(--shadow-sm), var(--glow-success);'>6</div>
+<div style='flex: 1; padding-top: 0.25rem; color: var(--gray-700);'>Upload that file here using the sidebar 👈</div>
+</div>
+</div>
+<div style='margin-top: 1.5rem; padding: 1rem; background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%); border-radius: var(--radius-lg); border-left: 4px solid var(--primary-500);'>
+<div style='display: flex; align-items: center; gap: 0.5rem;'>
+<span style='font-size: 1.25rem;'>💡</span>
+<span style='color: var(--gray-700); font-weight: 500;'><strong style='color: var(--gray-900);'>Tip:</strong> The CSV file should have columns like "First Name", "Last Name", "Company", "Position"</span>
+</div>
+</div>
+</div>""", unsafe_allow_html=True)
 
         # Example queries in modern gradient cards
         st.markdown("### ✨ What You Can Ask")
         col1, col2, col3 = st.columns(3)
 
         with col1:
-            st.markdown("""
-            <div class='card' style='
-                background: white;
-                padding: var(--spacing-xl);
-                border-radius: var(--radius-xl);
-                border: 2px solid var(--gray-200);
-                box-shadow: var(--shadow-md);
-                height: 100%;
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                position: relative;
-                overflow: hidden;'>
-
-                <div style='position: absolute; top: 0; left: 0; right: 0; height: 4px;
-                            background: linear-gradient(90deg, var(--primary-500) 0%, var(--secondary-500) 100%);'>
-                </div>
-
-                <div style='font-size: 2.5rem; margin-bottom: 1rem;'>🏢</div>
-                <h4 style='margin-bottom: 1rem; color: var(--gray-900); font-weight: 700; font-size: 1.15rem;'>
-                    By Industry
-                </h4>
-                <p style='color: var(--gray-600); margin-bottom: 0.5rem; font-size: 0.95rem; line-height: 1.5;'>
-                    "Who works in venture capital?"
-                </p>
-                <p style='color: var(--gray-600); font-size: 0.95rem; line-height: 1.5;'>
-                    "Show me people in tech companies"
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown("""<div class='card' style='background: white; padding: var(--spacing-xl); border-radius: var(--radius-xl); border: 2px solid var(--gray-200); box-shadow: var(--shadow-md); height: 100%; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden;'>
+<div style='position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--primary-500) 0%, var(--secondary-500) 100%);'></div>
+<div style='font-size: 2.5rem; margin-bottom: 1rem;'>🏢</div>
+<h4 style='margin-bottom: 1rem; color: var(--gray-900); font-weight: 700; font-size: 1.15rem;'>By Industry</h4>
+<p style='color: var(--gray-600); margin-bottom: 0.5rem; font-size: 0.95rem; line-height: 1.5;'>"Who works in venture capital?"</p>
+<p style='color: var(--gray-600); font-size: 0.95rem; line-height: 1.5;'>"Show me people in tech companies"</p>
+</div>""", unsafe_allow_html=True)
 
         with col2:
-            st.markdown("""
-            <div class='card' style='
-                background: white;
-                padding: var(--spacing-xl);
-                border-radius: var(--radius-xl);
-                border: 2px solid var(--gray-200);
-                box-shadow: var(--shadow-md);
-                height: 100%;
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                position: relative;
-                overflow: hidden;'>
-
-                <div style='position: absolute; top: 0; left: 0; right: 0; height: 4px;
-                            background: linear-gradient(90deg, var(--secondary-500) 0%, var(--accent-500) 100%);'>
-                </div>
-
-                <div style='font-size: 2.5rem; margin-bottom: 1rem;'>👔</div>
-                <h4 style='margin-bottom: 1rem; color: var(--gray-900); font-weight: 700; font-size: 1.15rem;'>
-                    By Role
-                </h4>
-                <p style='color: var(--gray-600); margin-bottom: 0.5rem; font-size: 0.95rem; line-height: 1.5;'>
-                    "Who is an engineer?"
-                </p>
-                <p style='color: var(--gray-600); font-size: 0.95rem; line-height: 1.5;'>
-                    "Show me product managers"
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown("""<div class='card' style='background: white; padding: var(--spacing-xl); border-radius: var(--radius-xl); border: 2px solid var(--gray-200); box-shadow: var(--shadow-md); height: 100%; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden;'>
+<div style='position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--secondary-500) 0%, var(--accent-500) 100%);'></div>
+<div style='font-size: 2.5rem; margin-bottom: 1rem;'>👔</div>
+<h4 style='margin-bottom: 1rem; color: var(--gray-900); font-weight: 700; font-size: 1.15rem;'>By Role</h4>
+<p style='color: var(--gray-600); margin-bottom: 0.5rem; font-size: 0.95rem; line-height: 1.5;'>"Who is an engineer?"</p>
+<p style='color: var(--gray-600); font-size: 0.95rem; line-height: 1.5;'>"Show me product managers"</p>
+</div>""", unsafe_allow_html=True)
 
         with col3:
-            st.markdown("""
-            <div class='card' style='
-                background: white;
-                padding: var(--spacing-xl);
-                border-radius: var(--radius-xl);
-                border: 2px solid var(--gray-200);
-                box-shadow: var(--shadow-md);
-                height: 100%;
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                position: relative;
-                overflow: hidden;'>
-
-                <div style='position: absolute; top: 0; left: 0; right: 0; height: 4px;
-                            background: linear-gradient(90deg, var(--accent-500) 0%, var(--primary-500) 100%);'>
-                </div>
-
-                <div style='font-size: 2.5rem; margin-bottom: 1rem;'>⭐</div>
-                <h4 style='margin-bottom: 1rem; color: var(--gray-900); font-weight: 700; font-size: 1.15rem;'>
-                    By Seniority
-                </h4>
-                <p style='color: var(--gray-600); margin-bottom: 0.5rem; font-size: 0.95rem; line-height: 1.5;'>
-                    "Who is the most senior person?"
-                </p>
-                <p style='color: var(--gray-600); font-size: 0.95rem; line-height: 1.5;'>
-                    "Show me top 5 leaders"
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown("""<div class='card' style='background: white; padding: var(--spacing-xl); border-radius: var(--radius-xl); border: 2px solid var(--gray-200); box-shadow: var(--shadow-md); height: 100%; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden;'>
+<div style='position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--accent-500) 0%, var(--primary-500) 100%);'></div>
+<div style='font-size: 2.5rem; margin-bottom: 1rem;'>⭐</div>
+<h4 style='margin-bottom: 1rem; color: var(--gray-900); font-weight: 700; font-size: 1.15rem;'>By Seniority</h4>
+<p style='color: var(--gray-600); margin-bottom: 0.5rem; font-size: 0.95rem; line-height: 1.5;'>"Who is the most senior person?"</p>
+<p style='color: var(--gray-600); font-size: 0.95rem; line-height: 1.5;'>"Show me top 5 leaders"</p>
+</div>""", unsafe_allow_html=True)
 
     else:
         contacts_df = st.session_state['contacts_df']
