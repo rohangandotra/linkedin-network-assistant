@@ -179,35 +179,105 @@ st.set_page_config(
     initial_sidebar_state="auto"  # Auto-expand on desktop, collapsed on mobile
 )
 
-# Premium CSS styling - Clean & Modern
+# Modern shadcn-inspired CSS styling with gradients and glassmorphism
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+    :root {
+        /* Modern color palette - shadcn inspired */
+        --primary-50: #eff6ff;
+        --primary-100: #dbeafe;
+        --primary-200: #bfdbfe;
+        --primary-300: #93c5fd;
+        --primary-400: #60a5fa;
+        --primary-500: #3b82f6;
+        --primary-600: #2563eb;
+        --primary-700: #1d4ed8;
+        --primary-800: #1e40af;
+        --primary-900: #1e3a8a;
+
+        --secondary-500: #8b5cf6;
+        --secondary-600: #7c3aed;
+
+        --accent-500: #06b6d4;
+        --accent-600: #0891b2;
+
+        --success-500: #10b981;
+        --success-600: #059669;
+
+        --warning-500: #f59e0b;
+        --warning-600: #d97706;
+
+        --error-500: #ef4444;
+        --error-600: #dc2626;
+
+        /* Neutral colors */
+        --gray-50: #f9fafb;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-300: #d1d5db;
+        --gray-400: #9ca3af;
+        --gray-500: #6b7280;
+        --gray-600: #4b5563;
+        --gray-700: #374151;
+        --gray-800: #1f2937;
+        --gray-900: #111827;
+
+        /* Spacing */
+        --spacing-xs: 0.5rem;
+        --spacing-sm: 0.75rem;
+        --spacing-md: 1rem;
+        --spacing-lg: 1.5rem;
+        --spacing-xl: 2rem;
+        --spacing-2xl: 3rem;
+
+        /* Radius */
+        --radius-sm: 0.375rem;
+        --radius-md: 0.5rem;
+        --radius-lg: 0.75rem;
+        --radius-xl: 1rem;
+        --radius-2xl: 1.5rem;
+
+        /* Shadows */
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+        /* Glows */
+        --glow-primary: 0 0 20px rgba(59, 130, 246, 0.3);
+        --glow-secondary: 0 0 20px rgba(139, 92, 246, 0.3);
+        --glow-success: 0 0 20px rgba(16, 185, 129, 0.3);
+    }
 
     * {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
-    /* Main background - Clean white */
+    /* Main background - Gradient */
     .main {
-        background: #fafafa;
+        background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 50%, #e5e7eb 100%);
+        background-attachment: fixed;
     }
 
     /* Content container */
     .block-container {
-        padding-top: 1rem !important;
-        padding-bottom: 2rem;
+        padding-top: var(--spacing-lg) !important;
+        padding-bottom: var(--spacing-xl);
         max-width: 1200px;
     }
 
-    /* Sidebar styling - Elegant dark */
+    /* Sidebar styling - Modern dark with gradient */
     section[data-testid="stSidebar"] {
-        background: #1a1a1a;
-        border-right: 1px solid #2a2a2a;
+        background: linear-gradient(180deg, var(--gray-900) 0%, var(--gray-800) 100%);
+        border-right: 1px solid var(--gray-700);
+        box-shadow: var(--shadow-xl);
     }
 
     section[data-testid="stSidebar"] > div {
-        padding-top: 2rem;
+        padding-top: var(--spacing-xl);
     }
 
     /* Sidebar text */
@@ -216,190 +286,390 @@ st.markdown("""
     section[data-testid="stSidebar"] h3,
     section[data-testid="stSidebar"] p,
     section[data-testid="stSidebar"] label {
-        color: #e0e0e0 !important;
+        color: var(--gray-100) !important;
     }
 
     section[data-testid="stSidebar"] .stMarkdown {
-        color: #b0b0b0 !important;
+        color: var(--gray-400) !important;
     }
 
-    /* Title styling - Bold black */
+    /* Title styling - Gradient text */
     h1 {
-        color: #0a0a0a !important;
-        font-size: 3.2rem !important;
+        background: linear-gradient(135deg, var(--primary-600) 0%, var(--secondary-500) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: 3.5rem !important;
         font-weight: 800 !important;
         letter-spacing: -0.03em;
-        margin-bottom: 0.5rem !important;
+        margin-bottom: var(--spacing-md) !important;
         line-height: 1.1 !important;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
     }
 
     /* Subtitle/description */
     .subtitle {
-        color: #666666;
-        font-size: 1.15rem;
-        font-weight: 400;
-        margin-bottom: 0.5rem;
+        color: var(--gray-600);
+        font-size: 1.25rem;
+        font-weight: 500;
+        margin-bottom: var(--spacing-lg);
         letter-spacing: -0.01em;
+        line-height: 1.6;
     }
 
-    /* Search input styling - Clean minimal */
+    /* Search input styling - Modern with gradient border */
     .stTextInput > div > div > input {
-        border-radius: 12px;
-        border: 2px solid #e0e0e0;
-        padding: 1rem 1.5rem;
-        font-size: 1rem;
-        transition: all 0.2s ease;
+        border-radius: var(--radius-xl);
+        border: 2px solid transparent;
         background: white;
-        color: #1a1a1a;
+        background-clip: padding-box;
+        padding: 1.1rem 1.75rem;
+        font-size: 1.05rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        color: var(--gray-900);
+        box-shadow: var(--shadow-md), inset 0 1px 2px rgba(0, 0, 0, 0.05);
+        position: relative;
+    }
+
+    .stTextInput > div > div {
+        position: relative;
+    }
+
+    .stTextInput > div > div::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: var(--radius-xl);
+        padding: 2px;
+        background: linear-gradient(135deg, var(--primary-400), var(--secondary-500), var(--accent-500));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+    }
+
+    .stTextInput > div > div:focus-within::before {
+        opacity: 1;
     }
 
     .stTextInput > div > div > input:focus {
-        border-color: #1a1a1a;
-        box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
         outline: none;
+        box-shadow: var(--shadow-lg), var(--glow-primary);
+        transform: translateY(-1px);
     }
 
     .stTextInput > div > div > input::placeholder {
-        color: #999999;
+        color: var(--gray-400);
     }
 
-    /* Button styling - Bold black */
+    /* Button styling - Gradient with glow */
     .stButton > button {
-        background: #1a1a1a;
+        background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-700) 100%);
         color: white;
         border: none;
-        border-radius: 12px;
-        padding: 0.85rem 2.5rem;
+        border-radius: var(--radius-xl);
+        padding: 0.95rem 2.75rem;
         font-weight: 600;
-        font-size: 1rem;
-        transition: all 0.2s ease;
+        font-size: 1.05rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         letter-spacing: -0.01em;
+        box-shadow: var(--shadow-md), 0 0 0 rgba(59, 130, 246, 0);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stButton > button::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .stButton > button:hover::before {
+        opacity: 1;
     }
 
     .stButton > button:hover {
-        background: #000000;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: var(--shadow-xl), var(--glow-primary);
+    }
+
+    .stButton > button:active {
+        transform: translateY(0) scale(0.98);
     }
 
     /* Form submit button styling */
     .stFormSubmitButton > button {
-        background: #1a1a1a;
+        background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-700) 100%);
         color: white;
         border: none;
-        border-radius: 12px;
-        padding: 0.85rem 2.5rem;
+        border-radius: var(--radius-xl);
+        padding: 0.95rem 2.75rem;
         font-weight: 600;
-        font-size: 1rem;
-        transition: all 0.2s ease;
+        font-size: 1.05rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         letter-spacing: -0.01em;
+        box-shadow: var(--shadow-md);
     }
 
     .stFormSubmitButton > button:hover {
-        background: #000000;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: var(--shadow-xl), var(--glow-primary);
     }
 
-    /* File uploader */
+    /* File uploader - Modern card */
     .stFileUploader {
-        background: #2a2a2a;
-        border-radius: 12px;
-        padding: 1.5rem;
-        border: 1px solid #3a3a3a;
+        background: white;
+        border-radius: var(--radius-xl);
+        padding: var(--spacing-xl);
+        border: 2px dashed var(--gray-300);
+        transition: all 0.3s ease;
+        box-shadow: var(--shadow-sm);
     }
 
-    /* Dataframe styling */
+    .stFileUploader:hover {
+        border-color: var(--primary-400);
+        background: var(--primary-50);
+        box-shadow: var(--shadow-md);
+    }
+
+    /* Dataframe styling - Modern card */
     .stDataFrame {
-        border-radius: 12px;
+        border-radius: var(--radius-lg);
         overflow: hidden;
-        border: 1px solid #e0e0e0;
+        border: 1px solid var(--gray-200);
+        box-shadow: var(--shadow-md);
+        background: white;
     }
 
-    /* Success/Info boxes */
+    /* Success/Info boxes - Glassmorphism */
     .stSuccess {
-        background: #f0fdf4;
-        border: 1px solid #86efac;
-        border-radius: 12px;
-        padding: 1rem;
-        color: #166534;
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
+        border: 1px solid var(--success-500);
+        border-radius: var(--radius-xl);
+        padding: var(--spacing-lg);
+        color: var(--success-600);
+        backdrop-filter: blur(10px);
+        box-shadow: var(--shadow-md), var(--glow-success);
+        font-weight: 500;
     }
 
     .stInfo {
-        background: #f0f9ff;
-        border: 1px solid #7dd3fc;
-        border-radius: 12px;
-        padding: 1rem;
-        color: #075985;
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%);
+        border: 1px solid var(--primary-400);
+        border-radius: var(--radius-xl);
+        padding: var(--spacing-lg);
+        color: var(--primary-700);
+        backdrop-filter: blur(10px);
+        box-shadow: var(--shadow-md), var(--glow-primary);
+        font-weight: 500;
     }
 
-    /* Expander styling */
+    .stWarning {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%);
+        border: 1px solid var(--warning-500);
+        border-radius: var(--radius-xl);
+        padding: var(--spacing-lg);
+        color: var(--warning-600);
+        backdrop-filter: blur(10px);
+        box-shadow: var(--shadow-md);
+        font-weight: 500;
+    }
+
+    .stError {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%);
+        border: 1px solid var(--error-500);
+        border-radius: var(--radius-xl);
+        padding: var(--spacing-lg);
+        color: var(--error-600);
+        backdrop-filter: blur(10px);
+        box-shadow: var(--shadow-md);
+        font-weight: 500;
+    }
+
+    /* Expander styling - Modern card */
     .streamlit-expanderHeader {
-        background: #f5f5f5;
-        border-radius: 10px;
-        font-weight: 600;
-        color: #1a1a1a;
-        border: 1px solid #e0e0e0;
-    }
-
-    /* Results summary - Clean card */
-    .results-summary {
         background: white;
-        padding: 1.5rem;
-        border-radius: 12px;
-        border: 1px solid #e0e0e0;
-        margin: 1rem 0;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        border-radius: var(--radius-lg);
+        font-weight: 600;
+        color: var(--gray-800);
+        border: 1px solid var(--gray-200);
+        transition: all 0.2s ease;
+        box-shadow: var(--shadow-sm);
     }
 
-    /* Download buttons - Outlined style */
+    .streamlit-expanderHeader:hover {
+        border-color: var(--primary-300);
+        background: var(--primary-50);
+        box-shadow: var(--shadow-md);
+        transform: translateX(4px);
+    }
+
+    /* Results summary - Glassmorphism card */
+    .results-summary {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%);
+        backdrop-filter: blur(10px);
+        padding: var(--spacing-xl);
+        border-radius: var(--radius-2xl);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        margin: var(--spacing-lg) 0;
+        box-shadow: var(--shadow-xl);
+        transition: all 0.3s ease;
+    }
+
+    .results-summary:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-2xl);
+    }
+
+    /* Download buttons - Outlined gradient */
     .stDownloadButton > button {
         background: white;
-        color: #1a1a1a;
-        border: 2px solid #1a1a1a;
-        border-radius: 12px;
-        padding: 0.7rem 1.5rem;
+        color: var(--primary-600);
+        border: 2px solid var(--primary-500);
+        border-radius: var(--radius-xl);
+        padding: 0.8rem 1.75rem;
         font-weight: 600;
-        transition: all 0.2s ease;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         letter-spacing: -0.01em;
+        box-shadow: var(--shadow-sm);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stDownloadButton > button::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        z-index: -1;
+    }
+
+    .stDownloadButton > button:hover::before {
+        opacity: 1;
     }
 
     .stDownloadButton > button:hover {
-        background: #1a1a1a;
         color: white;
-        transform: translateY(-1px);
+        border-color: var(--primary-600);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg), var(--glow-primary);
     }
 
     /* Hide default Streamlit elements */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
 
-    /* Section headers */
+    /* Section headers - Gradient underline */
     h2, h3 {
-        color: #1a1a1a !important;
+        color: var(--gray-800) !important;
         font-weight: 700 !important;
         letter-spacing: -0.02em !important;
+        position: relative;
+        padding-bottom: var(--spacing-sm);
+    }
+
+    h2::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 60px;
+        height: 4px;
+        background: linear-gradient(90deg, var(--primary-500) 0%, var(--secondary-500) 100%);
+        border-radius: 2px;
     }
 
     /* Animations */
     @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(15px); }
-        to { opacity: 1; transform: translateY(0); }
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes slideInFromLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes shimmer {
+        0% {
+            background-position: -1000px 0;
+        }
+        100% {
+            background-position: 1000px 0;
+        }
     }
 
     .main > div {
-        animation: fadeIn 0.5s ease-out;
+        animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     /* Markdown text */
     .main .stMarkdown {
-        color: #4a4a4a;
+        color: var(--gray-600);
+        line-height: 1.7;
     }
 
-    /* Dividers */
+    /* Dividers - Gradient */
     hr {
-        border-color: #e0e0e0;
-        margin: 2rem 0;
+        border: none;
+        height: 2px;
+        background: linear-gradient(90deg, transparent 0%, var(--primary-300) 50%, transparent 100%);
+        margin: var(--spacing-xl) 0;
+    }
+
+    /* Badge component */
+    .badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: var(--radius-md);
+        font-size: 0.875rem;
+        font-weight: 600;
+        background: linear-gradient(135deg, var(--primary-500) 0%, var(--secondary-500) 100%);
+        color: white;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .badge-success {
+        background: linear-gradient(135deg, var(--success-500) 0%, var(--success-600) 100%);
+    }
+
+    .badge-warning {
+        background: linear-gradient(135deg, var(--warning-500) 0%, var(--warning-600) 100%);
+    }
+
+    /* Card component */
+    .card {
+        background: white;
+        border-radius: var(--radius-xl);
+        padding: var(--spacing-xl);
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--gray-200);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-2xl);
+        border-color: var(--primary-300);
     }
 
     /* ============================================
@@ -407,29 +677,25 @@ st.markdown("""
        ============================================ */
 
     @media (max-width: 768px) {
-        /* Reduce title size on mobile */
         h1 {
-            font-size: 2rem !important;
+            font-size: 2.25rem !important;
         }
 
         .subtitle {
-            font-size: 1rem;
-            margin-bottom: 2rem;
+            font-size: 1.05rem;
+            margin-bottom: var(--spacing-xl);
         }
 
-        /* Make content container more compact */
         .block-container {
-            padding-top: 1.5rem;
-            padding-left: 1rem;
-            padding-right: 1rem;
+            padding-top: var(--spacing-md);
+            padding-left: var(--spacing-md);
+            padding-right: var(--spacing-md);
         }
 
-        /* Make sidebar take less space when open */
         section[data-testid="stSidebar"] {
             width: 280px !important;
         }
 
-        /* Better button sizing on mobile */
         .stButton > button,
         .stFormSubmitButton > button {
             width: 100%;
@@ -437,49 +703,41 @@ st.markdown("""
             font-size: 1rem;
         }
 
-        /* Stack columns vertically on mobile */
         .row-widget.stColumns {
             flex-direction: column !important;
         }
 
-        /* Full width inputs on mobile */
         .stTextInput > div > div > input {
             width: 100%;
-            font-size: 16px !important; /* Prevents zoom on iOS */
+            font-size: 16px !important;
         }
 
-        /* Smaller headings on mobile */
         h2, h3, h4 {
-            font-size: 1.3rem !important;
+            font-size: 1.4rem !important;
         }
 
-        /* Compact dataframe on mobile */
         .stDataFrame {
             font-size: 0.9rem;
         }
 
-        /* Better card spacing on mobile */
         .results-summary {
-            padding: 1rem;
+            padding: var(--spacing-lg);
             font-size: 0.95rem;
         }
 
-        /* Download buttons stack vertically */
         .stDownloadButton > button {
             width: 100%;
-            margin-bottom: 0.5rem;
+            margin-bottom: var(--spacing-sm);
         }
 
-        /* Reduce padding in example cards */
-        .main .stMarkdown div[style*="padding: 2rem"] {
-            padding: 1.5rem !important;
+        .card {
+            padding: var(--spacing-lg);
         }
     }
 
-    /* Extra small devices (phones in portrait) */
     @media (max-width: 480px) {
         h1 {
-            font-size: 1.75rem !important;
+            font-size: 1.875rem !important;
         }
 
         .subtitle {
@@ -487,22 +745,20 @@ st.markdown("""
         }
 
         .block-container {
-            padding-left: 0.75rem;
-            padding-right: 0.75rem;
+            padding-left: var(--spacing-sm);
+            padding-right: var(--spacing-sm);
         }
 
-        /* Even more compact on very small screens */
         .stButton > button,
         .stFormSubmitButton > button {
-            padding: 0.85rem 1rem;
+            padding: 0.9rem 1.25rem;
             font-size: 0.95rem;
         }
     }
 
-    /* Tablet and smaller laptops */
     @media (min-width: 769px) and (max-width: 1024px) {
         h1 {
-            font-size: 2.5rem !important;
+            font-size: 2.75rem !important;
         }
 
         .block-container {
@@ -511,59 +767,58 @@ st.markdown("""
     }
 
     /* ============================================
-       TAB STYLING - Make tabs highly visible
+       TAB STYLING - Modern gradient tabs
        ============================================ */
 
-    /* Tab container */
     .stTabs {
         background: white;
-        border-radius: 12px;
-        padding: 0.5rem;
-        border: 1px solid #e0e0e0;
+        border-radius: var(--radius-xl);
+        padding: var(--spacing-sm);
+        border: 1px solid var(--gray-200);
+        box-shadow: var(--shadow-md);
     }
 
-    /* Tab buttons */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-        background: #f5f5f5;
-        padding: 8px;
-        border-radius: 10px;
+        gap: var(--spacing-xs);
+        background: var(--gray-50);
+        padding: var(--spacing-xs);
+        border-radius: var(--radius-lg);
     }
 
     .stTabs [data-baseweb="tab"] {
         background: white;
-        border: 2px solid #e0e0e0;
-        border-radius: 8px;
-        padding: 12px 24px;
+        border: 2px solid var(--gray-200);
+        border-radius: var(--radius-md);
+        padding: 0.875rem 1.75rem;
         font-weight: 600;
-        color: #1a1a1a;
+        color: var(--gray-700);
         font-size: 1rem;
-        transition: all 0.2s ease;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: var(--shadow-sm);
     }
 
-    /* Hover state */
     .stTabs [data-baseweb="tab"]:hover {
-        background: #fafafa;
-        border-color: #999999;
-        transform: translateY(-1px);
+        background: var(--primary-50);
+        border-color: var(--primary-300);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+        color: var(--primary-700);
     }
 
-    /* Active tab - very visible */
     .stTabs [aria-selected="true"] {
-        background: #1a1a1a !important;
+        background: linear-gradient(135deg, var(--primary-600) 0%, var(--secondary-500) 100%) !important;
         color: white !important;
-        border-color: #1a1a1a !important;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        border-color: transparent !important;
+        box-shadow: var(--shadow-lg), var(--glow-primary) !important;
+        transform: translateY(-2px);
     }
 
-    /* Tab panel content */
     .stTabs [data-baseweb="tab-panel"] {
-        padding: 1.5rem 0.5rem;
+        padding: var(--spacing-xl) var(--spacing-sm);
     }
 
-    /* Make tab text more visible */
     .stTabs button[role="tab"] {
-        color: #1a1a1a !important;
+        color: var(--gray-700) !important;
         font-weight: 600 !important;
     }
 
@@ -1730,63 +1985,246 @@ def main():
 
     # Main content area
     if 'contacts_df' not in st.session_state:
-        # Empty state with examples
+        # Modern empty state with glassmorphism
         st.markdown("""
-        <h2 style='color: #718096; font-weight: 400; margin: 0; padding: 0;'>👈 Upload your LinkedIn contacts to get started</h2>
-        """, unsafe_allow_html=True)
-
-        # LinkedIn Download Instructions
-        st.markdown("### 📥 How to Get Your LinkedIn Data")
-        st.markdown("""
-        <div style='background: #f0f9ff; padding: 1.5rem; border-radius: 12px; border: 1px solid #7dd3fc; margin-bottom: 2rem;'>
-            <div style='color: #1a1a1a; font-weight: 600; font-size: 1.1rem; margin-bottom: 1rem;'>
-                Follow these simple steps:
-            </div>
-            <div style='color: #333; line-height: 1.8;'>
-                <strong>1.</strong> Go to <a href='https://www.linkedin.com/mypreferences/d/download-my-data' target='_blank' style='color: #0066cc;'>LinkedIn Data Download</a><br>
-                <strong>2.</strong> Click <strong>"Request archive"</strong> (the big button at the top)<br>
-                <strong>3.</strong> LinkedIn will email you in <strong>10-15 minutes</strong> when your data is ready<br>
-                <strong>4.</strong> Download the <strong>ZIP file</strong> from the email<br>
-                <strong>5.</strong> Extract/unzip it and find the <strong>Connections.csv</strong> file<br>
-                <strong>6.</strong> Upload that file here using the sidebar 👈
-            </div>
-            <div style='margin-top: 1rem; padding: 0.75rem; background: white; border-radius: 8px; color: #666; font-size: 0.9rem;'>
-                💡 <strong>Tip:</strong> The CSV file should have columns like "First Name", "Last Name", "Company", "Position"
+        <div style='text-align: center; padding: 3rem 2rem; margin: 2rem 0;
+                    background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+                    border-radius: var(--radius-2xl);
+                    border: 2px dashed var(--primary-300);'>
+            <div style='font-size: 4rem; margin-bottom: 1rem;'>🚀</div>
+            <h2 style='background: linear-gradient(135deg, var(--primary-600) 0%, var(--secondary-500) 100%);
+                       -webkit-background-clip: text;
+                       -webkit-text-fill-color: transparent;
+                       background-clip: text;
+                       font-size: 2rem;
+                       font-weight: 700;
+                       margin-bottom: 0.75rem;'>
+                Get Started with Your Network
+            </h2>
+            <p style='color: var(--gray-600); font-size: 1.15rem; max-width: 600px; margin: 0 auto 1.5rem;'>
+                Upload your LinkedIn connections to unlock powerful AI-powered search and insights
+            </p>
+            <div style='display: inline-block; padding: 0.75rem 2rem;
+                        background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
+                        color: white; border-radius: var(--radius-xl);
+                        font-weight: 600; box-shadow: var(--shadow-lg), var(--glow-primary);'>
+                👈 Upload your contacts in the sidebar to begin
             </div>
         </div>
         """, unsafe_allow_html=True)
 
-        # Example queries in premium cards
+        # LinkedIn Download Instructions - Modern card
+        st.markdown("### 📥 How to Get Your LinkedIn Data")
+        st.markdown("""
+        <div class='card' style='
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(255, 255, 255, 1) 100%);
+            padding: var(--spacing-xl);
+            border-radius: var(--radius-2xl);
+            border: 2px solid var(--primary-200);
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-lg);'>
+
+            <div style='display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;'>
+                <div style='width: 48px; height: 48px; border-radius: 50%;
+                            background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
+                            display: flex; align-items: center; justify-content: center;
+                            font-size: 1.5rem; box-shadow: var(--shadow-md), var(--glow-primary);'>
+                    📥
+                </div>
+                <div style='font-size: 1.3rem; font-weight: 700; color: var(--gray-900);'>
+                    Simple 6-Step Process
+                </div>
+            </div>
+
+            <div style='display: grid; gap: 1rem;'>
+                <div style='display: flex; gap: 1rem; align-items: start;'>
+                    <div style='flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%;
+                                background: linear-gradient(135deg, var(--primary-500) 0%, var(--secondary-500) 100%);
+                                display: flex; align-items: center; justify-content: center;
+                                color: white; font-weight: 700; font-size: 0.9rem;
+                                box-shadow: var(--shadow-sm);'>
+                        1
+                    </div>
+                    <div style='flex: 1; padding-top: 0.25rem;'>
+                        Go to <a href='https://www.linkedin.com/mypreferences/d/download-my-data' target='_blank'
+                                style='color: var(--primary-600); font-weight: 600; text-decoration: none;
+                                       border-bottom: 2px solid var(--primary-300);'>
+                            LinkedIn Data Download
+                        </a>
+                    </div>
+                </div>
+
+                <div style='display: flex; gap: 1rem; align-items: start;'>
+                    <div style='flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%;
+                                background: linear-gradient(135deg, var(--primary-500) 0%, var(--secondary-500) 100%);
+                                display: flex; align-items: center; justify-content: center;
+                                color: white; font-weight: 700; font-size: 0.9rem;
+                                box-shadow: var(--shadow-sm);'>
+                        2
+                    </div>
+                    <div style='flex: 1; padding-top: 0.25rem; color: var(--gray-700);'>
+                        Click <strong style='color: var(--gray-900);'>"Request archive"</strong> (the big button at the top)
+                    </div>
+                </div>
+
+                <div style='display: flex; gap: 1rem; align-items: start;'>
+                    <div style='flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%;
+                                background: linear-gradient(135deg, var(--primary-500) 0%, var(--secondary-500) 100%);
+                                display: flex; align-items: center; justify-content: center;
+                                color: white; font-weight: 700; font-size: 0.9rem;
+                                box-shadow: var(--shadow-sm);'>
+                        3
+                    </div>
+                    <div style='flex: 1; padding-top: 0.25rem; color: var(--gray-700);'>
+                        LinkedIn will email you in <strong style='color: var(--gray-900);'>10-15 minutes</strong> when your data is ready
+                    </div>
+                </div>
+
+                <div style='display: flex; gap: 1rem; align-items: start;'>
+                    <div style='flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%;
+                                background: linear-gradient(135deg, var(--primary-500) 0%, var(--secondary-500) 100%);
+                                display: flex; align-items: center; justify-content: center;
+                                color: white; font-weight: 700; font-size: 0.9rem;
+                                box-shadow: var(--shadow-sm);'>
+                        4
+                    </div>
+                    <div style='flex: 1; padding-top: 0.25rem; color: var(--gray-700);'>
+                        Download the <strong style='color: var(--gray-900);'>ZIP file</strong> from the email
+                    </div>
+                </div>
+
+                <div style='display: flex; gap: 1rem; align-items: start;'>
+                    <div style='flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%;
+                                background: linear-gradient(135deg, var(--primary-500) 0%, var(--secondary-500) 100%);
+                                display: flex; align-items: center; justify-content: center;
+                                color: white; font-weight: 700; font-size: 0.9rem;
+                                box-shadow: var(--shadow-sm);'>
+                        5
+                    </div>
+                    <div style='flex: 1; padding-top: 0.25rem; color: var(--gray-700);'>
+                        Extract/unzip it and find the <strong style='color: var(--gray-900);'>Connections.csv</strong> file
+                    </div>
+                </div>
+
+                <div style='display: flex; gap: 1rem; align-items: start;'>
+                    <div style='flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%;
+                                background: linear-gradient(135deg, var(--success-500) 0%, var(--success-600) 100%);
+                                display: flex; align-items: center; justify-content: center;
+                                color: white; font-weight: 700; font-size: 0.9rem;
+                                box-shadow: var(--shadow-sm), var(--glow-success);'>
+                        6
+                    </div>
+                    <div style='flex: 1; padding-top: 0.25rem; color: var(--gray-700);'>
+                        Upload that file here using the sidebar 👈
+                    </div>
+                </div>
+            </div>
+
+            <div style='margin-top: 1.5rem; padding: 1rem;
+                        background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+                        border-radius: var(--radius-lg); border-left: 4px solid var(--primary-500);'>
+                <div style='display: flex; align-items: center; gap: 0.5rem;'>
+                    <span style='font-size: 1.25rem;'>💡</span>
+                    <span style='color: var(--gray-700); font-weight: 500;'>
+                        <strong style='color: var(--gray-900);'>Tip:</strong>
+                        The CSV file should have columns like "First Name", "Last Name", "Company", "Position"
+                    </span>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Example queries in modern gradient cards
         st.markdown("### ✨ What You Can Ask")
         col1, col2, col3 = st.columns(3)
 
         with col1:
             st.markdown("""
-            <div style='background: white; padding: 2rem; border-radius: 12px; height: 100%;
-                        border: 1px solid #e0e0e0; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);'>
-                <h4 style='margin-bottom: 1rem; color: #1a1a1a;'>🏢 By Industry</h4>
-                <p style='color: #666666; margin-bottom: 0.5rem;'>"Who works in venture capital?"</p>
-                <p style='color: #666666;'>"Show me people in tech companies"</p>
+            <div class='card' style='
+                background: white;
+                padding: var(--spacing-xl);
+                border-radius: var(--radius-xl);
+                border: 2px solid var(--gray-200);
+                box-shadow: var(--shadow-md);
+                height: 100%;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                position: relative;
+                overflow: hidden;'>
+
+                <div style='position: absolute; top: 0; left: 0; right: 0; height: 4px;
+                            background: linear-gradient(90deg, var(--primary-500) 0%, var(--secondary-500) 100%);'>
+                </div>
+
+                <div style='font-size: 2.5rem; margin-bottom: 1rem;'>🏢</div>
+                <h4 style='margin-bottom: 1rem; color: var(--gray-900); font-weight: 700; font-size: 1.15rem;'>
+                    By Industry
+                </h4>
+                <p style='color: var(--gray-600); margin-bottom: 0.5rem; font-size: 0.95rem; line-height: 1.5;'>
+                    "Who works in venture capital?"
+                </p>
+                <p style='color: var(--gray-600); font-size: 0.95rem; line-height: 1.5;'>
+                    "Show me people in tech companies"
+                </p>
             </div>
             """, unsafe_allow_html=True)
 
         with col2:
             st.markdown("""
-            <div style='background: white; padding: 2rem; border-radius: 12px; height: 100%;
-                        border: 1px solid #e0e0e0; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);'>
-                <h4 style='margin-bottom: 1rem; color: #1a1a1a;'>👔 By Role</h4>
-                <p style='color: #666666; margin-bottom: 0.5rem;'>"Who is an engineer?"</p>
-                <p style='color: #666666;'>"Show me product managers"</p>
+            <div class='card' style='
+                background: white;
+                padding: var(--spacing-xl);
+                border-radius: var(--radius-xl);
+                border: 2px solid var(--gray-200);
+                box-shadow: var(--shadow-md);
+                height: 100%;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                position: relative;
+                overflow: hidden;'>
+
+                <div style='position: absolute; top: 0; left: 0; right: 0; height: 4px;
+                            background: linear-gradient(90deg, var(--secondary-500) 0%, var(--accent-500) 100%);'>
+                </div>
+
+                <div style='font-size: 2.5rem; margin-bottom: 1rem;'>👔</div>
+                <h4 style='margin-bottom: 1rem; color: var(--gray-900); font-weight: 700; font-size: 1.15rem;'>
+                    By Role
+                </h4>
+                <p style='color: var(--gray-600); margin-bottom: 0.5rem; font-size: 0.95rem; line-height: 1.5;'>
+                    "Who is an engineer?"
+                </p>
+                <p style='color: var(--gray-600); font-size: 0.95rem; line-height: 1.5;'>
+                    "Show me product managers"
+                </p>
             </div>
             """, unsafe_allow_html=True)
 
         with col3:
             st.markdown("""
-            <div style='background: white; padding: 2rem; border-radius: 12px; height: 100%;
-                        border: 1px solid #e0e0e0; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);'>
-                <h4 style='margin-bottom: 1rem; color: #1a1a1a;'>⭐ By Seniority</h4>
-                <p style='color: #666666; margin-bottom: 0.5rem;'>"Who is the most senior person?"</p>
-                <p style='color: #666666;'>"Show me top 5 leaders"</p>
+            <div class='card' style='
+                background: white;
+                padding: var(--spacing-xl);
+                border-radius: var(--radius-xl);
+                border: 2px solid var(--gray-200);
+                box-shadow: var(--shadow-md);
+                height: 100%;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                position: relative;
+                overflow: hidden;'>
+
+                <div style='position: absolute; top: 0; left: 0; right: 0; height: 4px;
+                            background: linear-gradient(90deg, var(--accent-500) 0%, var(--primary-500) 100%);'>
+                </div>
+
+                <div style='font-size: 2.5rem; margin-bottom: 1rem;'>⭐</div>
+                <h4 style='margin-bottom: 1rem; color: var(--gray-900); font-weight: 700; font-size: 1.15rem;'>
+                    By Seniority
+                </h4>
+                <p style='color: var(--gray-600); margin-bottom: 0.5rem; font-size: 0.95rem; line-height: 1.5;'>
+                    "Who is the most senior person?"
+                </p>
+                <p style='color: var(--gray-600); font-size: 0.95rem; line-height: 1.5;'>
+                    "Show me top 5 leaders"
+                </p>
             </div>
             """, unsafe_allow_html=True)
 
@@ -2062,19 +2500,85 @@ def main():
                         company = row.get('company', 'No Company')
                         email = row.get('email', '')
 
+                        # Modern contact card with gradient border and hover effects
                         st.markdown(f"""
-                        <div style='background: white; padding: 1rem; border-radius: 10px;
-                                    border: 1px solid #e0e0e0; margin-bottom: 0.5rem;'>
-                            <div style='font-weight: 600; font-size: 1.05rem; color: #1a1a1a; margin-bottom: 0.3rem;'>
-                                {name}
+                        <div class='contact-card' style='
+                            background: white;
+                            padding: 1.25rem;
+                            border-radius: var(--radius-xl);
+                            border: 2px solid var(--gray-200);
+                            margin-bottom: 0.75rem;
+                            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                            box-shadow: var(--shadow-sm);
+                            position: relative;
+                            overflow: hidden;
+                        '>
+                            <div style='position: absolute; top: 0; left: 0; right: 0; height: 4px;
+                                        background: linear-gradient(90deg, var(--primary-500) 0%, var(--secondary-500) 50%, var(--accent-500) 100%);
+                                        opacity: 0;
+                                        transition: opacity 0.3s ease;'
+                                 class='card-gradient-bar'>
                             </div>
-                            <div style='color: #666666; font-size: 0.95rem; margin-bottom: 0.2rem;'>
-                                {job_position}
-                            </div>
-                            <div style='color: #999999; font-size: 0.9rem;'>
-                                {company} {('• ' + email) if email else ''}
+
+                            <div style='display: flex; align-items: flex-start; gap: 1rem;'>
+                                <div style='flex-shrink: 0;
+                                            width: 48px;
+                                            height: 48px;
+                                            border-radius: 50%;
+                                            background: linear-gradient(135deg, var(--primary-500) 0%, var(--secondary-500) 100%);
+                                            display: flex;
+                                            align-items: center;
+                                            justify-content: center;
+                                            color: white;
+                                            font-weight: 700;
+                                            font-size: 1.25rem;
+                                            box-shadow: var(--shadow-md);'>
+                                    {name[0].upper() if name and name != 'No Name' else '?'}
+                                </div>
+
+                                <div style='flex: 1; min-width: 0;'>
+                                    <div style='font-weight: 700;
+                                                font-size: 1.1rem;
+                                                color: var(--gray-900);
+                                                margin-bottom: 0.35rem;
+                                                line-height: 1.3;'>
+                                        {name}
+                                    </div>
+                                    <div style='color: var(--gray-600);
+                                                font-size: 0.95rem;
+                                                font-weight: 500;
+                                                margin-bottom: 0.35rem;
+                                                line-height: 1.4;'>
+                                        {job_position}
+                                    </div>
+                                    <div style='display: flex;
+                                                align-items: center;
+                                                gap: 0.5rem;
+                                                flex-wrap: wrap;'>
+                                        <span style='color: var(--gray-500);
+                                                     font-size: 0.9rem;
+                                                     display: inline-flex;
+                                                     align-items: center;
+                                                     gap: 0.25rem;'>
+                                            🏢 {company}
+                                        </span>
+                                        {f'<span style="color: var(--gray-400);">•</span><span style="color: var(--primary-600); font-size: 0.85rem; font-weight: 500;">✉️ {email}</span>' if email else ''}
+                                    </div>
+                                </div>
                             </div>
                         </div>
+
+                        <style>
+                        .contact-card:hover {{
+                            transform: translateY(-3px) translateX(4px);
+                            box-shadow: var(--shadow-xl);
+                            border-color: var(--primary-300);
+                        }}
+
+                        .contact-card:hover .card-gradient-bar {{
+                            opacity: 1;
+                        }}
+                        </style>
                         """, unsafe_allow_html=True)
 
                 # Pagination controls
