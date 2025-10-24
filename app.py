@@ -20,6 +20,9 @@ import auth
 
 # Import collaboration module
 import collaboration
+
+# Import security module
+import security
 # Initialize OpenAI client - works both locally and on Streamlit Cloud
 def get_openai_api_key():
     """Get OpenAI API key from Streamlit secrets or environment variable"""
@@ -1122,9 +1125,35 @@ def show_login_page():
                 else:
                     with st.spinner("Logging in..."):
                         try:
+                            # Check rate limit
+                            rate_limit = security.check_login_rate_limit(email)
+                            if not rate_limit['allowed']:
+                                st.error(rate_limit['message'])
+                                return
+
                             result = auth.login_user(email, password)
 
+                            # Log login attempt
+                            security.log_login_attempt(email, result['success'])
+
                             if result['success']:
+                                # Check if email is verified
+                                supabase = auth.get_supabase_client()
+                                user_data = supabase.table('users').select('email_verified').eq('id', result['user']['id']).execute()
+
+                                if user_data.data and not user_data.data[0].get('email_verified', False):
+                                    st.warning("⚠️ Please verify your email to continue. Check your inbox for the verification link.")
+
+                                    # Show resend verification button
+                                    if st.button("📧 Resend Verification Email"):
+                                        security.send_verification_email(
+                                            result['user']['id'],
+                                            result['user']['email'],
+                                            result['user']['full_name']
+                                        )
+                                        st.info("✅ Verification email sent!")
+                                    return
+
                                 # Store user info in session
                                 st.session_state['authenticated'] = True
                                 st.session_state['user'] = result['user']
@@ -1138,11 +1167,22 @@ def show_login_page():
                                 st.rerun()
                             else:
                                 st.error(result['message'])
+                                if rate_limit.get('remaining_attempts'):
+                                    st.caption(f"Remaining attempts: {rate_limit['remaining_attempts']}")
                         except Exception as e:
                             st.error(f"❌ Login failed: {str(e)}")
                             with st.expander("Technical Details"):
                                 st.code(str(e))
                                 st.caption("If this error persists, please contact support.")
+
+        # Forgot password link
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("🔑 Forgot Password?", use_container_width=True, type="secondary"):
+                st.session_state['show_forgot_password'] = True
+                st.rerun()
+        with col2:
+            pass  # Empty column for spacing
 
         st.markdown("---")
         st.markdown("<p style='text-align: center;'>Don't have an account?</p>", unsafe_allow_html=True)
@@ -1150,6 +1190,86 @@ def show_login_page():
         if st.button("📝 Create New Account", use_container_width=True):
             st.session_state['show_register'] = True
             st.rerun()
+
+def show_forgot_password_page():
+    """Display forgot password page"""
+    st.markdown("<h1 style='text-align: center; margin-top: 2rem;'>🔑 Reset Your Password</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #666; margin-bottom: 3rem;'>Enter your email to receive a password reset link</p>", unsafe_allow_html=True)
+
+    col1, col2, col3 = st.columns([1, 2, 1])
+
+    with col2:
+        with st.form("forgot_password_form"):
+            st.markdown("### Password Reset")
+            email = st.text_input("Email Address", placeholder="your@email.com")
+
+            submit = st.form_submit_button("📧 Send Reset Link", use_container_width=True)
+
+            if submit:
+                email = email.strip() if email else ""
+
+                if not email:
+                    st.error("Please enter your email address")
+                else:
+                    with st.spinner("Sending reset link..."):
+                        result = security.request_password_reset(email)
+                        st.success(result['message'])
+                        st.info("If the email exists in our system, you'll receive a reset link shortly. Please check your inbox (and spam folder).")
+
+        st.markdown("---")
+
+        if st.button("⬅️ Back to Login", use_container_width=True):
+            st.session_state['show_forgot_password'] = False
+            st.rerun()
+
+
+def show_password_reset_form(token):
+    """Display password reset form (when user clicks email link)"""
+    st.markdown("<h1 style='text-align: center; margin-top: 2rem;'>🔒 Set New Password</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #666; margin-bottom: 3rem;'>Create a strong new password</p>", unsafe_allow_html=True)
+
+    col1, col2, col3 = st.columns([1, 2, 1])
+
+    with col2:
+        with st.form("reset_password_form"):
+            st.markdown("### New Password")
+
+            new_password = st.text_input("New Password", type="password", placeholder="Enter new password")
+            confirm_password = st.text_input("Confirm Password", type="password", placeholder="Re-enter new password")
+
+            submit = st.form_submit_button("✅ Reset Password", use_container_width=True)
+
+            if submit:
+                new_password = new_password.strip() if new_password else ""
+                confirm_password = confirm_password.strip() if confirm_password else ""
+
+                if not new_password or not confirm_password:
+                    st.error("Please fill in all fields")
+                elif new_password != confirm_password:
+                    st.error("Passwords don't match")
+                elif len(new_password) < 6:
+                    st.error("Password must be at least 6 characters")
+                else:
+                    # Check password strength
+                    strength = security.check_password_strength(new_password)
+                    if not strength['strong']:
+                        st.warning(strength['message'])
+
+                    with st.spinner("Resetting password..."):
+                        result = security.reset_password_with_token(token, new_password)
+
+                        if result['success']:
+                            st.success(result['message'])
+                            st.info("You can now log in with your new password.")
+
+                            # Clear query params and go to login
+                            if st.button("Go to Login", type="primary"):
+                                st.session_state['show_register'] = False
+                                st.query_params.clear()
+                                st.rerun()
+                        else:
+                            st.error(result['message'])
+
 
 def show_register_page():
     """Display registration page"""
@@ -1186,17 +1306,35 @@ def show_register_page():
                 elif len(password) < 6:
                     st.error("Password must be at least 6 characters")
                 else:
+                    # Check password strength
+                    strength = security.check_password_strength(password)
+                    if not strength['strong']:
+                        st.error(strength['message'])
+                        return
+
                     with st.spinner("Creating your account..."):
                         try:
                             result = auth.register_user(email, password, full_name, organization)
 
                             if result['success']:
+                                user_id = result['user']['id']
+                                user_email = result['user']['email']
+                                user_name = result['user']['full_name']
+
+                                # Send verification email
+                                email_sent = security.send_verification_email(user_id, user_email, user_name)
+
                                 st.success(result['message'])
-                                st.info("✅ You can now log in with your credentials")
+
+                                if email_sent:
+                                    st.info("📧 Verification email sent! Please check your inbox and click the verification link to activate your account.")
+                                else:
+                                    st.warning("⚠️ Account created but verification email could not be sent. You can still log in, but some features may be limited.")
+
                                 st.session_state['show_register'] = False
                                 # Wait a moment then redirect to login
                                 import time
-                                time.sleep(2)
+                                time.sleep(3)
                                 st.rerun()
                             else:
                                 st.error(result['message'])
@@ -1215,16 +1353,52 @@ def show_register_page():
 
 # Main app
 def main():
+    # Handle URL parameters for password reset and email verification
+    query_params = st.query_params
+
+    # Handle email verification token
+    if 'verify_email' in query_params:
+        token = query_params['verify_email']
+        st.markdown("<h1 style='text-align: center; margin-top: 2rem;'>✅ Email Verification</h1>", unsafe_allow_html=True)
+
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            with st.spinner("Verifying your email..."):
+                result = security.verify_email_token(token)
+
+                if result['success']:
+                    st.success(result['message'])
+                    st.balloons()
+                    if st.button("🚀 Go to Login", type="primary", use_container_width=True):
+                        st.query_params.clear()
+                        st.rerun()
+                else:
+                    st.error(result['message'])
+                    if st.button("⬅️ Back to Home", use_container_width=True):
+                        st.query_params.clear()
+                        st.rerun()
+        return
+
+    # Handle password reset token
+    if 'reset_token' in query_params:
+        token = query_params['reset_token']
+        show_password_reset_form(token)
+        return
+
     # Initialize session state for authentication
     if 'authenticated' not in st.session_state:
         st.session_state['authenticated'] = False
     if 'show_register' not in st.session_state:
         st.session_state['show_register'] = False
+    if 'show_forgot_password' not in st.session_state:
+        st.session_state['show_forgot_password'] = False
 
     # Authentication guard - show login/register if not authenticated
     if not st.session_state['authenticated']:
         if st.session_state['show_register']:
             show_register_page()
+        elif st.session_state['show_forgot_password']:
+            show_forgot_password_page()
         else:
             show_login_page()
         return  # Stop here if not authenticated
