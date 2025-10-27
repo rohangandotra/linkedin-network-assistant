@@ -1784,16 +1784,15 @@ def main():
 
     # Main content area
     if 'contacts_df' not in st.session_state:
-        # Premium Upload Card - Flow Design
+        # Premium Upload Card - Flow Design with integrated uploader
+        st.markdown("<div style='max-width: 700px; margin: var(--space-8) auto;'>", unsafe_allow_html=True)
+
         st.markdown("""
-<div class='card' style='text-align: center; padding: var(--space-12) var(--space-8); margin: var(--space-8) auto var(--space-12) auto; max-width: 700px;'>
+<div class='card' style='text-align: center; padding: var(--space-8) var(--space-8) var(--space-4) var(--space-8);'>
 <h2 style='font-family: var(--font-serif); font-size: 2.25rem; font-weight: 600; color: var(--text-primary); margin-bottom: var(--space-3);'>Get Started</h2>
-<p style='color: var(--text-secondary); font-size: 1.125rem; margin-bottom: var(--space-8);'>Upload your LinkedIn CSV to begin searching your network</p>
+<p style='color: var(--text-secondary); font-size: 1.125rem; margin-bottom: var(--space-6);'>Upload your LinkedIn CSV to begin searching your network</p>
 </div>
 """, unsafe_allow_html=True)
-
-        # Upload section - Premium card
-        st.markdown("<div style='max-width: 700px; margin: 0 auto;'>", unsafe_allow_html=True)
 
         # Check if user already has contacts (only for logged-in users)
         user_has_contacts = False
@@ -1809,8 +1808,10 @@ def main():
             "Upload LinkedIn CSV",
             type=['csv'],
             help="Download your LinkedIn connections and upload the Connections.csv file",
-            label_visibility="visible"
+            label_visibility="collapsed"
         )
+
+        st.markdown("</div>", unsafe_allow_html=True)  # Close card container
 
         if uploaded_file:
             with st.spinner("Parsing contacts..."):
@@ -1883,12 +1884,10 @@ def main():
                         session_id=st.session_state['session_id']
                     )
 
-        st.markdown("</div>", unsafe_allow_html=True)
-
         # Privacy reassurance
         st.markdown("""
 <div style='max-width: 700px; margin: var(--space-6) auto; padding: var(--space-4); background: var(--bg-tertiary); border-radius: var(--radius-md); text-align: center;'>
-<p style='font-size: 0.875rem; color: var(--text-secondary); margin: 0;'>🔒 Your data is private and secure. We never share or sell your information.</p>
+<p style='font-size: 0.875rem; color: var(--text-secondary); margin: 0;'>Your data is private and secure. We never share or sell your information.</p>
 </div>
 """, unsafe_allow_html=True)
 
