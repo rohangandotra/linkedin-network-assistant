@@ -1663,39 +1663,57 @@ def main():
     if 'show_forgot_password' not in st.session_state:
         st.session_state['show_forgot_password'] = False
 
-    # Authentication guard - show login/register if not authenticated
-    if not st.session_state['authenticated']:
-        if st.session_state['show_register']:
-            show_register_page()
-        elif st.session_state['show_forgot_password']:
-            show_forgot_password_page()
-        else:
-            show_login_page()
-        return  # Stop here if not authenticated
-
     # Phase 3B: Migrate existing users to new search (one-time index build)
-    if HAS_NEW_SEARCH:
+    if st.session_state.get('authenticated') and HAS_NEW_SEARCH:
         migrate_to_new_search()
 
-    # Sidebar - Restructured Layout
+    # Sidebar - Adaptive for logged-in and anonymous users
     with st.sidebar:
-        # === TOP SECTION: User Info ===
-        st.markdown("### 👤 Account")
-        st.markdown(f"**{st.session_state['user']['full_name']}**")
-        st.markdown(f"*{st.session_state['user']['email']}*")
+        if st.session_state.get('authenticated'):
+            # === LOGGED IN: User Info ===
+            st.markdown("### 👤 Account")
+            st.markdown(f"**{st.session_state['user']['full_name']}**")
+            st.markdown(f"*{st.session_state['user']['email']}*")
 
-        # Show contact count
-        contact_count = auth.get_contact_count(st.session_state['user']['id'])
-        if contact_count > 0:
-            st.markdown(f"**📇 {contact_count:,} contacts**")
-        else:
-            st.markdown("**📇 No contacts yet**")
+            # Show contact count
+            contact_count = auth.get_contact_count(st.session_state['user']['id'])
+            if contact_count > 0:
+                st.markdown(f"**📇 {contact_count:,} contacts**")
+            else:
+                st.markdown("**📇 No contacts yet**")
 
-        # Show search system status
-        if HAS_NEW_SEARCH:
-            st.markdown("**⚡ Fast Search:** Enabled")
+            # Show search system status
+            if HAS_NEW_SEARCH:
+                st.markdown("**⚡ Fast Search:** Enabled")
+            else:
+                st.markdown("**🔍 Search:** Standard")
         else:
-            st.markdown("**🔍 Search:** Standard")
+            # === ANONYMOUS: Login/Signup CTA ===
+            st.markdown("### 🎯 Try it free!")
+            st.markdown("Upload your LinkedIn contacts and start searching - no signup required.")
+
+            st.markdown("---")
+
+            st.markdown("### 💾 Save Your Data")
+            st.markdown("Create a free account to:")
+            st.markdown("✅ Save contacts permanently")
+            st.markdown("✅ Access from anywhere")
+            st.markdown("✅ Collaborate with team")
+
+            if st.button("🚀 Sign Up Free", key="sidebar_signup", use_container_width=True):
+                st.session_state['show_register'] = True
+                st.rerun()
+
+            if st.button("🔑 Log In", key="sidebar_login", use_container_width=True):
+                st.session_state['show_register'] = False
+                st.session_state['show_forgot_password'] = False
+                st.rerun()
+
+            # Show session contact count for anonymous users
+            if 'contacts_df' in st.session_state:
+                st.markdown("---")
+                st.markdown(f"**📇 {len(st.session_state['contacts_df']):,} contacts**")
+                st.caption("⚠️ Session only - sign up to save")
 
         # Hide auto-generated page navigation from top for everyone
         st.markdown("""
@@ -1836,8 +1854,10 @@ def main():
         st.markdown("### 📤 Upload Contacts")
         st.markdown("Export your LinkedIn contacts as CSV and upload here.")
 
-        # Check if user already has contacts
-        user_has_contacts = auth.get_contact_count(st.session_state['user']['id']) > 0
+        # Check if user already has contacts (only for logged-in users)
+        user_has_contacts = False
+        if st.session_state.get('authenticated'):
+            user_has_contacts = auth.get_contact_count(st.session_state['user']['id']) > 0
 
         # Show replace option if user has contacts
         replace_contacts = False
@@ -1858,32 +1878,39 @@ def main():
                 df = parse_linkedin_csv(uploaded_file)
                 if df is not None:
                     st.session_state['contacts_df'] = df
-                    user_id = st.session_state['user']['id']
 
-                    # Check if we need to replace contacts
-                    if user_has_contacts:
-                        if not replace_contacts:
-                            st.warning(f"⚠️ You already have contacts saved. Check 'Replace existing contacts' to upload new ones.")
-                            st.info(f"✅ Loaded {len(df)} contacts to current session (not saved to database)")
-                        else:
-                            # Delete old contacts first
-                            with st.spinner("Deleting old contacts..."):
-                                if auth.delete_user_contacts(user_id):
-                                    # Save new contacts
-                                    save_result = auth.save_contacts_to_db(user_id, df)
-                                    if save_result['success']:
-                                        st.success(f"✅ Replaced with {len(df)} new contacts!")
+                    if st.session_state.get('authenticated'):
+                        # LOGGED IN: Save to database
+                        user_id = st.session_state['user']['id']
+
+                        # Check if we need to replace contacts
+                        if user_has_contacts:
+                            if not replace_contacts:
+                                st.warning(f"⚠️ You already have contacts saved. Check 'Replace existing contacts' to upload new ones.")
+                                st.info(f"✅ Loaded {len(df)} contacts to current session (not saved to database)")
+                            else:
+                                # Delete old contacts first
+                                with st.spinner("Deleting old contacts..."):
+                                    if auth.delete_user_contacts(user_id):
+                                        # Save new contacts
+                                        save_result = auth.save_contacts_to_db(user_id, df)
+                                        if save_result['success']:
+                                            st.success(f"✅ Replaced with {len(df)} new contacts!")
+                                        else:
+                                            st.error(f"❌ Error saving: {save_result['message']}")
                                     else:
-                                        st.error(f"❌ Error saving: {save_result['message']}")
-                                else:
-                                    st.error("❌ Error deleting old contacts")
-                    else:
-                        # No existing contacts, just save
-                        save_result = auth.save_contacts_to_db(user_id, df)
-                        if save_result['success']:
-                            st.success(f"✅ Loaded and saved {len(df)} contacts to your account!")
+                                        st.error("❌ Error deleting old contacts")
                         else:
-                            st.warning(f"✅ Loaded {len(df)} contacts (saved to session only - DB error: {save_result['message']})")
+                            # No existing contacts, just save
+                            save_result = auth.save_contacts_to_db(user_id, df)
+                            if save_result['success']:
+                                st.success(f"✅ Loaded and saved {len(df)} contacts to your account!")
+                            else:
+                                st.warning(f"✅ Loaded {len(df)} contacts (saved to session only - DB error: {save_result['message']})")
+                    else:
+                        # ANONYMOUS: Session only with upgrade prompt
+                        st.success(f"✅ Loaded {len(df)} contacts!")
+                        st.info("💡 **Sign up free** to save your contacts permanently!")
 
                     # Log CSV upload
                     analytics.log_csv_upload(
@@ -1918,24 +1945,25 @@ def main():
 
         st.markdown("---")
 
-        # === BOTTOM SECTION: Logout Button ===
-        st.markdown("### 🚪 Account Actions")
-        if st.button("🚪 Logout", use_container_width=True, type="primary", key="logout_button"):
-            # Clear session
-            st.session_state['authenticated'] = False
-            st.session_state['user'] = None
-            if 'contacts_df' in st.session_state:
-                del st.session_state['contacts_df']
-            st.success("Logged out successfully!")
-            st.rerun()
+        # === BOTTOM SECTION: Account Actions (for logged-in users only) ===
+        if st.session_state.get('authenticated'):
+            st.markdown("### 🚪 Account Actions")
+            if st.button("🚪 Logout", use_container_width=True, type="primary", key="logout_button"):
+                # Clear session
+                st.session_state['authenticated'] = False
+                st.session_state['user'] = None
+                if 'contacts_df' in st.session_state:
+                    del st.session_state['contacts_df']
+                st.success("Logged out successfully!")
+                st.rerun()
 
-        # Admin-only page navigation at bottom
-        admin_email = "rohan.gandotra19@gmail.com"
-        if st.session_state['user']['email'] == admin_email:
-            st.markdown("---")
-            st.markdown("### 📊 Pages")
-            st.page_link("app.py", label="🏠 Home", icon="🏠")
-            st.page_link("pages/Analytics.py", label="📈 Analytics", icon="📈")
+            # Admin-only page navigation at bottom
+            admin_email = "rohan.gandotra19@gmail.com"
+            if st.session_state['user']['email'] == admin_email:
+                st.markdown("---")
+                st.markdown("### 📊 Pages")
+                st.page_link("app.py", label="🏠 Home", icon="🏠")
+                st.page_link("pages/Analytics.py", label="📈 Analytics", icon="📈")
 
         # Diagnostic section (collapsed by default)
         st.markdown("---")
@@ -1986,8 +2014,17 @@ def main():
                     del st.session_state['diagnostic_results']
                     st.rerun()
 
-    # Get user_id for use throughout the app
-    user_id = st.session_state['user']['id']
+    # Show login/register modal for anonymous users if requested
+    if not st.session_state.get('authenticated'):
+        if st.session_state.get('show_register'):
+            show_register_page()
+            return
+        elif st.session_state.get('show_forgot_password'):
+            show_forgot_password_page()
+            return
+
+    # Get user_id for logged-in users
+    user_id = st.session_state.get('user', {}).get('id', 'anonymous')
 
     # Main content area
     if 'contacts_df' not in st.session_state:
