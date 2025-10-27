@@ -1608,66 +1608,6 @@ def main():
     if st.session_state.get('authenticated') and HAS_NEW_SEARCH:
         migrate_to_new_search()
 
-    # Sidebar - Adaptive for logged-in and anonymous users
-    with st.sidebar:
-        if st.session_state.get('authenticated'):
-            # === LOGGED IN: User Info ===
-            st.markdown("### 👤 Account")
-            st.markdown(f"**{st.session_state['user']['full_name']}**")
-            st.markdown(f"*{st.session_state['user']['email']}*")
-
-            # Show contact count
-            contact_count = auth.get_contact_count(st.session_state['user']['id'])
-            if contact_count > 0:
-                st.markdown(f"**📇 {contact_count:,} contacts**")
-            else:
-                st.markdown("**📇 No contacts yet**")
-
-            # Show search system status
-            if HAS_NEW_SEARCH:
-                st.markdown("**⚡ Fast Search:** Enabled")
-            else:
-                st.markdown("**🔍 Search:** Standard")
-        else:
-            # === ANONYMOUS: Login/Signup CTA ===
-            st.markdown("### 🎯 Try it free!")
-            st.markdown("Upload your LinkedIn contacts and start searching - no signup required.")
-
-            st.markdown("---")
-
-            st.markdown("### 💾 Save Your Data")
-            st.markdown("Create a free account to:")
-            st.markdown("✅ Save contacts permanently")
-            st.markdown("✅ Access from anywhere")
-            st.markdown("✅ Collaborate with team")
-
-            if st.button("🚀 Sign Up Free", key="sidebar_signup", use_container_width=True):
-                st.session_state['show_register'] = True
-                st.rerun()
-
-            if st.button("🔑 Log In", key="sidebar_login", use_container_width=True):
-                st.session_state['show_register'] = False
-                st.session_state['show_forgot_password'] = False
-                st.rerun()
-
-            # Show session contact count for anonymous users
-            if 'contacts_df' in st.session_state:
-                st.markdown("---")
-                st.markdown(f"**📇 {len(st.session_state['contacts_df']):,} contacts**")
-                st.caption("⚠️ Session only - sign up to save")
-
-        # Hide auto-generated page navigation from top for everyone
-        st.markdown("""
-        <style>
-            /* Hide the auto-generated page navigation at top */
-            section[data-testid="stSidebarNav"] {
-                display: none !important;
-            }
-        </style>
-        """, unsafe_allow_html=True)
-
-        st.markdown("---")
-
 
     # Apply dark mode CSS if enabled
     if st.session_state.get('dark_mode', False):
@@ -1806,8 +1746,8 @@ def main():
             if st.session_state['user']['email'] == admin_email:
                 st.markdown("---")
                 st.markdown("<p style='font-size: 0.875rem; font-weight: 600; color: var(--text-primary); margin-bottom: var(--space-3);'>Admin</p>", unsafe_allow_html=True)
-                st.page_link("app.py", label="🏠 Home", icon="🏠")
-                st.page_link("pages/Analytics.py", label="📈 Analytics", icon="📈")
+                st.page_link("app.py", label="Home")
+                st.page_link("pages/Analytics.py", label="Analytics")
         else:
             # Anonymous user sidebar - Login/Signup CTAs
             st.markdown("<p style='font-size: 1.125rem; font-weight: 600; color: var(--text-primary); margin-bottom: var(--space-3);'>Welcome!</p>", unsafe_allow_html=True)
@@ -1827,9 +1767,18 @@ def main():
                 st.markdown("---")
                 st.markdown(f"<div style='padding: var(--space-3); background: rgba(37, 99, 235, 0.05); border: 1px solid var(--primary); border-radius: var(--radius-md); margin-top: var(--space-4);'><p style='font-size: 0.875rem; color: var(--text-secondary); margin: 0;'>{len(st.session_state['contacts_df']):,} contacts (session only)</p><p style='font-size: 0.8125rem; color: var(--text-tertiary); margin: var(--space-1) 0 0 0;'>Sign up to save permanently</p></div>", unsafe_allow_html=True)
 
+        # Hide auto-generated page navigation
+        st.markdown("""
+        <style>
+            section[data-testid="stSidebarNav"] {
+                display: none !important;
+            }
+        </style>
+        """, unsafe_allow_html=True)
+
         # Diagnostic section (collapsed by default)
         st.markdown("---")
-        with st.expander("🔧 Diagnostics", expanded=False):
+        with st.expander("Diagnostics", expanded=False):
             if st.button("Run API Connection Test", key="diagnostic_button"):
                 with st.spinner("Running diagnostic tests..."):
                     diagnostic_results = run_diagnostic_test()
