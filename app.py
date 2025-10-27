@@ -179,497 +179,413 @@ st.set_page_config(
     initial_sidebar_state="auto"  # Auto-expand on desktop, collapsed on mobile
 )
 
-# Modern shadcn-inspired CSS styling with gradients and glassmorphism
+# Flow-inspired refined CSS styling - clean, minimal, professional
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Crimson+Pro:wght@400;600;700&display=swap');
 
     :root {
-        /* Modern color palette - shadcn inspired */
-        --primary-50: #eff6ff;
-        --primary-100: #dbeafe;
-        --primary-200: #bfdbfe;
-        --primary-300: #93c5fd;
-        --primary-400: #60a5fa;
-        --primary-500: #3b82f6;
-        --primary-600: #2563eb;
-        --primary-700: #1d4ed8;
-        --primary-800: #1e40af;
-        --primary-900: #1e3a8a;
+        /* Flow-inspired refined color palette */
+        /* Primary brand color - sophisticated blue */
+        --primary: #2563eb;
+        --primary-hover: #1d4ed8;
+        --primary-light: #dbeafe;
 
-        --secondary-500: #8b5cf6;
-        --secondary-600: #7c3aed;
+        /* Soft neutral backgrounds */
+        --bg-primary: #fafaf9;
+        --bg-secondary: #ffffff;
+        --bg-tertiary: #f5f5f4;
 
-        --accent-500: #06b6d4;
-        --accent-600: #0891b2;
+        /* Text hierarchy - AA contrast compliant */
+        --text-primary: #18181b;
+        --text-secondary: #52525b;
+        --text-tertiary: #a1a1aa;
 
-        --success-500: #10b981;
-        --success-600: #059669;
+        /* Borders - subtle 1px */
+        --border-subtle: #e7e5e4;
+        --border-medium: #d6d3d1;
 
-        --warning-500: #f59e0b;
-        --warning-600: #d97706;
+        /* Feedback colors */
+        --success: #16a34a;
+        --error: #dc2626;
+        --warning: #ea580c;
 
-        --error-500: #ef4444;
-        --error-600: #dc2626;
+        /* Spacing scale */
+        --space-1: 0.25rem;
+        --space-2: 0.5rem;
+        --space-3: 0.75rem;
+        --space-4: 1rem;
+        --space-6: 1.5rem;
+        --space-8: 2rem;
+        --space-12: 3rem;
+        --space-16: 4rem;
+        --space-24: 6rem;
 
-        /* Neutral colors */
-        --gray-50: #f9fafb;
-        --gray-100: #f3f4f6;
-        --gray-200: #e5e7eb;
-        --gray-300: #d1d5db;
-        --gray-400: #9ca3af;
-        --gray-500: #6b7280;
-        --gray-600: #4b5563;
-        --gray-700: #374151;
-        --gray-800: #1f2937;
-        --gray-900: #111827;
+        /* Border radius - 12-16px range */
+        --radius-sm: 0.5rem;
+        --radius-md: 0.75rem;
+        --radius-lg: 1rem;
+        --radius-pill: 9999px;
 
-        /* Spacing */
-        --spacing-xs: 0.5rem;
-        --spacing-sm: 0.75rem;
-        --spacing-md: 1rem;
-        --spacing-lg: 1.5rem;
-        --spacing-xl: 2rem;
-        --spacing-2xl: 3rem;
+        /* Refined shadows - subtle and consistent */
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+        --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06);
+        --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.08);
 
-        /* Radius */
-        --radius-sm: 0.375rem;
-        --radius-md: 0.5rem;
-        --radius-lg: 0.75rem;
-        --radius-xl: 1rem;
-        --radius-2xl: 1.5rem;
-
-        /* Shadows */
-        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-
-        /* Glows */
-        --glow-primary: 0 0 20px rgba(59, 130, 246, 0.3);
-        --glow-secondary: 0 0 20px rgba(139, 92, 246, 0.3);
-        --glow-success: 0 0 20px rgba(16, 185, 129, 0.3);
+        /* Typography */
+        --font-serif: 'Crimson Pro', Georgia, serif;
+        --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
     }
 
     * {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        font-family: var(--font-sans);
     }
 
-    /* Main background - Gradient */
-    .main {
-        background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 50%, #e5e7eb 100%);
-        background-attachment: fixed;
-    }
-
-    /* Content container */
-    .block-container {
-        padding-top: var(--spacing-lg) !important;
-        padding-bottom: var(--spacing-xl);
-        max-width: 1200px;
-    }
-
-    /* Sidebar styling - Modern dark with gradient */
+    /* Hide sidebar - using top nav instead */
     section[data-testid="stSidebar"] {
-        background: linear-gradient(180deg, var(--gray-900) 0%, var(--gray-800) 100%);
-        border-right: 1px solid var(--gray-700);
-        box-shadow: var(--shadow-xl);
+        display: none !important;
     }
 
-    section[data-testid="stSidebar"] > div {
-        padding-top: var(--spacing-xl);
+    /* Main background - soft neutral */
+    .main {
+        background: var(--bg-primary);
+        padding-top: 0 !important;
     }
 
-    /* Sidebar text */
-    section[data-testid="stSidebar"] h1,
-    section[data-testid="stSidebar"] h2,
-    section[data-testid="stSidebar"] h3,
-    section[data-testid="stSidebar"] p,
-    section[data-testid="stSidebar"] label {
-        color: var(--gray-100) !important;
+    /* Content container - centered, spacious */
+    .block-container {
+        padding-top: 5rem !important;
+        padding-bottom: var(--space-16);
+        max-width: 1140px;
+        margin: 0 auto;
     }
 
-    section[data-testid="stSidebar"] .stMarkdown {
-        color: var(--gray-400) !important;
+    /* Hide Streamlit branding */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+
+    /* Hero typography - Serif/Sans pairing */
+    .hero-title {
+        font-family: var(--font-serif);
+        font-size: 4rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        letter-spacing: -0.02em;
+        line-height: 1.1;
+        margin-bottom: var(--space-4);
     }
 
-    /* Title styling - Gradient text */
+    .hero-subtitle {
+        font-family: var(--font-sans);
+        font-size: 1.125rem;
+        font-weight: 400;
+        color: var(--text-secondary);
+        line-height: 1.5;
+        margin-bottom: var(--space-8);
+    }
+
+    /* Typography hierarchy */
     h1 {
-        background: linear-gradient(135deg, var(--primary-600) 0%, var(--secondary-500) 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        font-size: 3.5rem !important;
-        font-weight: 800 !important;
-        letter-spacing: -0.03em;
-        margin-bottom: var(--spacing-md) !important;
-        line-height: 1.1 !important;
-        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+        font-family: var(--font-serif);
+        font-size: 2.5rem !important;
+        font-weight: 600 !important;
+        color: var(--text-primary) !important;
+        letter-spacing: -0.02em;
+        line-height: 1.2 !important;
     }
 
-    /* Subtitle/description */
-    .subtitle {
-        color: var(--gray-600);
-        font-size: 1.25rem;
-        font-weight: 500;
-        margin-bottom: var(--spacing-lg);
-        letter-spacing: -0.01em;
-        line-height: 1.6;
+    h2, h3 {
+        font-family: var(--font-sans);
+        font-weight: 600 !important;
+        color: var(--text-primary) !important;
+        letter-spacing: -0.01em !important;
     }
 
-    /* Search input styling - Modern with gradient border */
+    /* Search input - Clean and minimal */
     .stTextInput > div > div > input {
-        border-radius: var(--radius-xl);
-        border: 2px solid transparent;
-        background: white;
-        background-clip: padding-box;
-        padding: 1.1rem 1.75rem;
-        font-size: 1.05rem;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        color: var(--gray-900);
-        box-shadow: var(--shadow-md), inset 0 1px 2px rgba(0, 0, 0, 0.05);
-        position: relative;
-    }
-
-    .stTextInput > div > div {
-        position: relative;
-    }
-
-    .stTextInput > div > div::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        border-radius: var(--radius-xl);
-        padding: 2px;
-        background: linear-gradient(135deg, var(--primary-400), var(--secondary-500), var(--accent-500));
-        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-        -webkit-mask-composite: xor;
-        mask-composite: exclude;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-        pointer-events: none;
-    }
-
-    .stTextInput > div > div:focus-within::before {
-        opacity: 1;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-subtle);
+        background: var(--bg-secondary);
+        padding: 0.875rem 1.25rem;
+        font-size: 0.9375rem;
+        transition: all 0.15s ease;
+        color: var(--text-primary);
+        box-shadow: var(--shadow-sm);
     }
 
     .stTextInput > div > div > input:focus {
         outline: none;
-        box-shadow: var(--shadow-lg), var(--glow-primary);
-        transform: translateY(-1px);
-    }
-
-    .stTextInput > div > div > input::placeholder {
-        color: var(--gray-400);
-    }
-
-    /* Button styling - Gradient with glow */
-    .stButton > button {
-        background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-700) 100%);
-        color: white;
-        border: none;
-        border-radius: var(--radius-xl);
-        padding: 0.95rem 2.75rem;
-        font-weight: 600;
-        font-size: 1.05rem;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        letter-spacing: -0.01em;
-        box-shadow: var(--shadow-md), 0 0 0 rgba(59, 130, 246, 0);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .stButton > button::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-
-    .stButton > button:hover::before {
-        opacity: 1;
-    }
-
-    .stButton > button:hover {
-        transform: translateY(-2px) scale(1.02);
-        box-shadow: var(--shadow-xl), var(--glow-primary);
-    }
-
-    .stButton > button:active {
-        transform: translateY(0) scale(0.98);
-    }
-
-    /* Form submit button styling */
-    .stFormSubmitButton > button {
-        background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-700) 100%);
-        color: white;
-        border: none;
-        border-radius: var(--radius-xl);
-        padding: 0.95rem 2.75rem;
-        font-weight: 600;
-        font-size: 1.05rem;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        letter-spacing: -0.01em;
+        border-color: var(--primary);
         box-shadow: var(--shadow-md);
     }
 
-    .stFormSubmitButton > button:hover {
-        transform: translateY(-2px) scale(1.02);
-        box-shadow: var(--shadow-xl), var(--glow-primary);
+    .stTextInput > div > div > input::placeholder {
+        color: var(--text-tertiary);
     }
 
-    /* File uploader - Modern card */
+    /* Pill-shaped CTAs - primary */
+    .stButton > button,
+    .stFormSubmitButton > button {
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: var(--radius-pill);
+        padding: 0.75rem 1.75rem;
+        font-weight: 600;
+        font-size: 0.9375rem;
+        transition: all 0.15s ease;
+        box-shadow: var(--shadow-sm);
+        cursor: pointer;
+    }
+
+    .stButton > button:hover,
+    .stFormSubmitButton > button:hover {
+        background: var(--primary-hover);
+        box-shadow: var(--shadow-md);
+        transform: translateY(-1px);
+    }
+
+    .stButton > button:active,
+    .stFormSubmitButton > button:active {
+        transform: translateY(0);
+        box-shadow: var(--shadow-sm);
+    }
+
+    /* Secondary buttons */
+    .stButton.secondary > button {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        border: 1px solid var(--border-medium);
+    }
+
+    .stButton.secondary > button:hover {
+        background: var(--bg-tertiary);
+        border-color: var(--text-tertiary);
+    }
+
+    /* File uploader - Premium card */
     .stFileUploader {
-        background: white;
-        border-radius: var(--radius-xl);
-        padding: var(--spacing-xl);
-        border: 2px dashed var(--gray-300);
-        transition: all 0.3s ease;
+        background: var(--bg-secondary);
+        border-radius: var(--radius-lg);
+        padding: var(--space-8);
+        border: 1px dashed var(--border-medium);
+        transition: all 0.15s ease;
         box-shadow: var(--shadow-sm);
     }
 
     .stFileUploader:hover {
-        border-color: var(--primary-400);
-        background: var(--primary-50);
+        border-color: var(--primary);
+        background: var(--bg-secondary);
         box-shadow: var(--shadow-md);
     }
 
-    /* Dataframe styling - Modern card */
+    /* Dataframe styling - Clean card */
     .stDataFrame {
-        border-radius: var(--radius-lg);
+        border-radius: var(--radius-md);
         overflow: hidden;
-        border: 1px solid var(--gray-200);
-        box-shadow: var(--shadow-md);
-        background: white;
+        border: 1px solid var(--border-subtle);
+        box-shadow: var(--shadow-sm);
+        background: var(--bg-secondary);
     }
 
-    /* Success/Info boxes - Glassmorphism */
+    /* Success/Info boxes - Clean alerts */
     .stSuccess {
-        background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
-        border: 1px solid var(--success-500);
-        border-radius: var(--radius-xl);
-        padding: var(--spacing-lg);
-        color: var(--success-600);
-        backdrop-filter: blur(10px);
-        box-shadow: var(--shadow-md), var(--glow-success);
+        background: rgba(16, 185, 129, 0.05);
+        border: 1px solid var(--success);
+        border-radius: var(--radius-md);
+        padding: var(--space-4);
+        color: var(--success);
+        box-shadow: var(--shadow-sm);
         font-weight: 500;
     }
 
     .stInfo {
-        background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%);
-        border: 1px solid var(--primary-400);
-        border-radius: var(--radius-xl);
-        padding: var(--spacing-lg);
-        color: var(--primary-700);
-        backdrop-filter: blur(10px);
-        box-shadow: var(--shadow-md), var(--glow-primary);
+        background: rgba(37, 99, 235, 0.05);
+        border: 1px solid var(--primary);
+        border-radius: var(--radius-md);
+        padding: var(--space-4);
+        color: var(--primary);
+        box-shadow: var(--shadow-sm);
         font-weight: 500;
     }
 
     .stWarning {
-        background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%);
-        border: 1px solid var(--warning-500);
-        border-radius: var(--radius-xl);
-        padding: var(--spacing-lg);
-        color: var(--warning-600);
-        backdrop-filter: blur(10px);
-        box-shadow: var(--shadow-md);
+        background: rgba(234, 88, 12, 0.05);
+        border: 1px solid var(--warning);
+        border-radius: var(--radius-md);
+        padding: var(--space-4);
+        color: var(--warning);
+        box-shadow: var(--shadow-sm);
         font-weight: 500;
     }
 
     .stError {
-        background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%);
-        border: 1px solid var(--error-500);
-        border-radius: var(--radius-xl);
-        padding: var(--spacing-lg);
-        color: var(--error-600);
-        backdrop-filter: blur(10px);
-        box-shadow: var(--shadow-md);
+        background: rgba(220, 38, 38, 0.05);
+        border: 1px solid var(--error);
+        border-radius: var(--radius-md);
+        padding: var(--space-4);
+        color: var(--error);
+        box-shadow: var(--shadow-sm);
         font-weight: 500;
     }
 
-    /* Expander styling - Modern card */
+    /* Expander styling - Clean card */
     .streamlit-expanderHeader {
-        background: white;
-        border-radius: var(--radius-lg);
+        background: var(--bg-secondary);
+        border-radius: var(--radius-md);
         font-weight: 600;
-        color: var(--gray-800);
-        border: 1px solid var(--gray-200);
-        transition: all 0.2s ease;
+        color: var(--text-primary);
+        border: 1px solid var(--border-subtle);
+        transition: all 0.15s ease;
         box-shadow: var(--shadow-sm);
     }
 
     .streamlit-expanderHeader:hover {
-        border-color: var(--primary-300);
-        background: var(--primary-50);
+        border-color: var(--border-medium);
+        background: var(--bg-tertiary);
         box-shadow: var(--shadow-md);
-        transform: translateX(4px);
     }
 
-    /* Results summary - Glassmorphism card */
+    /* Results summary - Clean card */
     .results-summary {
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%);
-        backdrop-filter: blur(10px);
-        padding: var(--spacing-xl);
-        border-radius: var(--radius-2xl);
-        border: 1px solid rgba(255, 255, 255, 0.8);
-        margin: var(--spacing-lg) 0;
-        box-shadow: var(--shadow-xl);
-        transition: all 0.3s ease;
+        background: var(--bg-secondary);
+        padding: var(--space-6);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-subtle);
+        margin: var(--space-4) 0;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.15s ease;
     }
 
     .results-summary:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-2xl);
+        box-shadow: var(--shadow-md);
     }
 
-    /* Download buttons - Outlined gradient */
+    /* Download buttons - Clean outlined */
     .stDownloadButton > button {
-        background: white;
-        color: var(--primary-600);
-        border: 2px solid var(--primary-500);
-        border-radius: var(--radius-xl);
-        padding: 0.8rem 1.75rem;
+        background: var(--bg-secondary);
+        color: var(--primary);
+        border: 1px solid var(--primary);
+        border-radius: var(--radius-pill);
+        padding: 0.75rem 1.75rem;
         font-weight: 600;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        letter-spacing: -0.01em;
+        transition: all 0.15s ease;
         box-shadow: var(--shadow-sm);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .stDownloadButton > button::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
-        opacity: 0;
-        transition: opacity 0.3s ease;
-        z-index: -1;
-    }
-
-    .stDownloadButton > button:hover::before {
-        opacity: 1;
     }
 
     .stDownloadButton > button:hover {
+        background: var(--primary);
         color: white;
-        border-color: var(--primary-600);
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-lg), var(--glow-primary);
+        box-shadow: var(--shadow-md);
     }
 
     /* Hide default Streamlit elements */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
 
-    /* Section headers - Gradient underline */
-    h2, h3 {
-        color: var(--gray-800) !important;
-        font-weight: 700 !important;
-        letter-spacing: -0.02em !important;
-        position: relative;
-        padding-bottom: var(--spacing-sm);
+    /* Section headers - Clean */
+    h2 {
+        font-size: 1.75rem !important;
+        margin-bottom: var(--space-6) !important;
     }
 
-    h2::after {
-        content: '';
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 60px;
-        height: 4px;
-        background: linear-gradient(90deg, var(--primary-500) 0%, var(--secondary-500) 100%);
-        border-radius: 2px;
-    }
-
-    /* Animations */
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    @keyframes slideInFromLeft {
-        from {
-            opacity: 0;
-            transform: translateX(-30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
-    }
-
-    @keyframes shimmer {
-        0% {
-            background-position: -1000px 0;
-        }
-        100% {
-            background-position: 1000px 0;
-        }
-    }
-
-    .main > div {
-        animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    h3 {
+        font-size: 1.25rem !important;
+        margin-bottom: var(--space-4) !important;
     }
 
     /* Markdown text */
     .main .stMarkdown {
-        color: var(--gray-600);
+        color: var(--text-secondary);
         line-height: 1.7;
     }
 
-    /* Dividers - Gradient */
+    /* Dividers - Clean */
     hr {
         border: none;
-        height: 2px;
-        background: linear-gradient(90deg, transparent 0%, var(--primary-300) 50%, transparent 100%);
-        margin: var(--spacing-xl) 0;
-    }
-
-    /* Badge component */
-    .badge {
-        display: inline-block;
-        padding: 0.25rem 0.75rem;
-        border-radius: var(--radius-md);
-        font-size: 0.875rem;
-        font-weight: 600;
-        background: linear-gradient(135deg, var(--primary-500) 0%, var(--secondary-500) 100%);
-        color: white;
-        box-shadow: var(--shadow-sm);
-    }
-
-    .badge-success {
-        background: linear-gradient(135deg, var(--success-500) 0%, var(--success-600) 100%);
-    }
-
-    .badge-warning {
-        background: linear-gradient(135deg, var(--warning-500) 0%, var(--warning-600) 100%);
+        height: 1px;
+        background: var(--border-subtle);
+        margin: var(--space-8) 0;
     }
 
     /* Card component */
     .card {
-        background: white;
-        border-radius: var(--radius-xl);
-        padding: var(--spacing-xl);
-        box-shadow: var(--shadow-md);
-        border: 1px solid var(--gray-200);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        background: var(--bg-secondary);
+        border-radius: var(--radius-md);
+        padding: var(--space-6);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border-subtle);
+        transition: all 0.15s ease;
     }
 
     .card:hover {
-        transform: translateY(-4px);
-        box-shadow: var(--shadow-2xl);
-        border-color: var(--primary-300);
+        box-shadow: var(--shadow-md);
+    }
+
+    /* Top navigation bar */
+    .top-nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 64px;
+        background: var(--bg-secondary);
+        border-bottom: 1px solid var(--border-subtle);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 var(--space-8);
+        z-index: 1000;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .top-nav-logo {
+        font-family: var(--font-serif);
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        text-decoration: none;
+    }
+
+    .top-nav-links {
+        display: flex;
+        gap: var(--space-8);
+        align-items: center;
+    }
+
+    .top-nav-link {
+        font-size: 0.9375rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        text-decoration: none;
+        transition: color 0.15s ease;
+    }
+
+    .top-nav-link:hover {
+        color: var(--text-primary);
+    }
+
+    .top-nav-cta {
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: var(--radius-pill);
+        padding: 0.625rem 1.5rem;
+        font-weight: 600;
+        font-size: 0.9375rem;
+        transition: all 0.15s ease;
+        box-shadow: var(--shadow-sm);
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .top-nav-cta:hover {
+        background: var(--primary-hover);
+        box-shadow: var(--shadow-md);
     }
 
     /* ============================================
@@ -677,34 +593,36 @@ st.markdown("""
        ============================================ */
 
     @media (max-width: 768px) {
-        h1 {
-            font-size: 2.25rem !important;
+        .hero-title {
+            font-size: 2.5rem;
         }
 
-        .subtitle {
-            font-size: 1.05rem;
-            margin-bottom: var(--spacing-xl);
+        .hero-subtitle {
+            font-size: 1rem;
         }
 
         .block-container {
-            padding-top: var(--spacing-md);
-            padding-left: var(--spacing-md);
-            padding-right: var(--spacing-md);
+            padding-top: 5rem !important;
+            padding-left: var(--space-4);
+            padding-right: var(--space-4);
         }
 
-        section[data-testid="stSidebar"] {
-            width: 280px !important;
+        .top-nav {
+            padding: 0 var(--space-4);
+        }
+
+        .top-nav-links {
+            gap: var(--space-4);
+        }
+
+        .top-nav-link {
+            display: none;
         }
 
         .stButton > button,
         .stFormSubmitButton > button {
             width: 100%;
-            padding: 1rem 1.5rem;
-            font-size: 1rem;
-        }
-
-        .row-widget.stColumns {
-            flex-direction: column !important;
+            padding: 0.875rem 1.5rem;
         }
 
         .stTextInput > div > div > input {
@@ -767,50 +685,46 @@ st.markdown("""
     }
 
     /* ============================================
-       TAB STYLING - Modern gradient tabs
+       TAB STYLING - Clean tabs
        ============================================ */
 
     .stTabs {
-        background: white;
-        border-radius: var(--radius-xl);
-        padding: var(--spacing-sm);
-        border: 1px solid var(--gray-200);
-        box-shadow: var(--shadow-md);
-    }
-
-    .stTabs [data-baseweb="tab-list"] {
-        gap: var(--spacing-xs);
-        background: var(--gray-50);
-        padding: var(--spacing-xs);
-        border-radius: var(--radius-lg);
-    }
-
-    .stTabs [data-baseweb="tab"] {
-        background: white;
-        border: 2px solid var(--gray-200);
+        background: var(--bg-secondary);
         border-radius: var(--radius-md);
-        padding: 0.875rem 1.75rem;
-        font-weight: 600;
-        color: var(--gray-700);
-        font-size: 1rem;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        padding: var(--space-2);
+        border: 1px solid var(--border-subtle);
         box-shadow: var(--shadow-sm);
     }
 
+    .stTabs [data-baseweb="tab-list"] {
+        gap: var(--space-2);
+        background: var(--bg-tertiary);
+        padding: var(--space-2);
+        border-radius: var(--radius-md);
+    }
+
+    .stTabs [data-baseweb="tab"] {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        font-size: 0.9375rem;
+        transition: all 0.15s ease;
+    }
+
     .stTabs [data-baseweb="tab"]:hover {
-        background: var(--primary-50);
-        border-color: var(--primary-300);
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-md);
-        color: var(--primary-700);
+        background: var(--bg-secondary);
+        border-color: var(--border-medium);
+        color: var(--text-primary);
     }
 
     .stTabs [aria-selected="true"] {
-        background: linear-gradient(135deg, var(--primary-600) 0%, var(--secondary-500) 100%) !important;
+        background: var(--primary) !important;
         color: white !important;
-        border-color: transparent !important;
-        box-shadow: var(--shadow-lg), var(--glow-primary) !important;
-        transform: translateY(-2px);
+        border-color: var(--primary) !important;
+        box-shadow: var(--shadow-md) !important;
     }
 
     .stTabs [data-baseweb="tab-panel"] {
@@ -826,6 +740,18 @@ st.markdown("""
         color: white !important;
     }
 </style>
+""", unsafe_allow_html=True)
+
+# Top Navigation Bar
+st.markdown("""
+<div class='top-nav'>
+<div class='top-nav-logo'>NetworkAI</div>
+<div class='top-nav-links'>
+<a href='#how-it-works' class='top-nav-link'>How it works</a>
+<a href='#features' class='top-nav-link'>Features</a>
+<a href='#about' class='top-nav-link'>About</a>
+</div>
+</div>
 """, unsafe_allow_html=True)
 
 def parse_linkedin_csv(uploaded_file):
@@ -1828,26 +1754,13 @@ def main():
         </style>
         """, unsafe_allow_html=True)
 
-    # Hero section with premium styling - heading and toggle in same row
-    col_heading, col_toggle = st.columns([10, 1])
-
-    with col_heading:
-        st.markdown("<h1 style='margin-top: 0;'>LinkedIn Network Assistant</h1>", unsafe_allow_html=True)
-        st.markdown('<p class="subtitle">Unlock the power of your network with AI-driven insights</p>', unsafe_allow_html=True)
-
-    with col_toggle:
-        st.markdown("<div style='padding-top: 2rem;'></div>", unsafe_allow_html=True)  # Spacer to align with heading
-        dark_mode_toggle = st.toggle(
-            "🌙",
-            value=st.session_state.get('dark_mode', False),
-            key="dark_mode_toggle",
-            help="Toggle dark mode"
-        )
-
-        # Update dark mode state if toggle changed
-        if dark_mode_toggle != st.session_state.get('dark_mode', False):
-            st.session_state['dark_mode'] = dark_mode_toggle
-            st.rerun()
+    # Hero section - Flow-inspired minimal design
+    st.markdown("""
+<div style='text-align: center; padding: var(--space-24) 0 var(--space-16) 0;'>
+<h1 class='hero-title'>Turn your LinkedIn contacts<br>into warm intros with AI</h1>
+<p class='hero-subtitle'>Search your network naturally. Find the right person, instantly.</p>
+</div>
+""", unsafe_allow_html=True)
 
     # === MIDDLE SECTION: CSV Upload ===
     with st.sidebar:
@@ -2028,85 +1941,59 @@ def main():
 
     # Main content area
     if 'contacts_df' not in st.session_state:
-        # Modern empty state with glassmorphism
-        st.markdown("""<div style='text-align: center; padding: 3rem 2rem; margin: 2rem 0; background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%); border-radius: var(--radius-2xl); border: 2px dashed var(--primary-300);'>
-<div style='font-size: 4rem; margin-bottom: 1rem;'>🚀</div>
-<h2 style='background: linear-gradient(135deg, var(--primary-600) 0%, var(--secondary-500) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 2rem; font-weight: 700; margin-bottom: 0.75rem;'>Get Started with Your Network</h2>
-<p style='color: var(--gray-600); font-size: 1.15rem; max-width: 600px; margin: 0 auto 1.5rem;'>Upload your LinkedIn connections to unlock powerful AI-powered search and insights</p>
-<div style='display: inline-block; padding: 0.75rem 2rem; background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%); color: white; border-radius: var(--radius-xl); font-weight: 600; box-shadow: var(--shadow-lg), var(--glow-primary);'>👈 Upload your contacts in the sidebar to begin</div>
-</div>""", unsafe_allow_html=True)
+        # Clean empty state
+        st.markdown("""
+<div class='card' style='text-align: center; padding: var(--space-16) var(--space-8); margin: var(--space-8) auto; max-width: 600px;'>
+<h2 style='font-family: var(--font-serif); font-size: 2rem; font-weight: 600; color: var(--text-primary); margin-bottom: var(--space-4);'>Get Started</h2>
+<p style='color: var(--text-secondary); font-size: 1.125rem; margin-bottom: var(--space-6);'>Upload your LinkedIn CSV to begin searching your network</p>
+</div>
+""", unsafe_allow_html=True)
 
-        # LinkedIn Download Instructions - Modern card
-        st.markdown("### 📥 How to Get Your LinkedIn Data")
-        st.markdown("""<div class='card' style='background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(255, 255, 255, 1) 100%); padding: var(--spacing-xl); border-radius: var(--radius-2xl); border: 2px solid var(--primary-200); margin-bottom: 2rem; box-shadow: var(--shadow-lg);'>
-<div style='display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;'>
-<div style='width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; box-shadow: var(--shadow-md), var(--glow-primary);'>📥</div>
-<div style='font-size: 1.3rem; font-weight: 700; color: var(--gray-900);'>Simple 6-Step Process</div>
+        # LinkedIn Download Instructions - Clean
+        st.markdown("<h3 style='font-size: 1.5rem; font-weight: 600; margin-bottom: var(--space-6);'>How to Get Your LinkedIn Data</h3>", unsafe_allow_html=True)
+        st.markdown("""
+<div class='card' style='margin-bottom: var(--space-8);'>
+<ol style='margin: 0; padding-left: 1.5rem; color: var(--text-secondary); line-height: 1.8;'>
+<li style='margin-bottom: var(--space-3);'>Go to <a href='https://www.linkedin.com/mypreferences/d/download-my-data' target='_blank' style='color: var(--primary); font-weight: 600; text-decoration: none;'>LinkedIn Data Download</a></li>
+<li style='margin-bottom: var(--space-3);'>Click "Request archive"</li>
+<li style='margin-bottom: var(--space-3);'>Wait 10-15 minutes for the email</li>
+<li style='margin-bottom: var(--space-3);'>Download and extract the ZIP file</li>
+<li style='margin-bottom: var(--space-3);'>Find the <strong>Connections.csv</strong> file</li>
+<li>Upload it using the sidebar</li>
+</ol>
 </div>
-<div style='display: grid; gap: 1rem;'>
-<div style='display: flex; gap: 1rem; align-items: start;'>
-<div style='flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-500) 0%, var(--secondary-500) 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.9rem; box-shadow: var(--shadow-sm);'>1</div>
-<div style='flex: 1; padding-top: 0.25rem;'>Go to <a href='https://www.linkedin.com/mypreferences/d/download-my-data' target='_blank' style='color: var(--primary-600); font-weight: 600; text-decoration: none; border-bottom: 2px solid var(--primary-300);'>LinkedIn Data Download</a></div>
-</div>
-<div style='display: flex; gap: 1rem; align-items: start;'>
-<div style='flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-500) 0%, var(--secondary-500) 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.9rem; box-shadow: var(--shadow-sm);'>2</div>
-<div style='flex: 1; padding-top: 0.25rem; color: var(--gray-700);'>Click <strong style='color: var(--gray-900);'>"Request archive"</strong> (the big button at the top)</div>
-</div>
-<div style='display: flex; gap: 1rem; align-items: start;'>
-<div style='flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-500) 0%, var(--secondary-500) 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.9rem; box-shadow: var(--shadow-sm);'>3</div>
-<div style='flex: 1; padding-top: 0.25rem; color: var(--gray-700);'>LinkedIn will email you in <strong style='color: var(--gray-900);'>10-15 minutes</strong> when your data is ready</div>
-</div>
-<div style='display: flex; gap: 1rem; align-items: start;'>
-<div style='flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-500) 0%, var(--secondary-500) 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.9rem; box-shadow: var(--shadow-sm);'>4</div>
-<div style='flex: 1; padding-top: 0.25rem; color: var(--gray-700);'>Download the <strong style='color: var(--gray-900);'>ZIP file</strong> from the email</div>
-</div>
-<div style='display: flex; gap: 1rem; align-items: start;'>
-<div style='flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-500) 0%, var(--secondary-500) 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.9rem; box-shadow: var(--shadow-sm);'>5</div>
-<div style='flex: 1; padding-top: 0.25rem; color: var(--gray-700);'>Extract/unzip it and find the <strong style='color: var(--gray-900);'>Connections.csv</strong> file</div>
-</div>
-<div style='display: flex; gap: 1rem; align-items: start;'>
-<div style='flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--success-500) 0%, var(--success-600) 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.9rem; box-shadow: var(--shadow-sm), var(--glow-success);'>6</div>
-<div style='flex: 1; padding-top: 0.25rem; color: var(--gray-700);'>Upload that file here using the sidebar 👈</div>
-</div>
-</div>
-<div style='margin-top: 1.5rem; padding: 1rem; background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%); border-radius: var(--radius-lg); border-left: 4px solid var(--primary-500);'>
-<div style='display: flex; align-items: center; gap: 0.5rem;'>
-<span style='font-size: 1.25rem;'>💡</span>
-<span style='color: var(--gray-700); font-weight: 500;'><strong style='color: var(--gray-900);'>Tip:</strong> The CSV file should have columns like "First Name", "Last Name", "Company", "Position"</span>
-</div>
-</div>
-</div>""", unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
-        # Example queries in modern gradient cards
-        st.markdown("### ✨ What You Can Ask")
+        # Example queries - Clean
+        st.markdown("<h3 style='font-size: 1.5rem; font-weight: 600; margin-bottom: var(--space-6);'>Example Searches</h3>", unsafe_allow_html=True)
         col1, col2, col3 = st.columns(3)
 
         with col1:
-            st.markdown("""<div class='card' style='background: white; padding: var(--spacing-xl); border-radius: var(--radius-xl); border: 2px solid var(--gray-200); box-shadow: var(--shadow-md); height: 100%; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden;'>
-<div style='position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--primary-500) 0%, var(--secondary-500) 100%);'></div>
-<div style='font-size: 2.5rem; margin-bottom: 1rem;'>🏢</div>
-<h4 style='margin-bottom: 1rem; color: var(--gray-900); font-weight: 700; font-size: 1.15rem;'>By Industry</h4>
-<p style='color: var(--gray-600); margin-bottom: 0.5rem; font-size: 0.95rem; line-height: 1.5;'>"Who works in venture capital?"</p>
-<p style='color: var(--gray-600); font-size: 0.95rem; line-height: 1.5;'>"Show me people in tech companies"</p>
-</div>""", unsafe_allow_html=True)
+            st.markdown("""
+<div class='card'>
+<h4 style='margin-bottom: var(--space-3); color: var(--text-primary); font-weight: 600; font-size: 1rem;'>By Industry</h4>
+<p style='color: var(--text-secondary); margin-bottom: var(--space-2); font-size: 0.9375rem; line-height: 1.6;'>"Who works in venture capital?"</p>
+<p style='color: var(--text-secondary); font-size: 0.9375rem; line-height: 1.6;'>"Show me people in tech"</p>
+</div>
+""", unsafe_allow_html=True)
 
         with col2:
-            st.markdown("""<div class='card' style='background: white; padding: var(--spacing-xl); border-radius: var(--radius-xl); border: 2px solid var(--gray-200); box-shadow: var(--shadow-md); height: 100%; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden;'>
-<div style='position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--secondary-500) 0%, var(--accent-500) 100%);'></div>
-<div style='font-size: 2.5rem; margin-bottom: 1rem;'>👔</div>
-<h4 style='margin-bottom: 1rem; color: var(--gray-900); font-weight: 700; font-size: 1.15rem;'>By Role</h4>
-<p style='color: var(--gray-600); margin-bottom: 0.5rem; font-size: 0.95rem; line-height: 1.5;'>"Who is an engineer?"</p>
-<p style='color: var(--gray-600); font-size: 0.95rem; line-height: 1.5;'>"Show me product managers"</p>
-</div>""", unsafe_allow_html=True)
+            st.markdown("""
+<div class='card'>
+<h4 style='margin-bottom: var(--space-3); color: var(--text-primary); font-weight: 600; font-size: 1rem;'>By Role</h4>
+<p style='color: var(--text-secondary); margin-bottom: var(--space-2); font-size: 0.9375rem; line-height: 1.6;'>"Who is an engineer?"</p>
+<p style='color: var(--text-secondary); font-size: 0.9375rem; line-height: 1.6;'>"Show me product managers"</p>
+</div>
+""", unsafe_allow_html=True)
 
         with col3:
-            st.markdown("""<div class='card' style='background: white; padding: var(--spacing-xl); border-radius: var(--radius-xl); border: 2px solid var(--gray-200); box-shadow: var(--shadow-md); height: 100%; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden;'>
-<div style='position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--accent-500) 0%, var(--primary-500) 100%);'></div>
-<div style='font-size: 2.5rem; margin-bottom: 1rem;'>⭐</div>
-<h4 style='margin-bottom: 1rem; color: var(--gray-900); font-weight: 700; font-size: 1.15rem;'>By Seniority</h4>
-<p style='color: var(--gray-600); margin-bottom: 0.5rem; font-size: 0.95rem; line-height: 1.5;'>"Who is the most senior person?"</p>
-<p style='color: var(--gray-600); font-size: 0.95rem; line-height: 1.5;'>"Show me top 5 leaders"</p>
-</div>""", unsafe_allow_html=True)
+            st.markdown("""
+<div class='card'>
+<h4 style='margin-bottom: var(--space-3); color: var(--text-primary); font-weight: 600; font-size: 1rem;'>By Seniority</h4>
+<p style='color: var(--text-secondary); margin-bottom: var(--space-2); font-size: 0.9375rem; line-height: 1.6;'>"Who is the most senior?"</p>
+<p style='color: var(--text-secondary); font-size: 0.9375rem; line-height: 1.6;'>"Show me top 5 leaders"</p>
+</div>
+""", unsafe_allow_html=True)
 
     else:
         contacts_df = st.session_state['contacts_df']
