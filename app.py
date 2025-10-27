@@ -1741,13 +1741,7 @@ def main():
                 st.success("Logged out successfully!")
                 st.rerun()
 
-            # Admin-only page navigation
-            admin_email = "rohan.gandotra19@gmail.com"
-            if st.session_state['user']['email'] == admin_email:
-                st.markdown("---")
-                st.markdown("<p style='font-size: 0.875rem; font-weight: 600; color: var(--text-primary); margin-bottom: var(--space-3);'>Admin</p>", unsafe_allow_html=True)
-                st.page_link("app.py", label="Home")
-                st.page_link("pages/Analytics.py", label="Analytics")
+            # No admin section needed
         else:
             # Anonymous user sidebar - Login/Signup CTAs
             st.markdown("<p style='font-size: 1.125rem; font-weight: 600; color: var(--text-primary); margin-bottom: var(--space-3);'>Welcome!</p>", unsafe_allow_html=True)
@@ -1775,55 +1769,6 @@ def main():
             }
         </style>
         """, unsafe_allow_html=True)
-
-        # Diagnostic section (collapsed by default)
-        st.markdown("---")
-        with st.expander("Diagnostics", expanded=False):
-            if st.button("Run API Connection Test", key="diagnostic_button"):
-                with st.spinner("Running diagnostic tests..."):
-                    diagnostic_results = run_diagnostic_test()
-                    st.session_state['diagnostic_results'] = diagnostic_results
-
-            # Display diagnostic results if available
-            if 'diagnostic_results' in st.session_state:
-                results = st.session_state['diagnostic_results']
-
-                # API Key Status
-                if results['api_key_loaded']:
-                    st.success(f"✅ API Key: Loaded ({results.get('api_key_format', 'N/A')})")
-                else:
-                    st.error(f"❌ API Key: {results.get('api_key_format', 'Not loaded')}")
-
-                # Direct HTTP Test
-                http_status = results['direct_http_test']['status']
-                if http_status == 'success':
-                    st.success(f"✅ Direct HTTP: {results['direct_http_test']['details']}")
-                elif http_status == 'pending':
-                    st.info("⏳ Direct HTTP: Not tested")
-                else:
-                    st.error(f"❌ Direct HTTP: {http_status}")
-                    with st.expander("HTTP Error Details"):
-                        st.code(results['direct_http_test']['details'])
-                        if 'traceback' in results['direct_http_test']:
-                            st.code(results['direct_http_test']['traceback'])
-
-                # OpenAI SDK Test
-                sdk_status = results['openai_sdk_test']['status']
-                if sdk_status == 'success':
-                    st.success(f"✅ OpenAI SDK: {results['openai_sdk_test']['details']}")
-                elif sdk_status == 'pending':
-                    st.info("⏳ OpenAI SDK: Not tested")
-                else:
-                    st.error(f"❌ OpenAI SDK: {sdk_status}")
-                    with st.expander("SDK Error Details"):
-                        st.code(results['openai_sdk_test']['details'])
-                        if 'traceback' in results['openai_sdk_test']:
-                            st.code(results['openai_sdk_test']['traceback'])
-
-                # Clear results button
-                if st.button("Clear Diagnostic Results"):
-                    del st.session_state['diagnostic_results']
-                    st.rerun()
 
     # Show login/register modal for anonymous users if requested
     if not st.session_state.get('authenticated'):
