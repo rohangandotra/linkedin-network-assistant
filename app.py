@@ -12,8 +12,28 @@ import traceback
 # Load environment variables FIRST - before importing modules that need them
 load_dotenv()
 
-# Import analytics module
-import analytics
+# Import analytics module (optional - don't crash if missing)
+try:
+    import analytics
+    HAS_ANALYTICS = True
+except Exception as e:
+    print(f"⚠️ Analytics module not available: {e}")
+    HAS_ANALYTICS = False
+    # Create a dummy analytics module
+    class DummyAnalytics:
+        @staticmethod
+        def log_search_query(*args, **kwargs):
+            pass
+        @staticmethod
+        def log_csv_upload(*args, **kwargs):
+            pass
+        @staticmethod
+        def log_email_generation(*args, **kwargs):
+            pass
+        @staticmethod
+        def log_contact_export(*args, **kwargs):
+            pass
+    analytics = DummyAnalytics()
 
 # Import authentication module (needs env vars to be loaded)
 import auth
@@ -186,9 +206,9 @@ st.markdown("""
 
     :root {
         /* Flow-inspired refined color palette */
-        /* Primary brand color - sophisticated blue */
-        --primary: #2563eb;
-        --primary-hover: #1d4ed8;
+        /* Primary brand color - darker sophisticated blue */
+        --primary: #1d4ed8;
+        --primary-hover: #1e40af;
         --primary-light: #dbeafe;
 
         /* Soft neutral backgrounds */
@@ -1603,6 +1623,8 @@ def main():
         st.session_state['show_register'] = False
     if 'show_forgot_password' not in st.session_state:
         st.session_state['show_forgot_password'] = False
+    if 'show_login' not in st.session_state:
+        st.session_state['show_login'] = False
 
     # Phase 3B: Migrate existing users to new search (one-time index build)
     if st.session_state.get('authenticated') and HAS_NEW_SEARCH:
@@ -1747,13 +1769,15 @@ def main():
             st.markdown("<p style='font-size: 1.125rem; font-weight: 600; color: var(--text-primary); margin-bottom: var(--space-3);'>Welcome!</p>", unsafe_allow_html=True)
             st.markdown("<p style='font-size: 0.9375rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: var(--space-6);'>Sign up to save your contacts and access them from anywhere.</p>", unsafe_allow_html=True)
 
-            if st.button("Sign Up Free", use_container_width=True, key="sidebar_signup", type="primary"):
+            if st.button("Sign Up", use_container_width=True, key="sidebar_signup", type="primary"):
                 st.session_state['show_register'] = True
+                st.session_state['show_login'] = False
                 st.rerun()
 
             if st.button("Log In", use_container_width=True, key="sidebar_login"):
                 st.session_state['show_register'] = False
                 st.session_state['show_forgot_password'] = False
+                st.session_state['show_login'] = True
                 st.rerun()
 
             # Show session contact count for anonymous users
@@ -1777,6 +1801,9 @@ def main():
             return
         elif st.session_state.get('show_forgot_password'):
             show_forgot_password_page()
+            return
+        elif st.session_state.get('show_login'):
+            show_login_page()
             return
 
     # Get user_id for logged-in users
@@ -1848,8 +1875,8 @@ def main():
                                 st.warning(f"✅ Loaded {len(df)} contacts (saved to session only)")
                     else:
                         # ANONYMOUS: Session only with upgrade prompt
-                        st.success(f"✅ Loaded {len(df)} contacts!")
-                        st.info("💡 **Sign up free** in the sidebar to save your contacts permanently!")
+                        st.success(f"Loaded {len(df)} contacts!")
+                        st.info("**Sign up** in the sidebar to save your contacts permanently!")
 
                     # Log CSV upload
                     analytics.log_csv_upload(
