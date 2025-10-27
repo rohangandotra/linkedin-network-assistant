@@ -1734,7 +1734,7 @@ def main():
     # Hero section - Flow-inspired minimal design
     st.markdown("""
 <div style='text-align: center; padding: var(--space-24) 0 var(--space-16) 0;'>
-<h1 class='hero-title'>Turn your LinkedIn contacts<br>into warm intros with AI</h1>
+<h1 class='hero-title'>Get the most out of your network<br>using our advanced AI solution</h1>
 <p class='hero-subtitle'>Search your network naturally. Find the right person, instantly.</p>
 </div>
 """, unsafe_allow_html=True)
