@@ -1777,107 +1777,23 @@ def main():
 </div>
 """, unsafe_allow_html=True)
 
-    # === MIDDLE SECTION: CSV Upload ===
+    # === SIDEBAR: Clean Flow Design ===
     with st.sidebar:
-        st.markdown("### 📤 Upload Contacts")
-        st.markdown("Export your LinkedIn contacts as CSV and upload here.")
-
-        # Check if user already has contacts (only for logged-in users)
-        user_has_contacts = False
         if st.session_state.get('authenticated'):
-            user_has_contacts = auth.get_contact_count(st.session_state['user']['id']) > 0
+            # Logged-in user sidebar
+            st.markdown(f"<p style='font-size: 0.875rem; color: var(--text-tertiary); margin-bottom: var(--space-2);'>Signed in as</p>", unsafe_allow_html=True)
+            st.markdown(f"<p style='font-size: 1rem; font-weight: 600; color: var(--text-primary); margin-bottom: var(--space-1);'>{st.session_state['user']['full_name']}</p>", unsafe_allow_html=True)
+            st.markdown(f"<p style='font-size: 0.875rem; color: var(--text-secondary); margin-bottom: var(--space-6);'>{st.session_state['user']['email']}</p>", unsafe_allow_html=True)
 
-        # Show replace option if user has contacts
-        replace_contacts = False
-        if user_has_contacts:
-            st.warning(f"⚠️ You already have contacts saved. Upload a new CSV to replace them.")
-            replace_contacts = st.checkbox("Replace existing contacts", value=False,
-                                         help="Check this to delete your current contacts and upload new ones")
+            # Contact count
+            contact_count = auth.get_contact_count(st.session_state['user']['id'])
+            if contact_count > 0:
+                st.markdown(f"<div style='padding: var(--space-3); background: var(--bg-tertiary); border-radius: var(--radius-md); margin-bottom: var(--space-4);'><p style='font-size: 0.875rem; color: var(--text-secondary); margin: 0;'>{contact_count:,} contacts saved</p></div>", unsafe_allow_html=True)
 
-        uploaded_file = st.file_uploader(
-            "Choose your LinkedIn CSV file",
-            type=['csv'],
-            help="Download your LinkedIn connections and upload the CSV file",
-            label_visibility="collapsed"
-        )
+            st.markdown("---")
 
-        if uploaded_file:
-            with st.spinner("✨ Parsing contacts..."):
-                df = parse_linkedin_csv(uploaded_file)
-                if df is not None:
-                    st.session_state['contacts_df'] = df
-
-                    if st.session_state.get('authenticated'):
-                        # LOGGED IN: Save to database
-                        user_id = st.session_state['user']['id']
-
-                        # Check if we need to replace contacts
-                        if user_has_contacts:
-                            if not replace_contacts:
-                                st.warning(f"⚠️ You already have contacts saved. Check 'Replace existing contacts' to upload new ones.")
-                                st.info(f"✅ Loaded {len(df)} contacts to current session (not saved to database)")
-                            else:
-                                # Delete old contacts first
-                                with st.spinner("Deleting old contacts..."):
-                                    if auth.delete_user_contacts(user_id):
-                                        # Save new contacts
-                                        save_result = auth.save_contacts_to_db(user_id, df)
-                                        if save_result['success']:
-                                            st.success(f"✅ Replaced with {len(df)} new contacts!")
-                                        else:
-                                            st.error(f"❌ Error saving: {save_result['message']}")
-                                    else:
-                                        st.error("❌ Error deleting old contacts")
-                        else:
-                            # No existing contacts, just save
-                            save_result = auth.save_contacts_to_db(user_id, df)
-                            if save_result['success']:
-                                st.success(f"✅ Loaded and saved {len(df)} contacts to your account!")
-                            else:
-                                st.warning(f"✅ Loaded {len(df)} contacts (saved to session only - DB error: {save_result['message']})")
-                    else:
-                        # ANONYMOUS: Session only with upgrade prompt
-                        st.success(f"✅ Loaded {len(df)} contacts!")
-                        st.info("💡 **Sign up free** to save your contacts permanently!")
-
-                    # Log CSV upload
-                    analytics.log_csv_upload(
-                        file_name=uploaded_file.name,
-                        num_contacts=len(df),
-                        success=True,
-                        session_id=st.session_state['session_id']
-                    )
-
-                    # Phase 3B: Build search indexes for fast future searches
-                    if HAS_NEW_SEARCH:
-                        with st.spinner("🔨 Building search indexes for faster searches..."):
-                            try:
-                                initialize_search_for_user(user_id, df)
-                                st.success("✅ Search indexes built! Searches will be 25x faster.")
-                            except Exception as e:
-                                st.warning(f"⚠️ Could not build search indexes (will use legacy search): {e}")
-
-                    # Show preview
-                    with st.expander("👀 Preview contacts"):
-                        display_cols = [col for col in ['full_name', 'position', 'company'] if col in df.columns]
-                        st.dataframe(df[display_cols].head(10), use_container_width=True)
-                else:
-                    # Log failed upload
-                    analytics.log_csv_upload(
-                        file_name=uploaded_file.name,
-                        num_contacts=0,
-                        success=False,
-                        error_message="Failed to parse CSV",
-                        session_id=st.session_state['session_id']
-                    )
-
-        st.markdown("---")
-
-        # === BOTTOM SECTION: Account Actions (for logged-in users only) ===
-        if st.session_state.get('authenticated'):
-            st.markdown("### 🚪 Account Actions")
-            if st.button("🚪 Logout", use_container_width=True, type="primary", key="logout_button"):
-                # Clear session
+            # Logout button
+            if st.button("Logout", use_container_width=True, key="logout_button"):
                 st.session_state['authenticated'] = False
                 st.session_state['user'] = None
                 if 'contacts_df' in st.session_state:
@@ -1885,13 +1801,31 @@ def main():
                 st.success("Logged out successfully!")
                 st.rerun()
 
-            # Admin-only page navigation at bottom
+            # Admin-only page navigation
             admin_email = "rohan.gandotra19@gmail.com"
             if st.session_state['user']['email'] == admin_email:
                 st.markdown("---")
-                st.markdown("### 📊 Pages")
+                st.markdown("<p style='font-size: 0.875rem; font-weight: 600; color: var(--text-primary); margin-bottom: var(--space-3);'>Admin</p>", unsafe_allow_html=True)
                 st.page_link("app.py", label="🏠 Home", icon="🏠")
                 st.page_link("pages/Analytics.py", label="📈 Analytics", icon="📈")
+        else:
+            # Anonymous user sidebar - Login/Signup CTAs
+            st.markdown("<p style='font-size: 1.125rem; font-weight: 600; color: var(--text-primary); margin-bottom: var(--space-3);'>Welcome!</p>", unsafe_allow_html=True)
+            st.markdown("<p style='font-size: 0.9375rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: var(--space-6);'>Sign up to save your contacts and access them from anywhere.</p>", unsafe_allow_html=True)
+
+            if st.button("Sign Up Free", use_container_width=True, key="sidebar_signup", type="primary"):
+                st.session_state['show_register'] = True
+                st.rerun()
+
+            if st.button("Log In", use_container_width=True, key="sidebar_login"):
+                st.session_state['show_register'] = False
+                st.session_state['show_forgot_password'] = False
+                st.rerun()
+
+            # Show session contact count for anonymous users
+            if 'contacts_df' in st.session_state:
+                st.markdown("---")
+                st.markdown(f"<div style='padding: var(--space-3); background: rgba(37, 99, 235, 0.05); border: 1px solid var(--primary); border-radius: var(--radius-md); margin-top: var(--space-4);'><p style='font-size: 0.875rem; color: var(--text-secondary); margin: 0;'>{len(st.session_state['contacts_df']):,} contacts (session only)</p><p style='font-size: 0.8125rem; color: var(--text-tertiary); margin: var(--space-1) 0 0 0;'>Sign up to save permanently</p></div>", unsafe_allow_html=True)
 
         # Diagnostic section (collapsed by default)
         st.markdown("---")
@@ -1956,16 +1890,116 @@ def main():
 
     # Main content area
     if 'contacts_df' not in st.session_state:
-        # Clean empty state
+        # Premium Upload Card - Flow Design
         st.markdown("""
-<div class='card' style='text-align: center; padding: var(--space-16) var(--space-8); margin: var(--space-8) auto; max-width: 600px;'>
-<h2 style='font-family: var(--font-serif); font-size: 2rem; font-weight: 600; color: var(--text-primary); margin-bottom: var(--space-4);'>Get Started</h2>
-<p style='color: var(--text-secondary); font-size: 1.125rem; margin-bottom: var(--space-6);'>Upload your LinkedIn CSV to begin searching your network</p>
+<div class='card' style='text-align: center; padding: var(--space-12) var(--space-8); margin: var(--space-8) auto var(--space-12) auto; max-width: 700px;'>
+<h2 style='font-family: var(--font-serif); font-size: 2.25rem; font-weight: 600; color: var(--text-primary); margin-bottom: var(--space-3);'>Get Started</h2>
+<p style='color: var(--text-secondary); font-size: 1.125rem; margin-bottom: var(--space-8);'>Upload your LinkedIn CSV to begin searching your network</p>
+</div>
+""", unsafe_allow_html=True)
+
+        # Upload section - Premium card
+        st.markdown("<div style='max-width: 700px; margin: 0 auto;'>", unsafe_allow_html=True)
+
+        # Check if user already has contacts (only for logged-in users)
+        user_has_contacts = False
+        replace_contacts = False
+        if st.session_state.get('authenticated'):
+            user_has_contacts = auth.get_contact_count(st.session_state['user']['id']) > 0
+            if user_has_contacts:
+                st.info("You already have contacts saved. Upload a new CSV to replace them.")
+                replace_contacts = st.checkbox("Replace existing contacts", value=False,
+                                             help="Check this to delete your current contacts and upload new ones")
+
+        uploaded_file = st.file_uploader(
+            "Upload LinkedIn CSV",
+            type=['csv'],
+            help="Download your LinkedIn connections and upload the Connections.csv file",
+            label_visibility="visible"
+        )
+
+        if uploaded_file:
+            with st.spinner("Parsing contacts..."):
+                df = parse_linkedin_csv(uploaded_file)
+                if df is not None:
+                    st.session_state['contacts_df'] = df
+
+                    # Get user_id (for both logged-in and anonymous)
+                    user_id = st.session_state.get('user', {}).get('id', 'anonymous')
+
+                    if st.session_state.get('authenticated'):
+                        # LOGGED IN: Save to database
+                        if user_has_contacts:
+                            if not replace_contacts:
+                                st.warning("Check 'Replace existing contacts' above to save these to your account.")
+                                st.info(f"✅ Loaded {len(df)} contacts to current session")
+                            else:
+                                # Delete old contacts first
+                                with st.spinner("Replacing contacts..."):
+                                    if auth.delete_user_contacts(user_id):
+                                        save_result = auth.save_contacts_to_db(user_id, df)
+                                        if save_result['success']:
+                                            st.success(f"✅ Replaced with {len(df)} new contacts!")
+                                        else:
+                                            st.error(f"Error saving: {save_result['message']}")
+                                    else:
+                                        st.error("Error deleting old contacts")
+                        else:
+                            # No existing contacts, just save
+                            save_result = auth.save_contacts_to_db(user_id, df)
+                            if save_result['success']:
+                                st.success(f"✅ Loaded and saved {len(df)} contacts to your account!")
+                            else:
+                                st.warning(f"✅ Loaded {len(df)} contacts (saved to session only)")
+                    else:
+                        # ANONYMOUS: Session only with upgrade prompt
+                        st.success(f"✅ Loaded {len(df)} contacts!")
+                        st.info("💡 **Sign up free** in the sidebar to save your contacts permanently!")
+
+                    # Log CSV upload
+                    analytics.log_csv_upload(
+                        file_name=uploaded_file.name,
+                        num_contacts=len(df),
+                        success=True,
+                        session_id=st.session_state['session_id']
+                    )
+
+                    # Phase 3B: Build search indexes for fast future searches
+                    if HAS_NEW_SEARCH:
+                        with st.spinner("Building search indexes for faster searches..."):
+                            try:
+                                initialize_search_for_user(user_id, df)
+                                st.success("✅ Search indexes built! Searches will be 25x faster.")
+                            except Exception as e:
+                                st.warning(f"⚠️ Could not build search indexes: {e}")
+
+                    # Show preview
+                    with st.expander("👀 Preview contacts"):
+                        display_cols = [col for col in ['full_name', 'position', 'company'] if col in df.columns]
+                        st.dataframe(df[display_cols].head(10), use_container_width=True)
+
+                    st.rerun()
+                else:
+                    # Log failed upload
+                    analytics.log_csv_upload(
+                        file_name=uploaded_file.name,
+                        num_contacts=0,
+                        success=False,
+                        error_message="Failed to parse CSV",
+                        session_id=st.session_state['session_id']
+                    )
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        # Privacy reassurance
+        st.markdown("""
+<div style='max-width: 700px; margin: var(--space-6) auto; padding: var(--space-4); background: var(--bg-tertiary); border-radius: var(--radius-md); text-align: center;'>
+<p style='font-size: 0.875rem; color: var(--text-secondary); margin: 0;'>🔒 Your data is private and secure. We never share or sell your information.</p>
 </div>
 """, unsafe_allow_html=True)
 
         # LinkedIn Download Instructions - Clean
-        st.markdown("<h3 style='font-size: 1.5rem; font-weight: 600; margin-bottom: var(--space-6);'>How to Get Your LinkedIn Data</h3>", unsafe_allow_html=True)
+        st.markdown("<div style='max-width: 700px; margin: var(--space-16) auto;'><h3 style='font-size: 1.5rem; font-weight: 600; margin-bottom: var(--space-6);'>How to Get Your LinkedIn Data</h3>", unsafe_allow_html=True)
         st.markdown("""
 <div class='card' style='margin-bottom: var(--space-8);'>
 <ol style='margin: 0; padding-left: 1.5rem; color: var(--text-secondary); line-height: 1.8;'>
@@ -1974,13 +2008,14 @@ def main():
 <li style='margin-bottom: var(--space-3);'>Wait 10-15 minutes for the email</li>
 <li style='margin-bottom: var(--space-3);'>Download and extract the ZIP file</li>
 <li style='margin-bottom: var(--space-3);'>Find the <strong>Connections.csv</strong> file</li>
-<li>Upload it using the sidebar</li>
+<li>Upload it above</li>
 </ol>
+</div>
 </div>
 """, unsafe_allow_html=True)
 
         # Example queries - Clean
-        st.markdown("<h3 style='font-size: 1.5rem; font-weight: 600; margin-bottom: var(--space-6);'>Example Searches</h3>", unsafe_allow_html=True)
+        st.markdown("<div style='max-width: 700px; margin: 0 auto;'><h3 style='font-size: 1.5rem; font-weight: 600; margin-bottom: var(--space-6);'>Example Searches</h3>", unsafe_allow_html=True)
         col1, col2, col3 = st.columns(3)
 
         with col1:
@@ -2009,6 +2044,8 @@ def main():
 <p style='color: var(--text-secondary); font-size: 0.9375rem; line-height: 1.6;'>"Show me top 5 leaders"</p>
 </div>
 """, unsafe_allow_html=True)
+
+        st.markdown("</div>", unsafe_allow_html=True)  # Close max-width container
 
     else:
         contacts_df = st.session_state['contacts_df']
