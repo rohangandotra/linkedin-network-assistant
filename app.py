@@ -2338,85 +2338,30 @@ def main():
                         email = row.get('email', '')
 
                         # Modern contact card with gradient border and hover effects
-                        st.markdown(f"""
-                        <div class='contact-card' style='
-                            background: white;
-                            padding: 1.25rem;
-                            border-radius: var(--radius-xl);
-                            border: 2px solid var(--gray-200);
-                            margin-bottom: 0.75rem;
-                            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                            box-shadow: var(--shadow-sm);
-                            position: relative;
-                            overflow: hidden;
-                        '>
-                            <div style='position: absolute; top: 0; left: 0; right: 0; height: 4px;
-                                        background: linear-gradient(90deg, var(--primary-500) 0%, var(--secondary-500) 50%, var(--accent-500) 100%);
-                                        opacity: 0;
-                                        transition: opacity 0.3s ease;'
-                                 class='card-gradient-bar'>
-                            </div>
-
-                            <div style='display: flex; align-items: flex-start; gap: 1rem;'>
-                                <div style='flex-shrink: 0;
-                                            width: 48px;
-                                            height: 48px;
-                                            border-radius: 50%;
-                                            background: linear-gradient(135deg, var(--primary-500) 0%, var(--secondary-500) 100%);
-                                            display: flex;
-                                            align-items: center;
-                                            justify-content: center;
-                                            color: white;
-                                            font-weight: 700;
-                                            font-size: 1.25rem;
-                                            box-shadow: var(--shadow-md);'>
-                                    {name[0].upper() if name and name != 'No Name' else '?'}
-                                </div>
-
-                                <div style='flex: 1; min-width: 0;'>
-                                    <div style='font-weight: 700;
-                                                font-size: 1.1rem;
-                                                color: var(--gray-900);
-                                                margin-bottom: 0.35rem;
-                                                line-height: 1.3;'>
-                                        {name}
-                                    </div>
-                                    <div style='color: var(--gray-600);
-                                                font-size: 0.95rem;
-                                                font-weight: 500;
-                                                margin-bottom: 0.35rem;
-                                                line-height: 1.4;'>
-                                        {job_position}
-                                    </div>
-                                    <div style='display: flex;
-                                                align-items: center;
-                                                gap: 0.5rem;
-                                                flex-wrap: wrap;'>
-                                        <span style='color: var(--gray-500);
-                                                     font-size: 0.9rem;
-                                                     display: inline-flex;
-                                                     align-items: center;
-                                                     gap: 0.25rem;'>
-                                            🏢 {company}
-                                        </span>
-                                        {f'<span style="color: var(--gray-400);">•</span><span style="color: var(--primary-600); font-size: 0.85rem; font-weight: 500;">✉️ {email}</span>' if email else ''}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <style>
-                        .contact-card:hover {{
-                            transform: translateY(-3px) translateX(4px);
-                            box-shadow: var(--shadow-xl);
-                            border-color: var(--primary-300);
-                        }}
-
-                        .contact-card:hover .card-gradient-bar {{
-                            opacity: 1;
-                        }}
-                        </style>
-                        """, unsafe_allow_html=True)
+                        st.markdown(f"""<div class='contact-card' style='background: white; padding: 1.25rem; border-radius: var(--radius-xl); border: 2px solid var(--gray-200); margin-bottom: 0.75rem; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: var(--shadow-sm); position: relative; overflow: hidden;'>
+<div style='position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--primary-500) 0%, var(--secondary-500) 50%, var(--accent-500) 100%); opacity: 0; transition: opacity 0.3s ease;' class='card-gradient-bar'></div>
+<div style='display: flex; align-items: flex-start; gap: 1rem;'>
+<div style='flex-shrink: 0; width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-500) 0%, var(--secondary-500) 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.25rem; box-shadow: var(--shadow-md);'>{name[0].upper() if name and name != 'No Name' else '?'}</div>
+<div style='flex: 1; min-width: 0;'>
+<div style='font-weight: 700; font-size: 1.1rem; color: var(--gray-900); margin-bottom: 0.35rem; line-height: 1.3;'>{name}</div>
+<div style='color: var(--gray-600); font-size: 0.95rem; font-weight: 500; margin-bottom: 0.35rem; line-height: 1.4;'>{job_position}</div>
+<div style='display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;'>
+<span style='color: var(--gray-500); font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.25rem;'>🏢 {company}</span>
+{f'<span style="color: var(--gray-400);">•</span><span style="color: var(--primary-600); font-size: 0.85rem; font-weight: 500;">✉️ {email}</span>' if email else ''}
+</div>
+</div>
+</div>
+</div>
+<style>
+.contact-card:hover {{
+transform: translateY(-3px) translateX(4px);
+box-shadow: var(--shadow-xl);
+border-color: var(--primary-300);
+}}
+.contact-card:hover .card-gradient-bar {{
+opacity: 1;
+}}
+</style>""", unsafe_allow_html=True)
 
                 # Pagination controls
                 if total_pages > 1:
