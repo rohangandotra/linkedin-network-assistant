@@ -1691,6 +1691,12 @@ def main():
         else:
             st.markdown("**📇 No contacts yet**")
 
+        # Show search system status
+        if HAS_NEW_SEARCH:
+            st.markdown("**⚡ Fast Search:** Enabled")
+        else:
+            st.markdown("**🔍 Search:** Standard")
+
         # Hide auto-generated page navigation from top for everyone
         st.markdown("""
         <style>

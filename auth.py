@@ -383,11 +383,21 @@ def save_contacts_to_db(user_id: str, contacts_df) -> Dict[str, Any]:
         # Insert contacts in batch
         supabase.table('contacts').insert(contacts_list).execute()
 
-        # Track upload
-        supabase.table('csv_uploads').insert({
-            'user_id': user_id,
-            'contacts_count': len(contacts_list)
-        }).execute()
+        # Track upload (contacts_count column may not exist in older schemas)
+        try:
+            supabase.table('csv_uploads').insert({
+                'user_id': user_id,
+                'contacts_count': len(contacts_list)
+            }).execute()
+        except Exception as upload_error:
+            # If contacts_count column doesn't exist, try without it
+            try:
+                supabase.table('csv_uploads').insert({
+                    'user_id': user_id
+                }).execute()
+            except:
+                # csv_uploads tracking is optional - don't fail if it doesn't work
+                pass
 
         return {
             'success': True,
