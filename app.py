@@ -80,7 +80,7 @@ def get_openai_api_key():
         if len(api_key) > 20:
             return api_key
 
-    st.error("⚠️ OpenAI API key not found! Please check Streamlit Cloud secrets.")
+    st.error("OpenAI API key not found! Please check Streamlit Cloud secrets.")
     st.stop()
     return None
 
@@ -394,7 +394,7 @@ st.markdown("""
         background: var(--bg-secondary);
         border-radius: var(--radius-lg);
         padding: var(--space-8);
-        border: 1px dashed var(--border-medium);
+        border: 1px solid var(--border-light);
         transition: all 0.15s ease;
         box-shadow: var(--shadow-sm);
     }
@@ -775,7 +775,7 @@ if st.session_state.get('authenticated'):
 <div class='top-nav'>
 <div class='top-nav-logo'>NetworkAI</div>
 <div class='top-nav-links'>
-<span class='top-nav-link'>👤 {user_name}</span>
+<span class='top-nav-link'>{user_name}</span>
 </div>
 </div>
 """, unsafe_allow_html=True)
@@ -816,7 +816,7 @@ def parse_linkedin_csv(uploaded_file):
             matches = sum(1 for indicator in linkedin_indicators if indicator in line_lower)
             if matches >= 2:  # If we find at least 2 LinkedIn column names, this is the header
                 header_row = i
-                st.info(f"🔍 Found LinkedIn headers at row {i + 1}")
+                st.info(f"Found LinkedIn headers at row {i + 1}")
                 break
 
         # Now read the CSV with the correct header row
@@ -845,7 +845,7 @@ def parse_linkedin_csv(uploaded_file):
         df.columns = df.columns.str.strip().str.lower()
 
         # Debug: show what columns we found
-        st.success(f"✅ Loaded {len(df)} connections with columns: {', '.join(df.columns.tolist()[:10])}")
+        st.success(f"Loaded {len(df)} connections with columns: {', '.join(df.columns.tolist()[:10])}")
 
         # Map common LinkedIn column names
         column_mapping = {
@@ -876,7 +876,7 @@ def parse_linkedin_csv(uploaded_file):
 
         if not has_required:
             raise Exception(
-                f"❌ This doesn't look like a LinkedIn Connections export.\n\n"
+                f"This doesn't look like a LinkedIn Connections export.\n\n"
                 f"Found columns: {', '.join(df.columns.tolist())}\n\n"
                 f"Expected columns like: First Name, Last Name, Company, Position"
             )
@@ -971,20 +971,20 @@ Return ONLY valid JSON, no other text."""
 
         # Provide specific guidance based on error type
         if "insufficient_quota" in error_msg.lower():
-            st.error("❌ **Insufficient quota** - Your OpenAI credits have run out or billing is not set up.")
-            st.info("💡 Go to https://platform.openai.com/account/billing and add a payment method")
+            st.error("**Insufficient quota** - Your OpenAI credits have run out or billing is not set up.")
+            st.info("Go to https://platform.openai.com/account/billing and add a payment method")
         elif "invalid_api_key" in error_msg.lower():
-            st.error("❌ **Invalid API key** - The API key is incorrect or expired.")
+            st.error("**Invalid API key** - The API key is incorrect or expired.")
         elif "rate_limit" in error_msg.lower():
-            st.warning("⏱️ **Rate limit exceeded** - Too many requests. Please wait a moment and try again.")
+            st.warning("**Rate limit exceeded** - Too many requests. Please wait a moment and try again.")
         elif "timeout" in error_msg.lower():
-            st.warning("⏱️ **Request timeout** - The API took too long to respond. Try again.")
+            st.warning("**Request timeout** - The API took too long to respond. Try again.")
         else:
             st.error("Please check: 1) Your API key is valid, 2) You have credits/billing set up, 3) Your internet connection")
-            st.info("💡 Check your OpenAI account: https://platform.openai.com/account/billing")
+            st.info("Check your OpenAI account: https://platform.openai.com/account/billing")
 
         # Show full error in expander for debugging
-        with st.expander("🔍 Full error details (for debugging)"):
+        with st.expander("Full error details (for debugging)"):
             st.code(error_msg)
 
         return None
@@ -1332,8 +1332,8 @@ Return the email with a subject line."""
 # Authentication UI Functions
 def show_login_page():
     """Display login page"""
-    st.markdown("<h1 style='text-align: center; margin-top: 2rem;'>🔐 Login to LinkedIn Network Assistant</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #666; margin-bottom: 3rem;'>Access your personalized network dashboard</p>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; margin-top: 2rem; font-family: var(--font-serif);'>Login to LinkedIn Network Assistant</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: var(--text-secondary); margin-bottom: 3rem;'>Access your personalized network dashboard</p>", unsafe_allow_html=True)
 
     # Center the login form
     col1, col2, col3 = st.columns([1, 2, 1])
@@ -1344,7 +1344,7 @@ def show_login_page():
             email = st.text_input("Email", placeholder="your@email.com")
             password = st.text_input("Password", type="password", placeholder="Enter your password")
 
-            submit = st.form_submit_button("🚀 Login", use_container_width=True)
+            submit = st.form_submit_button("Login", use_container_width=True, type="primary")
 
             if submit:
                 # Strip whitespace from inputs
@@ -1373,16 +1373,16 @@ def show_login_page():
                                 user_data = supabase.table('users').select('email_verified').eq('id', result['user']['id']).execute()
 
                                 if user_data.data and not user_data.data[0].get('email_verified', False):
-                                    st.warning("⚠️ Please verify your email to continue. Check your inbox for the verification link.")
+                                    st.warning("Please verify your email to continue. Check your inbox for the verification link.")
 
                                     # Show resend verification button
-                                    if st.button("📧 Resend Verification Email"):
+                                    if st.button("Resend Verification Email"):
                                         security.send_verification_email(
                                             result['user']['id'],
                                             result['user']['email'],
                                             result['user']['full_name']
                                         )
-                                        st.info("✅ Verification email sent!")
+                                        st.info("Verification email sent!")
                                     return
 
                                 # Store user info in session
@@ -1401,7 +1401,7 @@ def show_login_page():
                                 if rate_limit.get('remaining_attempts'):
                                     st.caption(f"Remaining attempts: {rate_limit['remaining_attempts']}")
                         except Exception as e:
-                            st.error(f"❌ Login failed: {str(e)}")
+                            st.error(f"Login failed: {str(e)}")
                             with st.expander("Technical Details"):
                                 st.code(str(e))
                                 st.caption("If this error persists, please contact support.")
@@ -1409,7 +1409,7 @@ def show_login_page():
         # Forgot password link
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("🔑 Forgot Password?", use_container_width=True, type="secondary"):
+            if st.button("Forgot Password?", use_container_width=True, type="secondary"):
                 st.session_state['show_forgot_password'] = True
                 st.rerun()
         with col2:
@@ -1418,14 +1418,14 @@ def show_login_page():
         st.markdown("---")
         st.markdown("<p style='text-align: center;'>Don't have an account?</p>", unsafe_allow_html=True)
 
-        if st.button("📝 Create New Account", use_container_width=True):
+        if st.button("Create New Account", use_container_width=True):
             st.session_state['show_register'] = True
             st.rerun()
 
 def show_forgot_password_page():
     """Display forgot password page"""
-    st.markdown("<h1 style='text-align: center; margin-top: 2rem;'>🔑 Reset Your Password</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #666; margin-bottom: 3rem;'>Enter your email to receive a password reset link</p>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; margin-top: 2rem; font-family: var(--font-serif);'>Reset Your Password</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: var(--text-secondary); margin-bottom: 3rem;'>Enter your email to receive a password reset link</p>", unsafe_allow_html=True)
 
     col1, col2, col3 = st.columns([1, 2, 1])
 
@@ -1434,7 +1434,7 @@ def show_forgot_password_page():
             st.markdown("### Password Reset")
             email = st.text_input("Email Address", placeholder="your@email.com")
 
-            submit = st.form_submit_button("📧 Send Reset Link", use_container_width=True)
+            submit = st.form_submit_button("Send Reset Link", use_container_width=True, type="primary")
 
             if submit:
                 email = email.strip() if email else ""
@@ -1449,15 +1449,15 @@ def show_forgot_password_page():
 
         st.markdown("---")
 
-        if st.button("⬅️ Back to Login", use_container_width=True):
+        if st.button("Back to Login", use_container_width=True):
             st.session_state['show_forgot_password'] = False
             st.rerun()
 
 
 def show_password_reset_form(token):
     """Display password reset form (when user clicks email link)"""
-    st.markdown("<h1 style='text-align: center; margin-top: 2rem;'>🔒 Set New Password</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #666; margin-bottom: 3rem;'>Create a strong new password</p>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; margin-top: 2rem; font-family: var(--font-serif);'>Set New Password</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: var(--text-secondary); margin-bottom: 3rem;'>Create a strong new password</p>", unsafe_allow_html=True)
 
     col1, col2, col3 = st.columns([1, 2, 1])
 
@@ -1468,7 +1468,7 @@ def show_password_reset_form(token):
             new_password = st.text_input("New Password", type="password", placeholder="Enter new password")
             confirm_password = st.text_input("Confirm Password", type="password", placeholder="Re-enter new password")
 
-            submit = st.form_submit_button("✅ Reset Password", use_container_width=True)
+            submit = st.form_submit_button("Reset Password", use_container_width=True, type="primary")
 
             if submit:
                 new_password = new_password.strip() if new_password else ""
@@ -1519,7 +1519,7 @@ def show_register_page():
             password = st.text_input("Password", type="password", placeholder="Create a strong password")
             password_confirm = st.text_input("Confirm Password", type="password", placeholder="Re-enter your password")
 
-            submit = st.form_submit_button("✨ Create Account", use_container_width=True)
+            submit = st.form_submit_button("Create Account", use_container_width=True, type="primary")
 
             if submit:
                 # Strip whitespace from all inputs
@@ -1558,9 +1558,9 @@ def show_register_page():
                                 st.success(result['message'])
 
                                 if email_sent:
-                                    st.info("📧 Verification email sent! Please check your inbox and click the verification link to activate your account.")
+                                    st.info("Verification email sent! Please check your inbox and click the verification link to activate your account.")
                                 else:
-                                    st.warning("⚠️ Account created but verification email could not be sent. You can still log in, but some features may be limited.")
+                                    st.warning("Account created but verification email could not be sent. You can still log in, but some features may be limited.")
 
                                 st.session_state['show_register'] = False
                                 # Wait a moment then redirect to login
@@ -1570,7 +1570,7 @@ def show_register_page():
                             else:
                                 st.error(result['message'])
                         except Exception as e:
-                            st.error(f"❌ Registration failed: {str(e)}")
+                            st.error(f"Registration failed: {str(e)}")
                             with st.expander("Technical Details"):
                                 st.code(str(e))
                                 st.caption("If this error persists, please contact support.")
@@ -1578,7 +1578,7 @@ def show_register_page():
         st.markdown("---")
         st.markdown("<p style='text-align: center;'>Already have an account?</p>", unsafe_allow_html=True)
 
-        if st.button("🔐 Back to Login", use_container_width=True):
+        if st.button("Back to Login", use_container_width=True):
             st.session_state['show_register'] = False
             st.rerun()
 
@@ -1590,7 +1590,7 @@ def main():
     # Handle email verification token
     if 'verify_email' in query_params:
         token = query_params['verify_email']
-        st.markdown("<h1 style='text-align: center; margin-top: 2rem;'>✅ Email Verification</h1>", unsafe_allow_html=True)
+        st.markdown("<h1 style='text-align: center; margin-top: 2rem; font-family: var(--font-serif);'>Email Verification</h1>", unsafe_allow_html=True)
 
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
@@ -1600,12 +1600,12 @@ def main():
                 if result['success']:
                     st.success(result['message'])
                     st.balloons()
-                    if st.button("🚀 Go to Login", type="primary", use_container_width=True):
+                    if st.button("Go to Login", type="primary", use_container_width=True):
                         st.query_params.clear()
                         st.rerun()
                 else:
                     st.error(result['message'])
-                    if st.button("⬅️ Back to Home", use_container_width=True):
+                    if st.button("Back to Home", use_container_width=True):
                         st.query_params.clear()
                         st.rerun()
         return
@@ -1854,14 +1854,14 @@ def main():
                         if user_has_contacts:
                             if not replace_contacts:
                                 st.warning("Check 'Replace existing contacts' above to save these to your account.")
-                                st.info(f"✅ Loaded {len(df)} contacts to current session")
+                                st.info(f"Loaded {len(df)} contacts to current session")
                             else:
                                 # Delete old contacts first
                                 with st.spinner("Replacing contacts..."):
                                     if auth.delete_user_contacts(user_id):
                                         save_result = auth.save_contacts_to_db(user_id, df)
                                         if save_result['success']:
-                                            st.success(f"✅ Replaced with {len(df)} new contacts!")
+                                            st.success(f"Replaced with {len(df)} new contacts!")
                                         else:
                                             st.error(f"Error saving: {save_result['message']}")
                                     else:
@@ -1870,9 +1870,9 @@ def main():
                             # No existing contacts, just save
                             save_result = auth.save_contacts_to_db(user_id, df)
                             if save_result['success']:
-                                st.success(f"✅ Loaded and saved {len(df)} contacts to your account!")
+                                st.success(f"Loaded and saved {len(df)} contacts to your account!")
                             else:
-                                st.warning(f"✅ Loaded {len(df)} contacts (saved to session only)")
+                                st.warning(f"Loaded {len(df)} contacts (saved to session only)")
                     else:
                         # ANONYMOUS: Session only with upgrade prompt
                         st.success(f"Loaded {len(df)} contacts!")
@@ -1891,12 +1891,12 @@ def main():
                         with st.spinner("Building search indexes for faster searches..."):
                             try:
                                 initialize_search_for_user(user_id, df)
-                                st.success("✅ Search indexes built! Searches will be 25x faster.")
+                                st.success("Search indexes built! Searches will be 25x faster.")
                             except Exception as e:
-                                st.warning(f"⚠️ Could not build search indexes: {e}")
+                                st.warning(f"Could not build search indexes: {e}")
 
                     # Show preview
-                    with st.expander("👀 Preview contacts"):
+                    with st.expander("Preview contacts"):
                         display_cols = [col for col in ['full_name', 'position', 'company'] if col in df.columns]
                         st.dataframe(df[display_cols].head(10), use_container_width=True)
 
@@ -1980,10 +1980,10 @@ def main():
             )
 
             # Submit button (triggered by Enter or click)
-            search_button = st.form_submit_button("🔍 Search", type="primary")
+            search_button = st.form_submit_button("Search", type="primary")
 
         # Example questions in expander
-        with st.expander("💡 Example Questions", expanded=False):
+        with st.expander("Example Questions", expanded=False):
             st.markdown("""
             **Search for People:**
             - Who works in venture capital?
@@ -2005,7 +2005,7 @@ def main():
 
             if query_type == "analytics":
                 # Handle analytics query
-                with st.spinner("🧠 AI is analyzing your network..."):
+                with st.spinner("AI is analyzing your network..."):
                     result = analyze_network_with_ai(query, contacts_df)
 
                     if result['success']:
@@ -2029,12 +2029,12 @@ def main():
                                     summary = generate_summary(filtered_df, intent)
                                     st.session_state['summary'] = summary
                     else:
-                        st.error(f"❌ Analysis failed: {result.get('error', 'Unknown error')}")
+                        st.error(f"Analysis failed: {result.get('error', 'Unknown error')}")
             else:
                 # Handle search query (find people)
                 # Phase 3B: Use new hybrid search for 95% cost reduction + 25x speed
                 if HAS_NEW_SEARCH:
-                    with st.spinner("⚡ Searching your network..."):
+                    with st.spinner("Searching your network..."):
                         # Clear any previous analytics result
                         if 'analytics_result' in st.session_state:
                             del st.session_state['analytics_result']
@@ -2045,7 +2045,7 @@ def main():
 
                             if search_result.get('use_legacy_gpt'):
                                 # Complex query - fall back to old GPT search
-                                st.caption("⚙️ Using AI reasoning for complex query...")
+                                st.caption("Using AI reasoning for complex query...")
                                 intent = extract_search_intent(query, contacts_df)
 
                                 if intent:
@@ -2065,11 +2065,11 @@ def main():
                                     summary_text = get_search_summary(search_result, query)
                                     tier_info = f" • Method: {search_result.get('tier_used', 'unknown')}"
                                     latency_info = f" • Time: {search_result.get('latency_ms', 0):.0f}ms"
-                                    cached_info = " • ⚡ Cached" if search_result.get('cached') else ""
+                                    cached_info = " • Cached" if search_result.get('cached') else ""
 
                                     summary = f"""
                                     <strong>Search Results for "{query}"</strong><br>
-                                    ✅ Found {len(filtered_df)} matches{tier_info}{latency_info}{cached_info}
+                                    Found {len(filtered_df)} matches{tier_info}{latency_info}{cached_info}
                                     """
                                 else:
                                     summary = f"No results found for '{query}'"
@@ -2078,9 +2078,9 @@ def main():
 
                                 # Show performance badge
                                 if search_result.get('cached'):
-                                    st.success(f"⚡ Instant search (cached) • {len(filtered_df)} results")
+                                    st.success(f"Instant search (cached) • {len(filtered_df)} results")
                                 elif search_result.get('latency_ms', 0) < 100:
-                                    st.success(f"⚡ Lightning fast ({search_result.get('latency_ms', 0):.0f}ms) • {len(filtered_df)} results")
+                                    st.success(f"Lightning fast ({search_result.get('latency_ms', 0):.0f}ms) • {len(filtered_df)} results")
 
                             # Log search query
                             analytics.log_search_query(
@@ -2105,7 +2105,7 @@ def main():
 
                 else:
                     # Legacy search (if new search not available)
-                    with st.spinner("🔍 Searching your network..."):
+                    with st.spinner("Searching your network..."):
                         intent = extract_search_intent(query, contacts_df)
 
                         if intent:
@@ -2116,7 +2116,7 @@ def main():
                                 del st.session_state['analytics_result']
 
                             # Debug: Show what the AI understood
-                            with st.expander("🔍 Debug: What the AI understood from your query"):
+                            with st.expander("Debug: What the AI understood from your query"):
                                 st.json(intent)
 
                             # Filter contacts
@@ -2141,7 +2141,7 @@ def main():
         # Display AI analytics insights if available
         if 'analytics_result' in st.session_state:
             st.markdown("<br>", unsafe_allow_html=True)
-            st.markdown("### 💡 AI Insights")
+            st.markdown("### AI Insights")
             st.markdown(f"""
             <div class='results-summary'>
                 {st.session_state['analytics_result']}
@@ -2185,7 +2185,7 @@ def main():
                 # Selection header with action buttons and pagination info
                 col_header1, col_header2, col_header3 = st.columns([2, 1, 1])
                 with col_header1:
-                    st.markdown("### 📋 Select Contacts")
+                    st.markdown("### Select Contacts")
                 with col_header2:
                     st.markdown(f"<div style='text-align: right; padding-top: 0.5rem; color: #666;'>Page {current_page} of {total_pages}</div>", unsafe_allow_html=True)
                 with col_header3:
@@ -2313,14 +2313,14 @@ opacity: 1;
                         email_purpose = st.selectbox(
                             "What's the purpose of your email?",
                             [
-                                "🤝 Just catching up / Reconnecting",
-                                "💼 I'm looking for a job",
-                                "👥 I'm looking to hire",
-                                "🚀 Pitching my startup/idea",
-                                "💡 Asking for advice/mentorship",
-                                "🔗 Making an introduction",
-                                "☕ Requesting a coffee chat",
-                                "📚 Seeking information/insights"
+                                "Just catching up / Reconnecting",
+                                "I'm looking for a job",
+                                "I'm looking to hire",
+                                "Pitching my startup/idea",
+                                "Asking for advice/mentorship",
+                                "Making an introduction",
+                                "Requesting a coffee chat",
+                                "Seeking information/insights"
                             ],
                             key="email_purpose_selector"
                         )
@@ -2341,7 +2341,7 @@ opacity: 1;
                     # Additional context text area
                     st.markdown("<br>", unsafe_allow_html=True)
                     additional_context = st.text_area(
-                        "💡 Additional context (optional)",
+                        "Additional context (optional)",
                         placeholder="e.g., 'We met at the Tech Conference 2023' or 'They mentored me during my internship' or 'We worked together on Project X'",
                         help="Add any personal context about your relationship or what you know about these connections. This helps create more authentic emails.",
                         height=100,
@@ -2352,13 +2352,13 @@ opacity: 1;
                     col1, col2, col3 = st.columns(3)
 
                     with col1:
-                        if st.button("📧 Generate Personalized Emails", use_container_width=True, type="primary"):
+                        if st.button("Generate Personalized Emails", use_container_width=True, type="primary"):
                             # Get selected contacts by position
                             selected_positions = sorted(list(st.session_state['selected_contacts']))
                             selected_df = filtered_df.iloc[selected_positions]
 
                             # Generate personalized emails with loading spinner
-                            with st.spinner(f"✨ AI is writing {len(selected_df)} personalized email(s)..."):
+                            with st.spinner(f"AI is writing {len(selected_df)} personalized email(s)..."):
                                 try:
                                     email_drafts = generate_personalized_emails(selected_df, email_purpose, email_tone, additional_context)
                                     st.session_state['email_drafts'] = email_drafts
@@ -2374,7 +2374,7 @@ opacity: 1;
                                         success=True,
                                         session_id=st.session_state['session_id']
                                     )
-                                    st.success(f"✅ Generated {len(selected_df)} personalized email draft(s)!")
+                                    st.success(f"Generated {len(selected_df)} personalized email draft(s)!")
                                 except Exception as e:
                                     # Log failed email generation
                                     analytics.log_email_generation(
@@ -2384,10 +2384,10 @@ opacity: 1;
                                         success=False,
                                         session_id=st.session_state['session_id']
                                     )
-                                    st.error(f"❌ Failed to generate emails: {str(e)}")
+                                    st.error(f"Failed to generate emails: {str(e)}")
 
                     with col2:
-                        if st.button("📋 Copy Contact Info", use_container_width=True):
+                        if st.button("Copy Contact Info", use_container_width=True):
                             selected_positions = sorted(list(st.session_state['selected_contacts']))
                             selected_df = filtered_df.iloc[selected_positions]
                             contact_info = "\n".join([
@@ -2403,7 +2403,7 @@ opacity: 1;
                                 session_id=st.session_state['session_id']
                             )
 
-                            st.success("✅ Contact info copied! Check below.")
+                            st.success("Contact info copied! Check below.")
 
                     with col3:
                         # CSV export of selected
@@ -2411,7 +2411,7 @@ opacity: 1;
                         selected_df = filtered_df.iloc[selected_positions]
                         csv = selected_df[display_cols].to_csv(index=False)
                         st.download_button(
-                            label="📥 Export Selected",
+                            label="Export Selected",
                             data=csv,
                             file_name="selected_contacts.csv",
                             mime="text/csv",
@@ -2421,7 +2421,7 @@ opacity: 1;
                 # Display generated email drafts with tabs
                 if 'email_drafts' in st.session_state and st.session_state['email_drafts']:
                     st.markdown("<br>", unsafe_allow_html=True)
-                    st.markdown("### 📧 Email Drafts")
+                    st.markdown("### Email Drafts")
 
                     email_drafts = st.session_state['email_drafts']
 
@@ -2450,9 +2450,9 @@ opacity: 1;
                                 )
 
                                 if draft.get('error'):
-                                    st.error("⚠️ There was an error generating this email. Please check your OpenAI API settings.")
+                                    st.error("There was an error generating this email. Please check your OpenAI API settings.")
                                 else:
-                                    st.info("💡 AI-generated draft - please personalize before sending!")
+                                    st.info("AI-generated draft - please personalize before sending!")
                     else:
                         # Single email - no tabs needed
                         draft = email_drafts[0]
@@ -2473,9 +2473,9 @@ opacity: 1;
                         )
 
                         if draft.get('error'):
-                            st.error("⚠️ There was an error generating this email. Please check your OpenAI API settings.")
+                            st.error("There was an error generating this email. Please check your OpenAI API settings.")
                         else:
-                            st.info("💡 AI-generated draft - please personalize before sending!")
+                            st.info("AI-generated draft - please personalize before sending!")
 
                     if st.button("Clear All Email Drafts"):
                         del st.session_state['email_drafts']
@@ -2486,7 +2486,7 @@ opacity: 1;
                 # Display copied contact info
                 if 'contact_info' in st.session_state:
                     st.markdown("<br>", unsafe_allow_html=True)
-                    st.markdown("### 📋 Contact Information")
+                    st.markdown("### Contact Information")
                     st.code(st.session_state['contact_info'], language="text")
                     if st.button("Clear Contact Info"):
                         del st.session_state['contact_info']
@@ -2501,7 +2501,7 @@ opacity: 1;
                 with col1:
                     csv = filtered_df[display_cols].to_csv(index=False)
                     st.download_button(
-                        label="📥 Download All as CSV",
+                        label="Download All as CSV",
                         data=csv,
                         file_name="all_contacts.csv",
                         mime="text/csv",
@@ -2514,7 +2514,7 @@ opacity: 1;
                         for _, row in filtered_df.iterrows()
                     ])
                     st.download_button(
-                        label="📋 Download All as TXT",
+                        label="Download All as TXT",
                         data=text_output,
                         file_name="all_contacts.txt",
                         mime="text/plain",
@@ -2544,10 +2544,10 @@ opacity: 1;
                     key="extended_search_query"
                 )
 
-                ext_search_button = st.form_submit_button("🔍 Search Extended Network", type="secondary")
+                ext_search_button = st.form_submit_button("Search Extended Network", type="secondary")
 
             if ext_search_button and ext_query:
-                with st.spinner("🔍 Searching connected networks..."):
+                with st.spinner("Searching connected networks..."):
                     # Get contacts from connected users
                     extended_contacts_df = collaboration.get_contacts_from_connected_users(user_id)
 
@@ -2563,7 +2563,7 @@ opacity: 1;
                         results = extended_contacts_df[mask]
 
                         if not results.empty:
-                            st.success(f"✅ Found {len(results)} contact(s) in extended network!")
+                            st.success(f"Found {len(results)} contact(s) in extended network!")
 
                             # Display results
                             for idx, row in results.head(20).iterrows():  # Limit to 20 for performance
@@ -2584,7 +2584,7 @@ opacity: 1;
                                         </div>
                                         <div style='background: white; padding: 0.5rem; border-radius: 6px;'>
                                             <span style='color: #075985; font-size: 0.85rem; font-weight: 600;'>
-                                                📇 In {row.get('owner_name', 'Unknown')}'s network
+                                                In {row.get('owner_name', 'Unknown')}'s network
                                             </span>
                                         </div>
                                     </div>
@@ -2593,7 +2593,7 @@ opacity: 1;
                                 with col2:
                                     st.markdown("<br>", unsafe_allow_html=True)
                                     # Request intro button
-                                    if st.button(f"📨 Request Intro", key=f"req_intro_{idx}", use_container_width=True):
+                                    if st.button(f"Request Intro", key=f"req_intro_{idx}", use_container_width=True):
                                         # Store contact info in session state to show request form
                                         st.session_state['intro_request_contact'] = {
                                             'contact_id': row.get('id'),
@@ -2608,7 +2608,7 @@ opacity: 1;
                                         st.rerun()
 
                             if len(results) > 20:
-                                st.info(f"ℹ️ Showing first 20 of {len(results)} results. Refine your search for more specific matches.")
+                                st.info(f"Showing first 20 of {len(results)} results. Refine your search for more specific matches.")
 
                         else:
                             st.info(f"No contacts found matching '{ext_query}' in extended network.")
@@ -2620,7 +2620,7 @@ opacity: 1;
                 contact = st.session_state['intro_request_contact']
 
                 st.markdown("---")
-                st.markdown("### 📨 Request Introduction")
+                st.markdown("### Request Introduction")
 
                 st.markdown(f"""
                 <div style='background: #fffbeb; padding: 1.5rem; border-radius: 10px; border: 1px solid #fbbf24; margin-bottom: 1.5rem;'>
@@ -2653,9 +2653,9 @@ opacity: 1;
 
                     col1, col2 = st.columns(2)
                     with col1:
-                        submit_request = st.form_submit_button("📤 Send Request", type="primary", use_container_width=True)
+                        submit_request = st.form_submit_button("Send Request", type="primary", use_container_width=True)
                     with col2:
-                        cancel_request = st.form_submit_button("❌ Cancel", use_container_width=True)
+                        cancel_request = st.form_submit_button("Cancel", use_container_width=True)
 
                     if submit_request:
                         if not request_message.strip():
@@ -2675,7 +2675,7 @@ opacity: 1;
                             )
 
                             if result['success']:
-                                st.success(f"✅ Introduction request sent to {contact['connector_name']}!")
+                                st.success(f"Introduction request sent to {contact['connector_name']}!")
                                 del st.session_state['intro_request_contact']
                                 st.rerun()
                             else:
@@ -2686,7 +2686,7 @@ opacity: 1;
                         st.rerun()
 
         else:
-            st.info("👥 Connect with other users to search their networks and request introductions!")
+            st.info("Connect with other users to search their networks and request introductions!")
             st.markdown("""
             **How to build your extended network:**
             1. Go to the **Connections** page
@@ -2698,7 +2698,7 @@ opacity: 1;
 if __name__ == "__main__":
     # Check for API key
     if not os.getenv("OPENAI_API_KEY"):
-        st.error("⚠️ OpenAI API key not found. Please set OPENAI_API_KEY in your .env file")
+        st.error("OpenAI API key not found. Please set OPENAI_API_KEY in your .env file")
         st.stop()
 
     main()
