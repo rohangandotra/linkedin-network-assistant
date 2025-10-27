@@ -241,9 +241,14 @@ st.markdown("""
         font-family: var(--font-sans);
     }
 
-    /* Hide sidebar - using top nav instead */
+    /* Sidebar styling - Flow aesthetic */
     section[data-testid="stSidebar"] {
-        display: none !important;
+        background: var(--bg-secondary);
+        border-right: 1px solid var(--border-subtle);
+    }
+
+    section[data-testid="stSidebar"] > div {
+        background: var(--bg-secondary);
     }
 
     /* Main background - soft neutral */
@@ -742,14 +747,24 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Top Navigation Bar
-st.markdown("""
+# Top Navigation Bar - Dynamic based on auth state
+if st.session_state.get('authenticated'):
+    # Logged in: Show user name
+    user_name = st.session_state['user']['full_name'].split()[0]  # First name only
+    st.markdown(f"""
 <div class='top-nav'>
 <div class='top-nav-logo'>NetworkAI</div>
 <div class='top-nav-links'>
-<a href='#how-it-works' class='top-nav-link'>How it works</a>
-<a href='#features' class='top-nav-link'>Features</a>
-<a href='#about' class='top-nav-link'>About</a>
+<span class='top-nav-link'>👤 {user_name}</span>
+</div>
+</div>
+""", unsafe_allow_html=True)
+else:
+    # Not logged in: Show login button
+    st.markdown("""
+<div class='top-nav'>
+<div class='top-nav-logo'>NetworkAI</div>
+<div class='top-nav-links'>
 </div>
 </div>
 """, unsafe_allow_html=True)
