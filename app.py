@@ -2334,6 +2334,9 @@ def main():
     # === DUPLICATE NAVIGATION REMOVED (Phase 1) ===
     # Old navigation buttons removed - now handled by unified top nav bar
 
+    # Get user_id for main content area (needed for dashboard and other features)
+    user_id = st.session_state.get('user', {}).get('id', 'anonymous')
+
     # Show connections page if requested (requires authentication)
     if st.session_state.get('show_connections'):
         if st.session_state.get('authenticated'):
