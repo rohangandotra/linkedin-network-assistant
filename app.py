@@ -2199,19 +2199,11 @@ def main():
 
         user_name = st.session_state.get('user', {}).get('full_name', 'User')
 
-        st.markdown(f"""
-<div style='position: fixed; top: 0; left: 0; right: 0; background: var(--bg-secondary); border-bottom: 1px solid var(--border-subtle); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: var(--shadow-sm);'>
-<div style='display: flex; gap: 2rem; align-items: center;'>
-<h2 style='font-family: var(--font-serif); font-size: 1.5rem; font-weight: 600; color: var(--text-primary); margin: 0;'>6th Degree</h2>
-</div>
-<div style='display: flex; gap: 1rem; align-items: center;'>
-<span style='font-size: 0.9375rem; color: var(--text-secondary);'>{user_name}</span>
-</div>
-</div>
-""", unsafe_allow_html=True)
+        # Horizontal navigation bar with inline buttons
+        user_name = st.session_state.get('user', {}).get('full_name', 'User')
 
-        # Buttons in columns
-        col1, col2, col3, col4 = st.columns([6, 1, 1, 6])
+        # Navigation buttons - horizontal layout
+        col1, col2, col3, col4 = st.columns([2, 1, 1, 2])
 
         with col2:
             if st.button("Dashboard", key="nav_dashboard", use_container_width=True, type="secondary" if st.session_state.get('show_connections') else "primary"):
@@ -2223,6 +2215,10 @@ def main():
             if st.button(connections_label, key="nav_connections", use_container_width=True, type="primary" if st.session_state.get('show_connections') else "secondary"):
                 st.session_state['show_connections'] = True
                 st.rerun()
+
+        # User info display
+        st.markdown(f"<p style='text-align: right; color: var(--text-secondary); font-size: 0.875rem; margin-top: -2rem;'>Signed in as {user_name}</p>", unsafe_allow_html=True)
+        st.markdown("---")
 
     # Main content area
     if 'contacts_df' not in st.session_state:
