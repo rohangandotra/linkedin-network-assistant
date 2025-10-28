@@ -1505,6 +1505,282 @@ def show_password_reset_form(token):
                             st.error(result['message'])
 
 
+def show_connections_page():
+    """Display Connections page with 3 tabs: My Connections, Find People, Requests"""
+
+    # Get user ID
+    user_id = st.session_state.get('user', {}).get('id')
+
+    if not user_id:
+        st.warning("Please log in to use Connections features")
+        return
+
+    # Hero heading
+    st.markdown("<h1 class='hero-title' style='font-family: var(--font-serif); font-size: 3rem; font-weight: 700; margin-bottom: var(--space-8);'>Connections</h1>", unsafe_allow_html=True)
+
+    # Get pending requests count for badge
+    pending_requests = collaboration.get_pending_connection_requests(user_id)
+    pending_count = len(pending_requests)
+
+    # Create tabs
+    tab_labels = ["My Connections", "Find People", f"Requests ({pending_count})" if pending_count > 0 else "Requests"]
+    tabs = st.tabs(tab_labels)
+
+    # ============================================
+    # TAB 1: MY CONNECTIONS
+    # ============================================
+    with tabs[0]:
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        connections = collaboration.get_user_connections(user_id, status='accepted')
+
+        if not connections:
+            # Empty state
+            st.markdown("""
+<div class='card' style='text-align: center; padding: var(--space-10); margin: var(--space-6) auto; max-width: 600px;'>
+<h2 style='font-family: var(--font-serif); font-size: 1.875rem; font-weight: 600; color: var(--text-primary); margin-bottom: var(--space-4);'>Build Your Network</h2>
+<p style='color: var(--text-secondary); font-size: 1.0625rem; line-height: 1.6; margin-bottom: var(--space-2);'>Connect with other users to:</p>
+<ul style='text-align: left; color: var(--text-secondary); font-size: 1rem; line-height: 1.8; margin: var(--space-4) auto; max-width: 400px;'>
+<li>Search their LinkedIn networks</li>
+<li>Request warm introductions</li>
+<li>Expand your professional reach</li>
+</ul>
+</div>
+""", unsafe_allow_html=True)
+
+            if st.button("Find People to Connect", type="primary", use_container_width=False):
+                st.session_state['connections_active_tab'] = 1
+                st.rerun()
+        else:
+            st.markdown(f"<p style='color: var(--text-secondary); margin-bottom: var(--space-6);'>You have {len(connections)} connection(s)</p>", unsafe_allow_html=True)
+
+            # Display connections
+            for conn in connections:
+                col1, col2 = st.columns([3, 1])
+
+                with col1:
+                    # Connection card
+                    contact_count = collaboration.get_user_contact_count(conn['user_id'])
+                    sharing_badge = "✓ Sharing network" if conn['network_sharing_enabled'] else "Not sharing"
+                    sharing_color = "#10b981" if conn['network_sharing_enabled'] else "#6b7280"
+
+                    st.markdown(f"""
+<div class='card' style='padding: var(--space-5); margin-bottom: var(--space-4);'>
+<h3 style='font-size: 1.125rem; font-weight: 600; color: var(--text-primary); margin: 0 0 var(--space-2) 0;'>{conn['full_name']}</h3>
+<p style='font-size: 0.9375rem; color: var(--text-secondary); margin: 0 0 var(--space-1) 0;'>{conn.get('organization', 'No organization')}</p>
+<p style='font-size: 0.875rem; color: var(--text-tertiary); margin: 0 0 var(--space-3) 0;'>{conn['email']}</p>
+<div style='display: flex; gap: var(--space-4); align-items: center;'>
+<span style='font-size: 0.875rem; color: var(--text-tertiary);'>{contact_count:,} contacts</span>
+<span style='font-size: 0.875rem; color: {sharing_color};'>{sharing_badge}</span>
+</div>
+</div>
+""", unsafe_allow_html=True)
+
+                with col2:
+                    st.markdown("<br>", unsafe_allow_html=True)
+
+                    # Toggle network sharing
+                    new_sharing = st.toggle(
+                        "Share network",
+                        value=conn['network_sharing_enabled'],
+                        key=f"sharing_{conn['connection_id']}"
+                    )
+
+                    if new_sharing != conn['network_sharing_enabled']:
+                        result = collaboration.update_network_sharing(conn['connection_id'], new_sharing)
+                        if result['success']:
+                            st.success("Updated")
+                            st.rerun()
+
+    # ============================================
+    # TAB 2: FIND PEOPLE
+    # ============================================
+    with tabs[1]:
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("<p style='color: var(--text-secondary); margin-bottom: var(--space-6);'>Search for other 6th Degree users and send connection requests</p>", unsafe_allow_html=True)
+
+        # Search form
+        search_query = st.text_input(
+            "Search by name or organization",
+            placeholder='e.g., "John Smith" or "Acme Inc"',
+            key="connections_search_query"
+        )
+
+        if search_query and len(search_query) >= 2:
+            results = collaboration.search_users(search_query, user_id)
+
+            if not results:
+                st.info("No users found matching your search")
+            else:
+                st.markdown(f"<p style='color: var(--text-secondary); margin: var(--space-4) 0;'>Found {len(results)} user(s)</p>", unsafe_allow_html=True)
+
+                # Get user's existing connections and pending requests to show status
+                existing_connections = collaboration.get_user_connections(user_id, status='all')
+                sent_requests = collaboration.get_sent_connection_requests(user_id, status='pending')
+
+                # Create sets for quick lookup
+                connected_ids = {c['user_id'] for c in existing_connections}
+                pending_ids = {r['target_user_id'] for r in sent_requests}
+
+                for result in results:
+                    result_user_id = result['id']
+                    contact_count = collaboration.get_user_contact_count(result_user_id)
+
+                    # Determine connection status
+                    if result_user_id in connected_ids:
+                        status_text = "Connected ✓"
+                        status_color = "#10b981"
+                        show_button = False
+                    elif result_user_id in pending_ids:
+                        status_text = "Pending"
+                        status_color = "#fbbf24"
+                        show_button = False
+                    else:
+                        status_text = None
+                        show_button = True
+
+                    col1, col2 = st.columns([3, 1])
+
+                    with col1:
+                        st.markdown(f"""
+<div class='card' style='padding: var(--space-5); margin-bottom: var(--space-4);'>
+<h3 style='font-size: 1.125rem; font-weight: 600; color: var(--text-primary); margin: 0 0 var(--space-2) 0;'>{result['full_name']}</h3>
+<p style='font-size: 0.9375rem; color: var(--text-secondary); margin: 0 0 var(--space-1) 0;'>{result.get('organization', 'No organization')}</p>
+<p style='font-size: 0.875rem; color: var(--text-tertiary); margin: 0 0 var(--space-3) 0;'>{result['email']}</p>
+<span style='font-size: 0.875rem; color: var(--text-tertiary);'>{contact_count:,} contacts</span>
+</div>
+""", unsafe_allow_html=True)
+
+                    with col2:
+                        st.markdown("<br>", unsafe_allow_html=True)
+
+                        if status_text:
+                            st.markdown(f"<p style='font-size: 0.9375rem; color: {status_color}; font-weight: 600; padding: 0.5rem 0;'>{status_text}</p>", unsafe_allow_html=True)
+                        elif show_button:
+                            if st.button("Connect", key=f"connect_{result_user_id}", type="primary"):
+                                # Show modal for connection request
+                                st.session_state[f'show_connect_modal_{result_user_id}'] = True
+                                st.rerun()
+
+                    # Connection request modal
+                    if st.session_state.get(f'show_connect_modal_{result_user_id}'):
+                        with st.form(key=f"connect_form_{result_user_id}"):
+                            st.markdown(f"### Send Connection Request to {result['full_name']}")
+
+                            request_message = st.text_area(
+                                "Personal message (optional)",
+                                placeholder="Hey! I'd love to connect and expand our networks...",
+                                height=100,
+                                key=f"msg_{result_user_id}"
+                            )
+
+                            col1, col2 = st.columns(2)
+                            with col1:
+                                if st.form_submit_button("Send Request", type="primary", use_container_width=True):
+                                    result_send = collaboration.send_connection_request(
+                                        user_id,
+                                        result_user_id,
+                                        request_message if request_message.strip() else None
+                                    )
+
+                                    if result_send['success']:
+                                        st.success(result_send['message'])
+                                        st.session_state[f'show_connect_modal_{result_user_id}'] = False
+                                        st.rerun()
+                                    else:
+                                        st.error(result_send['message'])
+
+                            with col2:
+                                if st.form_submit_button("Cancel", use_container_width=True):
+                                    st.session_state[f'show_connect_modal_{result_user_id}'] = False
+                                    st.rerun()
+
+    # ============================================
+    # TAB 3: REQUESTS
+    # ============================================
+    with tabs[2]:
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        if not pending_requests:
+            # Empty state
+            st.markdown("""
+<div class='card' style='text-align: center; padding: var(--space-10); margin: var(--space-6) auto; max-width: 600px;'>
+<h2 style='font-family: var(--font-serif); font-size: 1.875rem; font-weight: 600; color: var(--text-primary); margin-bottom: var(--space-4);'>No Pending Requests</h2>
+<p style='color: var(--text-secondary); font-size: 1.0625rem;'>You don't have any pending connection requests at the moment.</p>
+</div>
+""", unsafe_allow_html=True)
+        else:
+            st.markdown(f"<p style='color: var(--text-secondary); margin-bottom: var(--space-6);'>You have {len(pending_requests)} pending request(s)</p>", unsafe_allow_html=True)
+
+            for req in pending_requests:
+                contact_count = collaboration.get_user_contact_count(req['requester_id'])
+
+                # Request card
+                st.markdown(f"""
+<div class='card' style='padding: var(--space-5); margin-bottom: var(--space-4);'>
+<h3 style='font-size: 1.125rem; font-weight: 600; color: var(--text-primary); margin: 0 0 var(--space-2) 0;'>{req['requester_name']} wants to connect</h3>
+<p style='font-size: 0.9375rem; color: var(--text-secondary); margin: 0 0 var(--space-1) 0;'>{req.get('requester_organization', 'No organization')}</p>
+<p style='font-size: 0.875rem; color: var(--text-tertiary); margin: 0 0 var(--space-3) 0;'>{req['requester_email']}</p>
+<span style='font-size: 0.875rem; color: var(--text-tertiary);'>{contact_count:,} contacts</span>
+</div>
+""", unsafe_allow_html=True)
+
+                # Show message if exists
+                if req.get('request_message'):
+                    st.markdown(f"""
+<div style='padding: var(--space-4); background: var(--bg-tertiary); border-left: 3px solid var(--primary); border-radius: var(--radius-md); margin-bottom: var(--space-4);'>
+<p style='font-size: 0.9375rem; color: var(--text-secondary); margin: 0; font-style: italic;'>"{req['request_message']}"</p>
+</div>
+""", unsafe_allow_html=True)
+
+                # Action buttons
+                col1, col2, col3 = st.columns([1, 1, 2])
+
+                with col1:
+                    if st.button("Accept", key=f"accept_{req['connection_id']}", type="primary", use_container_width=True):
+                        st.session_state[f'show_accept_modal_{req["connection_id"]}'] = True
+                        st.rerun()
+
+                with col2:
+                    if st.button("Decline", key=f"decline_{req['connection_id']}", use_container_width=True):
+                        result = collaboration.decline_connection_request(req['connection_id'])
+                        if result['success']:
+                            st.success("Request declined")
+                            st.rerun()
+                        else:
+                            st.error(result['message'])
+
+                # Accept modal
+                if st.session_state.get(f'show_accept_modal_{req["connection_id"]}'):
+                    with st.form(key=f"accept_form_{req['connection_id']}"):
+                        st.markdown(f"### Accept Connection from {req['requester_name']}")
+
+                        share_network = st.checkbox(
+                            "Share my network with this connection",
+                            value=True,
+                            help="Allow them to search your LinkedIn contacts for introductions"
+                        )
+
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            if st.form_submit_button("Confirm Accept", type="primary", use_container_width=True):
+                                result = collaboration.accept_connection_request(req['connection_id'], share_network)
+
+                                if result['success']:
+                                    st.success(result['message'])
+                                    st.session_state[f'show_accept_modal_{req["connection_id"]}'] = False
+                                    st.rerun()
+                                else:
+                                    st.error(result['message'])
+
+                        with col2:
+                            if st.form_submit_button("Cancel", use_container_width=True):
+                                st.session_state[f'show_accept_modal_{req["connection_id"]}'] = False
+                                st.rerun()
+
+                st.markdown("<br>", unsafe_allow_html=True)
+
+
 def show_register_page():
     """Display registration page"""
     st.markdown("<h1 style='text-align: center; margin-top: 2rem;'>📝 Create Your Account</h1>", unsafe_allow_html=True)
@@ -1628,6 +1904,8 @@ def main():
         st.session_state['show_forgot_password'] = False
     if 'show_login' not in st.session_state:
         st.session_state['show_login'] = False
+    if 'show_connections' not in st.session_state:
+        st.session_state['show_connections'] = False
 
     # Phase 3B: Migrate existing users to new search (one-time index build)
     if st.session_state.get('authenticated') and HAS_NEW_SEARCH:
@@ -1874,8 +2152,56 @@ def main():
             show_login_page()
             return
 
+    # Show connections page if requested (requires authentication)
+    if st.session_state.get('show_connections'):
+        if st.session_state.get('authenticated'):
+            show_connections_page()
+            return
+        else:
+            st.warning("Please log in to use Connections features")
+            st.session_state['show_connections'] = False
+            st.session_state['show_login'] = True
+            st.rerun()
+
     # Get user_id for logged-in users
     user_id = st.session_state.get('user', {}).get('id', 'anonymous')
+
+    # Top Navigation Bar (for authenticated users)
+    if st.session_state.get('authenticated'):
+        pending_requests_count = 0
+        if user_id != 'anonymous':
+            pending_requests_list = collaboration.get_pending_connection_requests(user_id)
+            pending_requests_count = len(pending_requests_list)
+
+        # Navigation badge styling
+        badge_html = f" <span style='background: #dc2626; color: white; font-size: 0.75rem; font-weight: 600; padding: 0.125rem 0.5rem; border-radius: 9999px; margin-left: 0.25rem;'>{pending_requests_count}</span>" if pending_requests_count > 0 else ""
+
+        user_name = st.session_state.get('user', {}).get('full_name', 'User')
+
+        st.markdown(f"""
+<div style='position: fixed; top: 0; left: 0; right: 0; background: var(--bg-secondary); border-bottom: 1px solid var(--border-subtle); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: var(--shadow-sm);'>
+<div style='display: flex; gap: 2rem; align-items: center;'>
+<h2 style='font-family: var(--font-serif); font-size: 1.5rem; font-weight: 600; color: var(--text-primary); margin: 0;'>6th Degree</h2>
+</div>
+<div style='display: flex; gap: 1rem; align-items: center;'>
+<span style='font-size: 0.9375rem; color: var(--text-secondary);'>{user_name}</span>
+</div>
+</div>
+""", unsafe_allow_html=True)
+
+        # Buttons in columns
+        col1, col2, col3, col4 = st.columns([6, 1, 1, 6])
+
+        with col2:
+            if st.button("Dashboard", key="nav_dashboard", use_container_width=True, type="secondary" if st.session_state.get('show_connections') else "primary"):
+                st.session_state['show_connections'] = False
+                st.rerun()
+
+        with col3:
+            connections_label = f"Connections ({pending_requests_count})" if pending_requests_count > 0 else "Connections"
+            if st.button(connections_label, key="nav_connections", use_container_width=True, type="primary" if st.session_state.get('show_connections') else "secondary"):
+                st.session_state['show_connections'] = True
+                st.rerun()
 
     # Main content area
     if 'contacts_df' not in st.session_state:
@@ -2593,7 +2919,7 @@ opacity: 1;
         # Search in connected users' networks
         st.markdown("<br><br>", unsafe_allow_html=True)
         st.markdown("---")
-        st.markdown("## 🌐 Extended Network Search")
+        st.markdown("## Extended Network Search")
         st.markdown("Search contacts in your connections' networks and request introductions")
 
         # Get connections count

@@ -48,13 +48,39 @@ def search_users(search_query: str, current_user_id: str) -> List[Dict[str, Any]
         return []
 
 
-def send_connection_request(user_id: str, target_user_id: str) -> Dict[str, Any]:
+def get_user_contact_count(user_id: str) -> int:
+    """
+    Get the number of contacts a user has uploaded
+
+    Args:
+        user_id: User's UUID
+
+    Returns:
+        Integer count of contacts
+    """
+    supabase = auth.get_supabase_client()
+
+    try:
+        response = supabase.table('contacts')\
+            .select('id', count='exact')\
+            .eq('user_id', user_id)\
+            .execute()
+
+        return response.count if response.count else 0
+
+    except Exception as e:
+        print(f"Error getting contact count: {e}")
+        return 0
+
+
+def send_connection_request(user_id: str, target_user_id: str, request_message: str = None) -> Dict[str, Any]:
     """
     Send a connection request to another user
 
     Args:
         user_id: ID of user sending request
         target_user_id: ID of user to connect with
+        request_message: Optional personal message with the request
 
     Returns:
         dict with 'success' boolean and 'message' or 'connection_id'
@@ -75,12 +101,17 @@ def send_connection_request(user_id: str, target_user_id: str) -> Dict[str, Any]
             }
 
         # Create connection request
-        response = supabase.table('user_connections').insert({
+        connection_data = {
             'user_id': user_id,
             'connected_user_id': target_user_id,
             'status': 'pending',
             'network_sharing_enabled': True
-        }).execute()
+        }
+
+        if request_message:
+            connection_data['request_message'] = request_message
+
+        response = supabase.table('user_connections').insert(connection_data).execute()
 
         if response.data and len(response.data) > 0:
             return {
@@ -267,13 +298,60 @@ def get_pending_connection_requests(user_id: str) -> List[Dict[str, Any]]:
                 'requester_email': req['users']['email'],
                 'requester_name': req['users']['full_name'],
                 'requester_organization': req['users'].get('organization'),
-                'requested_at': req['requested_at']
+                'requested_at': req['requested_at'],
+                'request_message': req.get('request_message')
             })
 
         return requests
 
     except Exception as e:
         print(f"Error getting pending requests: {e}")
+        return []
+
+
+def get_sent_connection_requests(user_id: str, status: str = 'pending') -> List[Dict[str, Any]]:
+    """
+    Get connection requests sent by user (outgoing requests)
+
+    Args:
+        user_id: User's UUID
+        status: Status filter (default 'pending', can be 'accepted', 'declined', or 'all')
+
+    Returns:
+        List of sent requests with target user details
+    """
+    supabase = auth.get_supabase_client()
+
+    try:
+        # Get requests where user is the requester (user_id)
+        query = supabase.table('user_connections')\
+            .select('*, users!user_connections_connected_user_id_fkey(id, email, full_name, organization)')\
+            .eq('user_id', user_id)
+
+        if status != 'all':
+            query = query.eq('status', status)
+
+        response = query.execute()
+
+        requests = []
+        for req in (response.data if response.data else []):
+            requests.append({
+                'connection_id': req['id'],
+                'target_user_id': req['connected_user_id'],
+                'target_email': req['users']['email'],
+                'target_name': req['users']['full_name'],
+                'target_organization': req['users'].get('organization'),
+                'status': req['status'],
+                'requested_at': req['requested_at'],
+                'accepted_at': req.get('accepted_at'),
+                'declined_at': req.get('declined_at'),
+                'request_message': req.get('request_message')
+            })
+
+        return requests
+
+    except Exception as e:
+        print(f"Error getting sent requests: {e}")
         return []
 
 
