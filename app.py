@@ -848,34 +848,58 @@ st.markdown("""
 # ============================================
 # Replaces old top nav + sidebar + duplicate nav buttons
 
-# Add CSS for unified navigation
+# Add CSS for clean, professional navigation bar
 st.markdown("""
 <style>
-.unified-nav-container {
+/* Top Navigation Bar - SaaS Modern (Notion/Linear style) */
+.top-nav-bar {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 1rem 2rem;
+    justify-content: space-between;
+    padding: 16px 32px;
     background: white;
-    border-bottom: 1px solid var(--border-light);
-    margin-bottom: 2rem;
+    border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 0;
+    height: 64px;
+    box-sizing: border-box;
 }
-.nav-logo {
+
+.top-nav-logo {
     font-family: var(--font-serif);
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     font-weight: 600;
     color: var(--text-primary);
+    margin: 0;
+    line-height: 1;
 }
-.nav-spacer {
-    flex: 1;
+
+.top-nav-buttons {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Navigation button overrides - ONLY for top nav */
+[data-testid="column"] > div > div > button[data-testid*="baseButton-"] {
+    padding: 12px 20px !important;
+    border-radius: 8px !important;
+    font-size: 15px !important;
+    font-weight: 500 !important;
+    height: 40px !important;
+    min-width: auto !important;
+    white-space: nowrap !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
 }
 </style>
 """, unsafe_allow_html=True)
 
-# Logo
-st.markdown("<div class='unified-nav-container'><div class='nav-logo'>NetworkAI</div></div>", unsafe_allow_html=True)
+# Top navigation bar container
+st.markdown('<div class="top-nav-bar"><div class="top-nav-logo">NetworkAI</div><div class="top-nav-buttons"></div></div>', unsafe_allow_html=True)
 
-# Navigation buttons in columns
+# Navigation buttons in clean horizontal layout
 if st.session_state.get('authenticated'):
     # Authenticated user navigation
     user_id = st.session_state.get('user', {}).get('id', 'anonymous')
@@ -891,8 +915,8 @@ if st.session_state.get('authenticated'):
     # Get contact count
     contact_count = auth.get_contact_count(user_id)
 
-    # Create layout: [Logo space] [Dashboard] [Connections] [spacer] [Feedback] [User Menu] [Logout]
-    nav_cols = st.columns([2, 1, 1.2, 3, 1, 1.5, 1])
+    # Clean layout: Logo on left, buttons on right with even spacing
+    nav_cols = st.columns([2, 0.9, 1.1, 3.5, 0.9, 1.1, 0.8])
 
     with nav_cols[1]:
         if st.button("Dashboard", key="nav_dashboard", use_container_width=True,
@@ -908,19 +932,19 @@ if st.session_state.get('authenticated'):
             st.rerun()
 
     with nav_cols[4]:
-        if st.button("📋 Feedback", key="nav_feedback", use_container_width=True):
+        if st.button("Feedback", key="nav_feedback", use_container_width=True, type="secondary"):
             st.session_state['show_feedback_modal'] = True
             st.rerun()
 
     with nav_cols[5]:
         # User info button (triggers dropdown)
         user_label = user_name.split()[0] + " ▾"  # First name + dropdown arrow
-        if st.button(user_label, key="nav_user_menu", use_container_width=True):
+        if st.button(user_label, key="nav_user_menu", use_container_width=True, type="secondary"):
             st.session_state['show_user_menu'] = not st.session_state.get('show_user_menu', False)
             st.rerun()
 
     with nav_cols[6]:
-        if st.button("Logout", key="nav_logout", use_container_width=True):
+        if st.button("Logout", key="nav_logout", use_container_width=True, type="secondary"):
             st.session_state['authenticated'] = False
             st.session_state['user'] = None
             if 'contacts_df' in st.session_state:
@@ -931,8 +955,8 @@ if st.session_state.get('authenticated'):
     # User menu dropdown (if active)
     if st.session_state.get('show_user_menu'):
         st.markdown(f"""
-<div style='background: white; border: 1px solid var(--border-light); border-radius: var(--radius-md);
-     padding: 1rem; margin: -1rem 0 1rem auto; max-width: 300px; box-shadow: var(--shadow-lg);'>
+<div style='background: white; border: 1px solid #e5e7eb; border-radius: 8px;
+     padding: 1rem; margin: -0.5rem 0 1rem auto; max-width: 300px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);'>
     <p style='font-size: 0.875rem; color: var(--text-tertiary); margin: 0 0 0.5rem 0;'>Signed in as</p>
     <p style='font-size: 1rem; font-weight: 600; color: var(--text-primary); margin: 0;'>{user_name}</p>
     <p style='font-size: 0.875rem; color: var(--text-secondary); margin: 0.25rem 0 0 0;'>{user_email}</p>
@@ -941,11 +965,11 @@ if st.session_state.get('authenticated'):
 """, unsafe_allow_html=True)
 
 else:
-    # Anonymous user navigation
-    nav_cols = st.columns([2, 5, 1.2, 1.2])
+    # Anonymous user navigation - simpler layout
+    nav_cols = st.columns([2, 6.5, 0.8, 0.9])
 
     with nav_cols[2]:
-        if st.button("Login", key="nav_login", use_container_width=True):
+        if st.button("Login", key="nav_login", use_container_width=True, type="secondary"):
             st.session_state['show_register'] = False
             st.session_state['show_forgot_password'] = False
             st.session_state['show_login'] = True
@@ -957,7 +981,7 @@ else:
             st.session_state['show_login'] = False
             st.rerun()
 
-st.markdown("---")
+st.markdown('<div style="height: 32px;"></div>', unsafe_allow_html=True)
 
 # Feedback Modal (shown when feedback button clicked)
 if st.session_state.get('show_feedback_modal'):
