@@ -891,7 +891,18 @@ st.markdown("""
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    margin: 0 !important;
+    box-sizing: border-box !important;
+}
+
+/* Navigation button spacing - Create 14px gaps between buttons */
+/* Override the general button spacing just for navigation area */
+/* These styles apply to the first set of columns (navigation) */
+.block-container > div:first-of-type [data-testid="column"] .stButton {
+    margin-right: 14px !important;
+}
+
+.block-container > div:first-of-type [data-testid="column"]:last-child .stButton {
+    margin-right: 0 !important;
 }
 </style>
 """, unsafe_allow_html=True)
