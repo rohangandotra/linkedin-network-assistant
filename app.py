@@ -208,10 +208,10 @@ st.markdown("""
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Crimson+Pro:wght@400;600;700&display=swap');
 
     :root {
-        /* Flow-inspired refined color palette */
-        /* Primary brand color - darker sophisticated blue */
-        --primary: #1d4ed8;
-        --primary-hover: #1e40af;
+        /* SaaS-style modern color palette */
+        /* Primary brand color - professional blue */
+        --primary: #2B6CB0;
+        --primary-hover: #2C5282;
         --primary-light: #dbeafe;
 
         /* Soft neutral backgrounds */
@@ -352,44 +352,107 @@ st.markdown("""
         color: var(--text-tertiary);
     }
 
-    /* Pill-shaped CTAs - primary */
+    /* ============================================
+       STANDARDIZED BUTTON STYLES - SaaS Modern
+       ============================================ */
+
+    /* Base button styling - All buttons */
     .stButton > button,
     .stFormSubmitButton > button {
-        background: var(--primary);
-        color: white;
-        border: none;
-        border-radius: var(--radius-pill);
-        padding: 0.75rem 1.75rem;
-        font-weight: 600;
-        font-size: 0.9375rem;
-        transition: all 0.15s ease;
-        box-shadow: var(--shadow-sm);
-        cursor: pointer;
+        /* Shape: Rectangular with moderate corner radius */
+        border-radius: 10px !important;
+
+        /* Sizing: Minimum width to prevent text wrapping */
+        min-width: 120px !important;
+        padding: 0.75rem 1.5rem !important;
+
+        /* Typography: 16px semibold */
+        font-size: 16px !important;
+        font-weight: 600 !important;
+        line-height: 1.5 !important;
+
+        /* Spacing: Prevent text wrapping */
+        white-space: nowrap !important;
+
+        /* Transitions: Smooth 150ms */
+        transition: all 0.15s ease !important;
+
+        /* Cursor */
+        cursor: pointer !important;
+
+        /* Remove transforms to avoid bubbly feel */
+        transform: none !important;
     }
 
-    .stButton > button:hover,
-    .stFormSubmitButton > button:hover {
-        background: var(--primary-hover);
-        box-shadow: var(--shadow-md);
-        transform: translateY(-1px);
+    /* Primary button (type="primary" or default) */
+    .stButton > button[kind="primary"],
+    .stButton > button[data-testid*="primary"],
+    .stFormSubmitButton > button,
+    .stButton > button:not([kind="secondary"]):not([kind="tertiary"]) {
+        background: var(--primary) !important;
+        color: white !important;
+        border: 2px solid var(--primary) !important;
+        box-shadow: var(--shadow-sm) !important;
     }
 
+    .stButton > button[kind="primary"]:hover,
+    .stButton > button[data-testid*="primary"]:hover,
+    .stFormSubmitButton > button:hover,
+    .stButton > button:not([kind="secondary"]):not([kind="tertiary"]):hover {
+        background: var(--primary-hover) !important;
+        border-color: var(--primary-hover) !important;
+        box-shadow: var(--shadow-md) !important;
+        /* No transform - keep it flat */
+    }
+
+    /* Secondary button (type="secondary") */
+    .stButton > button[kind="secondary"],
+    .stButton > button[data-testid*="secondary"] {
+        background: white !important;
+        color: var(--primary) !important;
+        border: 2px solid var(--primary) !important;
+        box-shadow: var(--shadow-sm) !important;
+    }
+
+    .stButton > button[kind="secondary"]:hover,
+    .stButton > button[data-testid*="secondary"]:hover {
+        background: var(--primary-light) !important;
+        border-color: var(--primary-hover) !important;
+        color: var(--primary-hover) !important;
+        box-shadow: var(--shadow-md) !important;
+        /* No transform - keep it flat */
+    }
+
+    /* Active/pressed state - subtle feedback */
     .stButton > button:active,
     .stFormSubmitButton > button:active {
-        transform: translateY(0);
-        box-shadow: var(--shadow-sm);
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+        transform: none !important;
     }
 
-    /* Secondary buttons */
-    .stButton.secondary > button {
-        background: var(--bg-secondary);
-        color: var(--text-primary);
-        border: 1px solid var(--border-medium);
+    /* Disabled state */
+    .stButton > button:disabled,
+    .stFormSubmitButton > button:disabled {
+        opacity: 0.5 !important;
+        cursor: not-allowed !important;
     }
 
-    .stButton.secondary > button:hover {
-        background: var(--bg-tertiary);
-        border-color: var(--text-tertiary);
+    /* Button spacing - Consistent gaps between buttons */
+    .stButton {
+        margin: 0 !important;
+    }
+
+    /* Horizontal button groups - even spacing */
+    [data-testid="column"] .stButton {
+        margin: 0 6px !important;
+    }
+
+    [data-testid="column"]:first-child .stButton {
+        margin-left: 0 !important;
+    }
+
+    [data-testid="column"]:last-child .stButton {
+        margin-right: 0 !important;
     }
 
     /* File uploader - Premium card */
@@ -490,22 +553,26 @@ st.markdown("""
         box-shadow: var(--shadow-md);
     }
 
-    /* Download buttons - Clean outlined */
+    /* Download buttons - Standardized secondary style */
     .stDownloadButton > button {
-        background: var(--bg-secondary);
-        color: var(--primary);
-        border: 1px solid var(--primary);
-        border-radius: var(--radius-pill);
-        padding: 0.75rem 1.75rem;
-        font-weight: 600;
-        transition: all 0.15s ease;
-        box-shadow: var(--shadow-sm);
+        background: white !important;
+        color: var(--primary) !important;
+        border: 2px solid var(--primary) !important;
+        border-radius: 10px !important;
+        padding: 0.75rem 1.5rem !important;
+        font-size: 16px !important;
+        font-weight: 600 !important;
+        min-width: 120px !important;
+        white-space: nowrap !important;
+        transition: all 0.15s ease !important;
+        box-shadow: var(--shadow-sm) !important;
     }
 
     .stDownloadButton > button:hover {
-        background: var(--primary);
-        color: white;
-        box-shadow: var(--shadow-md);
+        background: var(--primary-light) !important;
+        color: var(--primary-hover) !important;
+        border-color: var(--primary-hover) !important;
+        box-shadow: var(--shadow-md) !important;
     }
 
     /* Hide default Streamlit elements */
@@ -597,22 +664,26 @@ st.markdown("""
     .top-nav-cta {
         background: var(--primary);
         color: white;
-        border: none;
-        border-radius: var(--radius-pill);
-        padding: 0.625rem 1.5rem;
+        border: 2px solid var(--primary);
+        border-radius: 10px;
+        padding: 0.75rem 1.5rem;
         font-weight: 600;
-        font-size: 0.9375rem;
+        font-size: 16px;
+        min-width: 120px;
+        white-space: nowrap;
         transition: all 0.15s ease;
         box-shadow: var(--shadow-sm);
         cursor: pointer;
         text-decoration: none;
         display: inline-flex;
         align-items: center;
+        justify-content: center;
         gap: 0.5rem;
     }
 
     .top-nav-cta:hover {
         background: var(--primary-hover);
+        border-color: var(--primary-hover);
         box-shadow: var(--shadow-md);
     }
 
@@ -649,8 +720,10 @@ st.markdown("""
 
         .stButton > button,
         .stFormSubmitButton > button {
-            width: 100%;
-            padding: 0.875rem 1.5rem;
+            width: 100% !important;
+            padding: 0.875rem 1.5rem !important;
+            font-size: 16px !important;
+            min-width: auto !important;
         }
 
         .stTextInput > div > div > input {
@@ -697,8 +770,8 @@ st.markdown("""
 
         .stButton > button,
         .stFormSubmitButton > button {
-            padding: 0.9rem 1.25rem;
-            font-size: 0.95rem;
+            padding: 0.875rem 1.25rem !important;
+            font-size: 16px !important;
         }
     }
 
