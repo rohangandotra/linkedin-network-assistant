@@ -1,5 +1,5 @@
 """
-Security Module for LinkedIn Network Assistant
+Security Module for 6th Degree
 Handles password reset, email verification, rate limiting, and security auditing
 """
 
@@ -130,7 +130,7 @@ def request_password_reset(email: str) -> Dict[str, Any]:
         log_security_event(user_id, email, 'password_reset_requested')
 
         # Send email with reset link
-        app_url = os.getenv('APP_URL', 'https://linkedin-network-assistant.streamlit.app')
+        app_url = os.getenv('APP_URL', 'https://6thdegree.streamlit.app')
         reset_link = f"{app_url}?reset_token={token}"
 
         html_body = f"""
@@ -138,14 +138,14 @@ def request_password_reset(email: str) -> Dict[str, Any]:
         <body style='font-family: Arial, sans-serif;'>
             <h2>Password Reset Request</h2>
             <p>Hi {user['full_name']},</p>
-            <p>You requested to reset your password for LinkedIn Network Assistant.</p>
+            <p>You requested to reset your password for 6th Degree.</p>
             <p>Click the link below to reset your password:</p>
             <p><a href='{reset_link}' style='background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;'>Reset Password</a></p>
             <p>Or copy and paste this link: <br>{reset_link}</p>
             <p><strong>This link expires in 15 minutes.</strong></p>
             <p>If you didn't request this, please ignore this email.</p>
             <br>
-            <p>Best,<br>LinkedIn Network Assistant Team</p>
+            <p>Best,<br>6th Degree Team</p>
         </body>
         </html>
         """
@@ -155,7 +155,7 @@ def request_password_reset(email: str) -> Dict[str, Any]:
 
         Hi {user['full_name']},
 
-        You requested to reset your password for LinkedIn Network Assistant.
+        You requested to reset your password for 6th Degree.
 
         Click this link to reset your password:
         {reset_link}
@@ -165,7 +165,7 @@ def request_password_reset(email: str) -> Dict[str, Any]:
         If you didn't request this, please ignore this email.
 
         Best,
-        LinkedIn Network Assistant Team
+        6th Degree Team
         """
 
         send_email(email, "Reset Your Password", html_body, text_body)
@@ -310,7 +310,7 @@ def send_verification_email(user_id: str, email: str, full_name: str) -> bool:
         log_security_event(user_id, email, 'verification_email_sent')
 
         # Send email
-        app_url = os.getenv('APP_URL', 'https://linkedin-network-assistant.streamlit.app')
+        app_url = os.getenv('APP_URL', 'https://6thdegree.streamlit.app')
         verify_link = f"{app_url}?verify_email={token}"
 
         html_body = f"""
@@ -318,12 +318,12 @@ def send_verification_email(user_id: str, email: str, full_name: str) -> bool:
         <body style='font-family: Arial, sans-serif;'>
             <h2>Verify Your Email</h2>
             <p>Hi {full_name},</p>
-            <p>Welcome to LinkedIn Network Assistant! Please verify your email to get started.</p>
+            <p>Welcome to 6th Degree! Please verify your email to get started.</p>
             <p><a href='{verify_link}' style='background: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;'>Verify Email</a></p>
             <p>Or copy and paste this link: <br>{verify_link}</p>
             <p>This link expires in 7 days.</p>
             <br>
-            <p>Best,<br>LinkedIn Network Assistant Team</p>
+            <p>Best,<br>6th Degree Team</p>
         </body>
         </html>
         """
@@ -333,14 +333,14 @@ def send_verification_email(user_id: str, email: str, full_name: str) -> bool:
 
         Hi {full_name},
 
-        Welcome to LinkedIn Network Assistant! Please verify your email to get started.
+        Welcome to 6th Degree! Please verify your email to get started.
 
         Click this link: {verify_link}
 
         This link expires in 7 days.
 
         Best,
-        LinkedIn Network Assistant Team
+        6th Degree Team
         """
 
         return send_email(email, "Verify Your Email", html_body, text_body)
