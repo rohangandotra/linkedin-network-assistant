@@ -1335,79 +1335,94 @@ Return the email with a subject line."""
 # Authentication UI Functions
 def show_login_page():
     """Display login page"""
-    st.markdown("<h1 style='text-align: center; margin-top: 2rem; font-family: var(--font-serif);'>Login to LinkedIn Network Assistant</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; margin-top: 2rem; font-family: var(--font-serif);'>Login to 6th Degree</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; color: var(--text-secondary); margin-bottom: 3rem;'>Access your personalized network dashboard</p>", unsafe_allow_html=True)
 
     # Center the login form
     col1, col2, col3 = st.columns([1, 2, 1])
 
     with col2:
-        with st.form("login_form"):
-            st.markdown("### Sign In")
-            email = st.text_input("Email", placeholder="your@email.com")
-            password = st.text_input("Password", type="password", placeholder="Enter your password")
+        # Check if user needs to verify email (show resend button outside form)
+        if st.session_state.get('unverified_user'):
+            user_info = st.session_state['unverified_user']
 
-            submit = st.form_submit_button("Login", use_container_width=True, type="primary")
+            st.warning("Please verify your email to continue. Check your inbox for the verification link.")
+            st.info(f"Verification email sent to: {user_info['email']}")
 
-            if submit:
-                # Strip whitespace from inputs
-                email = email.strip() if email else ""
-                password = password.strip() if password else ""
-
-                if not email or not password:
-                    st.error("Please enter both email and password")
+            if st.button("Resend Verification Email", type="primary", use_container_width=True):
+                result = security.send_verification_email(
+                    user_info['id'],
+                    user_info['email'],
+                    user_info['full_name']
+                )
+                if result:
+                    st.success("Verification email sent!")
                 else:
-                    with st.spinner("Logging in..."):
-                        try:
-                            # Check rate limit
-                            rate_limit = security.check_login_rate_limit(email)
-                            if not rate_limit['allowed']:
-                                st.error(rate_limit['message'])
-                                return
+                    st.error("Failed to send verification email. Please try again or contact support.")
 
-                            result = auth.login_user(email, password)
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("Back to Login", use_container_width=True):
+                st.session_state['unverified_user'] = None
+                st.rerun()
+        else:
+            with st.form("login_form"):
+                st.markdown("### Sign In")
+                email = st.text_input("Email", placeholder="your@email.com")
+                password = st.text_input("Password", type="password", placeholder="Enter your password")
 
-                            # Log login attempt
-                            security.log_login_attempt(email, result['success'])
+                submit = st.form_submit_button("Login", use_container_width=True, type="primary")
 
-                            if result['success']:
-                                # Check if email is verified
-                                supabase = auth.get_supabase_client()
-                                user_data = supabase.table('users').select('email_verified').eq('id', result['user']['id']).execute()
+                if submit:
+                    # Strip whitespace from inputs
+                    email = email.strip() if email else ""
+                    password = password.strip() if password else ""
 
-                                if user_data.data and not user_data.data[0].get('email_verified', False):
-                                    st.warning("Please verify your email to continue. Check your inbox for the verification link.")
-
-                                    # Show resend verification button
-                                    if st.button("Resend Verification Email"):
-                                        security.send_verification_email(
-                                            result['user']['id'],
-                                            result['user']['email'],
-                                            result['user']['full_name']
-                                        )
-                                        st.info("Verification email sent!")
+                    if not email or not password:
+                        st.error("Please enter both email and password")
+                    else:
+                        with st.spinner("Logging in..."):
+                            try:
+                                # Check rate limit
+                                rate_limit = security.check_login_rate_limit(email)
+                                if not rate_limit['allowed']:
+                                    st.error(rate_limit['message'])
                                     return
 
-                                # Store user info in session
-                                st.session_state['authenticated'] = True
-                                st.session_state['user'] = result['user']
+                                result = auth.login_user(email, password)
 
-                                # Load user's contacts from database
-                                contacts_df = auth.load_user_contacts(result['user']['id'])
-                                if contacts_df is not None:
-                                    st.session_state['contacts_df'] = contacts_df
+                                # Log login attempt
+                                security.log_login_attempt(email, result['success'])
 
-                                st.success(f"Welcome back, {result['user']['full_name']}!")
-                                st.rerun()
-                            else:
-                                st.error(result['message'])
-                                if rate_limit.get('remaining_attempts'):
-                                    st.caption(f"Remaining attempts: {rate_limit['remaining_attempts']}")
-                        except Exception as e:
-                            st.error(f"Login failed: {str(e)}")
-                            with st.expander("Technical Details"):
-                                st.code(str(e))
-                                st.caption("If this error persists, please contact support.")
+                                if result['success']:
+                                    # Check if email is verified
+                                    supabase = auth.get_supabase_client()
+                                    user_data = supabase.table('users').select('email_verified').eq('id', result['user']['id']).execute()
+
+                                    if user_data.data and not user_data.data[0].get('email_verified', False):
+                                        # Store unverified user info and rerun to show resend button outside form
+                                        st.session_state['unverified_user'] = result['user']
+                                        st.rerun()
+
+                                    # Store user info in session
+                                    st.session_state['authenticated'] = True
+                                    st.session_state['user'] = result['user']
+
+                                    # Load user's contacts from database
+                                    contacts_df = auth.load_user_contacts(result['user']['id'])
+                                    if contacts_df is not None:
+                                        st.session_state['contacts_df'] = contacts_df
+
+                                    st.success(f"Welcome back, {result['user']['full_name']}!")
+                                    st.rerun()
+                                else:
+                                    st.error(result['message'])
+                                    if rate_limit.get('remaining_attempts'):
+                                        st.caption(f"Remaining attempts: {rate_limit['remaining_attempts']}")
+                            except Exception as e:
+                                st.error(f"Login failed: {str(e)}")
+                                with st.expander("Technical Details"):
+                                    st.code(str(e))
+                                    st.caption("If this error persists, please contact support.")
 
         # Forgot password link
         col1, col2 = st.columns(2)
