@@ -1465,44 +1465,50 @@ def show_password_reset_form(token):
     col1, col2, col3 = st.columns([1, 2, 1])
 
     with col2:
-        with st.form("reset_password_form"):
-            st.markdown("### New Password")
+        # Check if password was already reset successfully
+        if st.session_state.get('password_reset_success'):
+            st.success("Password reset successful!")
+            st.info("You can now log in with your new password.")
 
-            new_password = st.text_input("New Password", type="password", placeholder="Enter new password")
-            confirm_password = st.text_input("Confirm Password", type="password", placeholder="Re-enter new password")
+            if st.button("Go to Login", type="primary", use_container_width=True):
+                st.session_state['password_reset_success'] = False
+                st.session_state['show_register'] = False
+                st.session_state['show_login'] = True
+                st.query_params.clear()
+                st.rerun()
+        else:
+            with st.form("reset_password_form"):
+                st.markdown("### New Password")
 
-            submit = st.form_submit_button("Reset Password", use_container_width=True, type="primary")
+                new_password = st.text_input("New Password", type="password", placeholder="Enter new password")
+                confirm_password = st.text_input("Confirm Password", type="password", placeholder="Re-enter new password")
 
-            if submit:
-                new_password = new_password.strip() if new_password else ""
-                confirm_password = confirm_password.strip() if confirm_password else ""
+                submit = st.form_submit_button("Reset Password", use_container_width=True, type="primary")
 
-                if not new_password or not confirm_password:
-                    st.error("Please fill in all fields")
-                elif new_password != confirm_password:
-                    st.error("Passwords don't match")
-                elif len(new_password) < 6:
-                    st.error("Password must be at least 6 characters")
-                else:
-                    # Check password strength
-                    strength = security.check_password_strength(new_password)
-                    if not strength['strong']:
-                        st.warning(strength['message'])
+                if submit:
+                    new_password = new_password.strip() if new_password else ""
+                    confirm_password = confirm_password.strip() if confirm_password else ""
 
-                    with st.spinner("Resetting password..."):
-                        result = security.reset_password_with_token(token, new_password)
+                    if not new_password or not confirm_password:
+                        st.error("Please fill in all fields")
+                    elif new_password != confirm_password:
+                        st.error("Passwords don't match")
+                    elif len(new_password) < 6:
+                        st.error("Password must be at least 6 characters")
+                    else:
+                        # Check password strength
+                        strength = security.check_password_strength(new_password)
+                        if not strength['strong']:
+                            st.warning(strength['message'])
 
-                        if result['success']:
-                            st.success(result['message'])
-                            st.info("You can now log in with your new password.")
+                        with st.spinner("Resetting password..."):
+                            result = security.reset_password_with_token(token, new_password)
 
-                            # Clear query params and go to login
-                            if st.button("Go to Login", type="primary"):
-                                st.session_state['show_register'] = False
-                                st.query_params.clear()
+                            if result['success']:
+                                st.session_state['password_reset_success'] = True
                                 st.rerun()
-                        else:
-                            st.error(result['message'])
+                            else:
+                                st.error(result['message'])
 
 
 def show_connections_page():
