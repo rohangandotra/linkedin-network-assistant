@@ -1,0 +1,107 @@
+location,canonical,metro,country,region
+sf,san francisco,san francisco bay area,usa,north america
+san francisco,san francisco,san francisco bay area,usa,north america
+san fran,san francisco,san francisco bay area,usa,north america
+bay area,san francisco,san francisco bay area,usa,north america
+silicon valley,silicon valley,san francisco bay area,usa,north america
+palo alto,palo alto,san francisco bay area,usa,north america
+mountain view,mountain view,san francisco bay area,usa,north america
+sunnyvale,sunnyvale,san francisco bay area,usa,north america
+san jose,san jose,san francisco bay area,usa,north america
+oakland,oakland,san francisco bay area,usa,north america
+berkeley,berkeley,san francisco bay area,usa,north america
+menlo park,menlo park,san francisco bay area,usa,north america
+redwood city,redwood city,san francisco bay area,usa,north america
+cupertino,cupertino,san francisco bay area,usa,north america
+santa clara,santa clara,san francisco bay area,usa,north america
+nyc,new york,new york,usa,north america
+new york,new york,new york,usa,north america
+new york city,new york,new york,usa,north america
+manhattan,manhattan,new york,usa,north america
+brooklyn,brooklyn,new york,usa,north america
+la,los angeles,los angeles,usa,north america
+los angeles,los angeles,los angeles,usa,north america
+santa monica,santa monica,los angeles,usa,north america
+venice,venice beach,los angeles,usa,north america
+seattle,seattle,seattle,usa,north america
+redmond,redmond,seattle,usa,north america
+boston,boston,boston,usa,north america
+cambridge,cambridge,boston,usa,north america
+austin,austin,austin,usa,north america
+chicago,chicago,chicago,usa,north america
+denver,denver,denver,usa,north america
+boulder,boulder,denver,usa,north america
+portland,portland,portland,usa,north america
+miami,miami,miami,usa,north america
+atlanta,atlanta,atlanta,usa,north america
+dallas,dallas,dallas,usa,north america
+houston,houston,houston,usa,north america
+philadelphia,philadelphia,philadelphia,usa,north america
+phoenix,phoenix,phoenix,usa,north america
+san diego,san diego,san diego,usa,north america
+dc,washington dc,washington dc,usa,north america
+washington,washington dc,washington dc,usa,north america
+washington dc,washington dc,washington dc,usa,north america
+nashville,nashville,nashville,usa,north america
+raleigh,raleigh,raleigh-durham,usa,north america
+durham,durham,raleigh-durham,usa,north america
+salt lake city,salt lake city,salt lake city,usa,north america
+minneapolis,minneapolis,minneapolis,usa,north america
+detroit,detroit,detroit,usa,north america
+pittsburgh,pittsburgh,pittsburgh,usa,north america
+london,london,london,uk,europe
+uk,united kingdom,united kingdom,uk,europe
+united kingdom,united kingdom,united kingdom,uk,europe
+england,england,united kingdom,uk,europe
+paris,paris,paris,france,europe
+france,france,france,france,europe
+berlin,berlin,berlin,germany,europe
+germany,germany,germany,germany,europe
+munich,munich,munich,germany,europe
+amsterdam,amsterdam,amsterdam,netherlands,europe
+netherlands,netherlands,netherlands,netherlands,europe
+stockholm,stockholm,stockholm,sweden,europe
+sweden,sweden,sweden,sweden,europe
+copenhagen,copenhagen,copenhagen,denmark,europe
+denmark,denmark,denmark,denmark,europe
+zurich,zurich,zurich,switzerland,europe
+switzerland,switzerland,switzerland,switzerland,europe
+barcelona,barcelona,barcelona,spain,europe
+madrid,madrid,madrid,spain,europe
+spain,spain,spain,spain,europe
+dublin,dublin,dublin,ireland,europe
+ireland,ireland,ireland,ireland,europe
+singapore,singapore,singapore,singapore,asia
+india,india,india,india,asia
+bangalore,bangalore,bangalore,india,asia
+bengaluru,bangalore,bangalore,india,asia
+mumbai,mumbai,mumbai,india,asia
+delhi,delhi,delhi,india,asia
+hyderabad,hyderabad,hyderabad,india,asia
+pune,pune,pune,india,asia
+china,china,china,china,asia
+beijing,beijing,beijing,china,asia
+shanghai,shanghai,shanghai,china,asia
+shenzhen,shenzhen,shenzhen,china,asia
+hong kong,hong kong,hong kong,hong kong,asia
+tokyo,tokyo,tokyo,japan,asia
+japan,japan,japan,japan,asia
+seoul,seoul,seoul,south korea,asia
+south korea,south korea,south korea,south korea,asia
+korea,south korea,south korea,south korea,asia
+tel aviv,tel aviv,tel aviv,israel,middle east
+israel,israel,israel,israel,middle east
+dubai,dubai,dubai,uae,middle east
+uae,dubai,dubai,uae,middle east
+toronto,toronto,toronto,canada,north america
+canada,canada,canada,canada,north america
+vancouver,vancouver,vancouver,canada,north america
+montreal,montreal,montreal,canada,north america
+sydney,sydney,sydney,australia,oceania
+australia,australia,australia,australia,oceania
+melbourne,melbourne,melbourne,australia,oceania
+sao paulo,sao paulo,sao paulo,brazil,south america
+brazil,brazil,brazil,brazil,south america
+mexico city,mexico city,mexico city,mexico,north america
+mexico,mexico,mexico,mexico,north america
+remote,remote,remote,remote,remote

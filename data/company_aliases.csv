@@ -1,0 +1,206 @@
+alias,canonical,parent_company,industry
+google,google,alphabet,technology
+alphabet,alphabet,alphabet,technology
+google cloud,google,alphabet,technology
+youtube,youtube,alphabet,technology
+waymo,waymo,alphabet,technology
+deepmind,deepmind,alphabet,technology
+verily,verily,alphabet,technology
+meta,meta,meta,technology
+facebook,meta,meta,technology
+instagram,instagram,meta,technology
+whatsapp,whatsapp,meta,technology
+oculus,meta reality labs,meta,technology
+apple,apple,apple,technology
+microsoft,microsoft,microsoft,technology
+msft,microsoft,microsoft,technology
+linkedin,linkedin,microsoft,technology
+github,github,microsoft,technology
+azure,microsoft azure,microsoft,technology
+amazon,amazon,amazon,technology
+aws,amazon web services,amazon,technology
+amazon web services,amazon web services,amazon,technology
+twitch,twitch,amazon,technology
+whole foods,whole foods,amazon,retail
+tesla,tesla,tesla,automotive
+spacex,spacex,spacex,aerospace
+neuralink,neuralink,neuralink,healthcare
+openai,openai,openai,technology
+anthropic,anthropic,anthropic,technology
+stripe,stripe,stripe,fintech
+coinbase,coinbase,coinbase,cryptocurrency
+airbnb,airbnb,airbnb,hospitality
+uber,uber,uber,transportation
+lyft,lyft,lyft,transportation
+doordash,doordash,doordash,food delivery
+instacart,instacart,instacart,grocery
+walmart,walmart,walmart,retail
+target,target,target,retail
+netflix,netflix,netflix,entertainment
+disney,disney,disney,entertainment
+spotify,spotify,spotify,entertainment
+salesforce,salesforce,salesforce,enterprise software
+oracle,oracle,oracle,enterprise software
+sap,sap,sap,enterprise software
+ibm,ibm,ibm,technology
+intel,intel,intel,semiconductor
+nvidia,nvidia,nvidia,semiconductor
+amd,amd,amd,semiconductor
+qualcomm,qualcomm,qualcomm,semiconductor
+twitter,x,x,technology
+x,x,x,technology
+snap,snap,snap,technology
+snapchat,snap,snap,technology
+tiktok,tiktok,bytedance,technology
+bytedance,bytedance,bytedance,technology
+pinterest,pinterest,pinterest,technology
+reddit,reddit,reddit,technology
+zoom,zoom,zoom,technology
+slack,slack,salesforce,technology
+dropbox,dropbox,dropbox,technology
+box,box,box,technology
+atlassian,atlassian,atlassian,technology
+jira,atlassian,atlassian,technology
+confluence,atlassian,atlassian,technology
+notion,notion,notion,technology
+figma,figma,adobe,technology
+adobe,adobe,adobe,technology
+autodesk,autodesk,autodesk,technology
+unity,unity,unity,technology
+epic games,epic games,epic games,gaming
+roblox,roblox,roblox,gaming
+valve,valve,valve,gaming
+ea,electronic arts,electronic arts,gaming
+activision,activision blizzard,microsoft,gaming
+blizzard,activision blizzard,microsoft,gaming
+shopify,shopify,shopify,ecommerce
+square,block,block,fintech
+block,block,block,fintech
+paypal,paypal,paypal,fintech
+venmo,venmo,paypal,fintech
+visa,visa,visa,finance
+mastercard,mastercard,mastercard,finance
+amex,american express,american express,finance
+american express,american express,american express,finance
+jpmorgan,jpmorgan chase,jpmorgan chase,banking
+goldman sachs,goldman sachs,goldman sachs,banking
+morgan stanley,morgan stanley,morgan stanley,banking
+wells fargo,wells fargo,wells fargo,banking
+bank of america,bank of america,bank of america,banking
+citigroup,citigroup,citigroup,banking
+blackrock,blackrock,blackrock,asset management
+vanguard,vanguard,vanguard,asset management
+fidelity,fidelity,fidelity,asset management
+sequoia,sequoia capital,sequoia capital,venture capital
+a16z,andreessen horowitz,andreessen horowitz,venture capital
+andreessen horowitz,andreessen horowitz,andreessen horowitz,venture capital
+yc,y combinator,y combinator,accelerator
+y combinator,y combinator,y combinator,accelerator
+techstars,techstars,techstars,accelerator
+500 startups,500 startups,500 startups,venture capital
+accel,accel,accel,venture capital
+greylock,greylock partners,greylock partners,venture capital
+kleiner perkins,kleiner perkins,kleiner perkins,venture capital
+benchmark,benchmark,benchmark,venture capital
+general catalyst,general catalyst,general catalyst,venture capital
+insight partners,insight partners,insight partners,venture capital
+tiger global,tiger global,tiger global,venture capital
+coatue,coatue,coatue,venture capital
+samsung,samsung,samsung,technology
+lg,lg,lg,technology
+sony,sony,sony,technology
+panasonic,panasonic,panasonic,technology
+cisco,cisco,cisco,technology
+vmware,vmware,broadcom,technology
+dell,dell,dell,technology
+hp,hp,hp,technology
+lenovo,lenovo,lenovo,technology
+asus,asus,asus,technology
+acer,acer,acer,technology
+nokia,nokia,nokia,telecom
+ericsson,ericsson,ericsson,telecom
+at&t,at&t,at&t,telecom
+verizon,verizon,verizon,telecom
+t-mobile,t-mobile,t-mobile,telecom
+comcast,comcast,comcast,telecom
+nbc,nbcuniversal,comcast,media
+universal,nbcuniversal,comcast,media
+paramount,paramount,paramount,media
+warner bros,warner bros discovery,warner bros discovery,media
+hbo,hbo,warner bros discovery,media
+fox,fox,fox,media
+cbs,cbs,paramount,media
+abc,abc,disney,media
+espn,espn,disney,media
+hulu,hulu,disney,entertainment
+marvel,marvel,disney,entertainment
+pixar,pixar,disney,entertainment
+lucasfilm,lucasfilm,disney,entertainment
+nyt,new york times,new york times,media
+new york times,new york times,new york times,media
+washington post,washington post,amazon,media
+bloomberg,bloomberg,bloomberg,media
+reuters,reuters,thomson reuters,media
+ap,associated press,associated press,media
+cnn,cnn,warner bros discovery,media
+msnbc,msnbc,nbcuniversal,media
+boeing,boeing,boeing,aerospace
+airbus,airbus,airbus,aerospace
+lockheed martin,lockheed martin,lockheed martin,defense
+northrop grumman,northrop grumman,northrop grumman,defense
+raytheon,raytheon technologies,raytheon technologies,defense
+pfizer,pfizer,pfizer,pharmaceuticals
+moderna,moderna,moderna,biotech
+johnson & johnson,johnson & johnson,johnson & johnson,healthcare
+j&j,johnson & johnson,johnson & johnson,healthcare
+merck,merck,merck,pharmaceuticals
+bristol myers squibb,bristol myers squibb,bristol myers squibb,pharmaceuticals
+abbvie,abbvie,abbvie,pharmaceuticals
+gilead,gilead,gilead,biotech
+amgen,amgen,amgen,biotech
+regeneron,regeneron,regeneron,biotech
+biogen,biogen,biogen,biotech
+illumina,illumina,illumina,biotech
+genentech,genentech,roche,biotech
+roche,roche,roche,pharmaceuticals
+novartis,novartis,novartis,pharmaceuticals
+sanofi,sanofi,sanofi,pharmaceuticals
+gsk,glaxosmithkline,glaxosmithkline,pharmaceuticals
+glaxosmithkline,glaxosmithkline,glaxosmithkline,pharmaceuticals
+astrazeneca,astrazeneca,astrazeneca,pharmaceuticals
+eli lilly,eli lilly,eli lilly,pharmaceuticals
+kaiser,kaiser permanente,kaiser permanente,healthcare
+united health,unitedhealth group,unitedhealth group,healthcare
+cvs,cvs health,cvs health,healthcare
+walgreens,walgreens,walgreens,pharmacy
+rite aid,rite aid,rite aid,pharmacy
+mckesson,mckesson,mckesson,healthcare
+exxonmobil,exxonmobil,exxonmobil,energy
+chevron,chevron,chevron,energy
+bp,bp,bp,energy
+shell,shell,shell,energy
+total,totalenergies,totalenergies,energy
+conocophillips,conocophillips,conocophillips,energy
+ford,ford,ford,automotive
+gm,general motors,general motors,automotive
+general motors,general motors,general motors,automotive
+toyota,toyota,toyota,automotive
+volkswagen,volkswagen,volkswagen,automotive
+bmw,bmw,bmw,automotive
+mercedes,mercedes-benz,mercedes-benz,automotive
+honda,honda,honda,automotive
+nissan,nissan,nissan,automotive
+hyundai,hyundai,hyundai,automotive
+kia,kia,kia,automotive
+rivian,rivian,rivian,automotive
+lucid,lucid motors,lucid motors,automotive
+ge,general electric,general electric,industrial
+3m,3m,3m,industrial
+honeywell,honeywell,honeywell,industrial
+siemens,siemens,siemens,industrial
+caterpillar,caterpillar,caterpillar,industrial
+deere,deere,deere,industrial
+fedex,fedex,fedex,logistics
+ups,ups,ups,logistics
+dhl,dhl,dhl,logistics
+maersk,maersk,maersk,logistics

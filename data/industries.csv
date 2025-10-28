@@ -1,0 +1,102 @@
+industry,canonical,sector
+ai,artificial intelligence,technology
+artificial intelligence,artificial intelligence,technology
+machine learning,machine learning,technology
+ml,machine learning,technology
+deep learning,deep learning,technology
+nlp,natural language processing,technology
+computer vision,computer vision,technology
+robotics,robotics,technology
+software,software,technology
+saas,software as a service,technology
+enterprise software,enterprise software,technology
+b2b software,b2b software,technology
+b2c software,b2c software,technology
+fintech,financial technology,technology
+finance,finance,finance
+banking,banking,finance
+investment,investment,finance
+venture capital,venture capital,finance
+vc,venture capital,finance
+private equity,private equity,finance
+pe,private equity,finance
+hedge fund,hedge fund,finance
+asset management,asset management,finance
+healthcare,healthcare,healthcare
+biotech,biotechnology,healthcare
+pharma,pharmaceuticals,healthcare
+medtech,medical technology,healthcare
+health tech,health technology,healthcare
+ecommerce,ecommerce,commerce
+e-commerce,ecommerce,commerce
+retail,retail,commerce
+marketplace,marketplace,commerce
+consumer,consumer,commerce
+education,education,education
+edtech,education technology,education
+crypto,cryptocurrency,technology
+blockchain,blockchain,technology
+web3,web3,technology
+social media,social media,technology
+advertising,advertising,marketing
+adtech,advertising technology,marketing
+martech,marketing technology,marketing
+real estate,real estate,real estate
+proptech,property technology,real estate
+logistics,logistics,operations
+supply chain,supply chain,operations
+manufacturing,manufacturing,operations
+automotive,automotive,transportation
+mobility,mobility,transportation
+transportation,transportation,transportation
+energy,energy,energy
+cleantech,clean technology,energy
+climate,climate,energy
+sustainability,sustainability,energy
+aerospace,aerospace,aerospace
+defense,defense,defense
+gaming,gaming,entertainment
+entertainment,entertainment,entertainment
+media,media,media
+telecom,telecommunications,telecom
+cybersecurity,cybersecurity,security
+security,security,security
+cloud,cloud computing,technology
+infrastructure,infrastructure,technology
+devtools,developer tools,technology
+developer tools,developer tools,technology
+api,application programming interface,technology
+data,data,technology
+analytics,analytics,technology
+business intelligence,business intelligence,technology
+consulting,consulting,services
+professional services,professional services,services
+legal,legal,legal
+law,legal,legal
+government,government,public
+nonprofit,nonprofit,nonprofit
+agriculture,agriculture,agriculture
+agtech,agriculture technology,agriculture
+food,food,food
+foodtech,food technology,food
+fashion,fashion,fashion
+beauty,beauty,beauty
+travel,travel,travel
+hospitality,hospitality,hospitality
+insurance,insurance,insurance
+insurtech,insurance technology,insurance
+hr tech,human resources technology,technology
+human resources tech,human resources technology,technology
+recruiting,recruiting,hr
+staffing,staffing,hr
+construction,construction,construction
+architecture,architecture,construction
+design,design,creative
+research,research,research
+science,science,research
+hardware,hardware,technology
+semiconductor,semiconductor,technology
+iot,internet of things,technology
+5g,5g,telecom
+space,space,aerospace
+quantum,quantum computing,technology

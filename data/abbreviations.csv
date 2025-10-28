@@ -1,0 +1,67 @@
+abbreviation,expansion,category
+vc,venture capital,finance
+pe,private equity,finance
+pm,product manager,role
+tpm,technical program manager,role
+swe,software engineer,role
+ml,machine learning,tech
+ai,artificial intelligence,tech
+nlp,natural language processing,tech
+cv,computer vision,tech
+ui,user interface,tech
+ux,user experience,tech
+api,application programming interface,tech
+sdk,software development kit,tech
+ceo,chief executive officer,role
+cto,chief technology officer,role
+cfo,chief financial officer,role
+coo,chief operating officer,role
+cmo,chief marketing officer,role
+cpo,chief product officer,role
+ciso,chief information security officer,role
+vp,vice president,role
+svp,senior vice president,role
+evp,executive vice president,role
+hr,human resources,department
+pr,public relations,department
+bd,business development,department
+bdr,business development representative,role
+sdr,sales development representative,role
+saas,software as a service,business
+b2b,business to business,business
+b2c,business to consumer,business
+b2g,business to government,business
+roi,return on investment,metric
+kpi,key performance indicator,metric
+arr,annual recurring revenue,metric
+mrr,monthly recurring revenue,metric
+cac,customer acquisition cost,metric
+ltv,lifetime value,metric
+qa,quality assurance,tech
+ci,continuous integration,tech
+cd,continuous deployment,tech
+aws,amazon web services,tech
+gcp,google cloud platform,tech
+iot,internet of things,tech
+ar,augmented reality,tech
+vr,virtual reality,tech
+xr,extended reality,tech
+crm,customer relationship management,tech
+erp,enterprise resource planning,tech
+hr,human resources,department
+it,information technology,department
+r&d,research and development,department
+ip,intellectual property,legal
+nda,non-disclosure agreement,legal
+mba,master of business administration,education
+phd,doctor of philosophy,education
+ms,master of science,education
+bs,bachelor of science,education
+ba,bachelor of arts,education
+yc,y combinator,organization
+sf,san francisco,location
+nyc,new york city,location
+la,los angeles,location
+dc,washington dc,location
+uk,united kingdom,location
+usa,united states,location

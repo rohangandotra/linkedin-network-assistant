@@ -1,0 +1,96 @@
+role,canonical,category
+ceo,chief executive officer,executive
+cto,chief technology officer,executive
+cfo,chief financial officer,executive
+coo,chief operating officer,executive
+cmo,chief marketing officer,executive
+cpo,chief product officer,executive
+ciso,chief information security officer,executive
+vp,vice president,leadership
+svp,senior vice president,leadership
+evp,executive vice president,leadership
+head of,head,leadership
+director,director,leadership
+senior director,senior director,leadership
+managing director,managing director,leadership
+general manager,general manager,leadership
+product manager,product manager,product
+senior product manager,senior product manager,product
+staff product manager,staff product manager,product
+principal product manager,principal product manager,product
+group product manager,group product manager,product
+pm,product manager,product
+tpm,technical program manager,product
+program manager,program manager,product
+project manager,project manager,product
+software engineer,software engineer,engineering
+senior software engineer,senior software engineer,engineering
+staff software engineer,staff software engineer,engineering
+principal engineer,principal engineer,engineering
+software developer,software developer,engineering
+swe,software engineer,engineering
+engineer,engineer,engineering
+backend engineer,backend engineer,engineering
+frontend engineer,frontend engineer,engineering
+full stack engineer,full stack engineer,engineering
+ml engineer,machine learning engineer,engineering
+machine learning engineer,machine learning engineer,engineering
+data engineer,data engineer,engineering
+data scientist,data scientist,data
+senior data scientist,senior data scientist,data
+staff data scientist,staff data scientist,data
+research scientist,research scientist,research
+ai researcher,ai researcher,research
+artificial intelligence researcher,ai researcher,research
+applied scientist,applied scientist,research
+designer,designer,design
+product designer,product designer,design
+ux designer,ux designer,design
+ui designer,ui designer,design
+ux researcher,ux researcher,design
+design lead,design lead,design
+marketing manager,marketing manager,marketing
+marketing,marketing manager,marketing
+growth manager,growth manager,marketing
+content marketing,content marketing,marketing
+demand gen,demand generation,marketing
+sales,sales,sales
+account executive,account executive,sales
+sales engineer,sales engineer,sales
+business development,business development,sales
+bd,business development,sales
+bdr,business development representative,sales
+sdr,sales development representative,sales
+recruiter,recruiter,hr
+people ops,people operations,hr
+talent acquisition,talent acquisition,hr
+analyst,analyst,analytics
+business analyst,business analyst,analytics
+data analyst,data analyst,analytics
+financial analyst,financial analyst,finance
+finance manager,finance manager,finance
+accountant,accountant,finance
+controller,controller,finance
+investor,investor,finance
+partner,partner,leadership
+founding engineer,founding engineer,engineering
+founder,founder,executive
+co-founder,co-founder,executive
+consultant,consultant,consulting
+strategy,strategy,consulting
+operations,operations,operations
+ops,operations,operations
+customer success,customer success,support
+account manager,account manager,support
+solutions architect,solutions architect,engineering
+dev rel,developer relations,community
+devrel,developer relations,community
+evangelist,evangelist,community
+researcher,researcher,research
+professor,professor,academia
+postdoc,postdoctoral researcher,academia
+phd student,phd student,academia
+student,student,academia
+intern,intern,entry
+associate,associate,entry
+junior,junior,entry
