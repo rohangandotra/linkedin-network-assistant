@@ -2173,33 +2173,16 @@ def main():
             show_login_page()
             return
 
-    # Show connections page if requested (requires authentication)
-    if st.session_state.get('show_connections'):
-        if st.session_state.get('authenticated'):
-            show_connections_page()
-            return
-        else:
-            st.warning("Please log in to use Connections features")
-            st.session_state['show_connections'] = False
-            st.session_state['show_login'] = True
-            st.rerun()
-
     # Get user_id for logged-in users
     user_id = st.session_state.get('user', {}).get('id', 'anonymous')
 
-    # Top Navigation Bar (for authenticated users)
+    # Top Navigation Bar (for authenticated users) - MUST RENDER BEFORE PAGE ROUTING
     if st.session_state.get('authenticated'):
         pending_requests_count = 0
         if user_id != 'anonymous':
             pending_requests_list = collaboration.get_pending_connection_requests(user_id)
             pending_requests_count = len(pending_requests_list)
 
-        # Navigation badge styling
-        badge_html = f" <span style='background: #dc2626; color: white; font-size: 0.75rem; font-weight: 600; padding: 0.125rem 0.5rem; border-radius: 9999px; margin-left: 0.25rem;'>{pending_requests_count}</span>" if pending_requests_count > 0 else ""
-
-        user_name = st.session_state.get('user', {}).get('full_name', 'User')
-
-        # Horizontal navigation bar with inline buttons
         user_name = st.session_state.get('user', {}).get('full_name', 'User')
 
         # Navigation buttons - horizontal layout
@@ -2219,6 +2202,17 @@ def main():
         # User info display
         st.markdown(f"<p style='text-align: right; color: var(--text-secondary); font-size: 0.875rem; margin-top: -2rem;'>Signed in as {user_name}</p>", unsafe_allow_html=True)
         st.markdown("---")
+
+    # Show connections page if requested (requires authentication)
+    if st.session_state.get('show_connections'):
+        if st.session_state.get('authenticated'):
+            show_connections_page()
+            return
+        else:
+            st.warning("Please log in to use Connections features")
+            st.session_state['show_connections'] = False
+            st.session_state['show_login'] = True
+            st.rerun()
 
     # Main content area
     if 'contacts_df' not in st.session_state:
