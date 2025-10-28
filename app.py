@@ -894,16 +894,7 @@ st.markdown("""
     box-sizing: border-box !important;
 }
 
-/* Navigation button spacing - Create 14px gaps between buttons */
-/* Override the general button spacing just for navigation area */
-/* These styles apply to the first set of columns (navigation) */
-.block-container > div:first-of-type [data-testid="column"] .stButton {
-    margin-right: 14px !important;
-}
-
-.block-container > div:first-of-type [data-testid="column"]:last-child .stButton {
-    margin-right: 0 !important;
-}
+/* Gap columns create spacing - no additional margins needed */
 </style>
 """, unsafe_allow_html=True)
 
@@ -927,35 +918,44 @@ if st.session_state.get('authenticated'):
     contact_count = auth.get_contact_count(user_id)
 
     # Clean layout: Logo on left, buttons on right with even spacing
-    nav_cols = st.columns([2, 0.9, 1.1, 3.5, 0.9, 1.1, 0.8])
+    # Gap columns (0.15) create spacing between buttons
+    nav_cols = st.columns([2, 1, 0.15, 1.3, 3, 0.9, 0.15, 1, 0.15, 0.8])
 
     with nav_cols[1]:
-        if st.button("Dashboard", key="nav_dashboard", use_container_width=True,
+        if st.button("Dashboard", key="nav_dashboard",
                     type="primary" if not st.session_state.get('show_connections') else "secondary"):
             st.session_state['show_connections'] = False
             st.rerun()
 
-    with nav_cols[2]:
+    # nav_cols[2] is gap
+
+    with nav_cols[3]:
         connections_label = f"Connections ({pending_requests_count})" if pending_requests_count > 0 else "Connections"
-        if st.button(connections_label, key="nav_connections", use_container_width=True,
+        if st.button(connections_label, key="nav_connections",
                     type="primary" if st.session_state.get('show_connections') else "secondary"):
             st.session_state['show_connections'] = True
             st.rerun()
 
-    with nav_cols[4]:
-        if st.button("Feedback", key="nav_feedback", use_container_width=True, type="secondary"):
+    # nav_cols[4] is spacer
+
+    with nav_cols[5]:
+        if st.button("Feedback", key="nav_feedback", type="secondary"):
             st.session_state['show_feedback_modal'] = True
             st.rerun()
 
-    with nav_cols[5]:
+    # nav_cols[6] is gap
+
+    with nav_cols[7]:
         # User info button (triggers dropdown)
         user_label = user_name.split()[0] + " ▾"  # First name + dropdown arrow
-        if st.button(user_label, key="nav_user_menu", use_container_width=True, type="secondary"):
+        if st.button(user_label, key="nav_user_menu", type="secondary"):
             st.session_state['show_user_menu'] = not st.session_state.get('show_user_menu', False)
             st.rerun()
 
-    with nav_cols[6]:
-        if st.button("Logout", key="nav_logout", use_container_width=True, type="secondary"):
+    # nav_cols[8] is gap
+
+    with nav_cols[9]:
+        if st.button("Logout", key="nav_logout", type="secondary"):
             st.session_state['authenticated'] = False
             st.session_state['user'] = None
             if 'contacts_df' in st.session_state:
@@ -976,18 +976,20 @@ if st.session_state.get('authenticated'):
 """, unsafe_allow_html=True)
 
 else:
-    # Anonymous user navigation - simpler layout
-    nav_cols = st.columns([2, 6.5, 0.8, 0.9])
+    # Anonymous user navigation - simpler layout with gap between buttons
+    nav_cols = st.columns([2, 6.5, 0.8, 0.15, 0.9])
 
     with nav_cols[2]:
-        if st.button("Login", key="nav_login", use_container_width=True, type="secondary"):
+        if st.button("Login", key="nav_login", type="secondary"):
             st.session_state['show_register'] = False
             st.session_state['show_forgot_password'] = False
             st.session_state['show_login'] = True
             st.rerun()
 
-    with nav_cols[3]:
-        if st.button("Sign Up", key="nav_signup", use_container_width=True, type="primary"):
+    # nav_cols[3] is gap
+
+    with nav_cols[4]:
+        if st.button("Sign Up", key="nav_signup", type="primary"):
             st.session_state['show_register'] = True
             st.session_state['show_login'] = False
             st.rerun()
