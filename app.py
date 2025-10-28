@@ -770,27 +770,189 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Top Navigation Bar - Dynamic based on auth state
+# ============================================
+# UNIFIED TOP NAVIGATION BAR (Phase 1)
+# ============================================
+# Replaces old top nav + sidebar + duplicate nav buttons
+
+# Add CSS for unified navigation
+st.markdown("""
+<style>
+.unified-nav-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background: white;
+    border-bottom: 1px solid var(--border-light);
+    margin-bottom: 2rem;
+}
+.nav-logo {
+    font-family: var(--font-serif);
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+.nav-spacer {
+    flex: 1;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# Logo
+st.markdown("<div class='unified-nav-container'><div class='nav-logo'>NetworkAI</div></div>", unsafe_allow_html=True)
+
+# Navigation buttons in columns
 if st.session_state.get('authenticated'):
-    # Logged in: Show user name
-    user_name = st.session_state['user']['full_name'].split()[0]  # First name only
-    st.markdown(f"""
-<div class='top-nav'>
-<div class='top-nav-logo'>NetworkAI</div>
-<div class='top-nav-links'>
-<span class='top-nav-link'>{user_name}</span>
-</div>
+    # Authenticated user navigation
+    user_id = st.session_state.get('user', {}).get('id', 'anonymous')
+    user_name = st.session_state['user']['full_name']
+    user_email = st.session_state['user']['email']
+
+    # Get pending requests count
+    pending_requests_count = 0
+    if user_id != 'anonymous':
+        pending_requests_list = collaboration.get_pending_connection_requests(user_id)
+        pending_requests_count = len(pending_requests_list)
+
+    # Get contact count
+    contact_count = auth.get_contact_count(user_id)
+
+    # Create layout: [Logo space] [Dashboard] [Connections] [spacer] [Feedback] [User Menu] [Logout]
+    nav_cols = st.columns([2, 1, 1.2, 3, 1, 1.5, 1])
+
+    with nav_cols[1]:
+        if st.button("Dashboard", key="nav_dashboard", use_container_width=True,
+                    type="primary" if not st.session_state.get('show_connections') else "secondary"):
+            st.session_state['show_connections'] = False
+            st.rerun()
+
+    with nav_cols[2]:
+        connections_label = f"Connections ({pending_requests_count})" if pending_requests_count > 0 else "Connections"
+        if st.button(connections_label, key="nav_connections", use_container_width=True,
+                    type="primary" if st.session_state.get('show_connections') else "secondary"):
+            st.session_state['show_connections'] = True
+            st.rerun()
+
+    with nav_cols[4]:
+        if st.button("📋 Feedback", key="nav_feedback", use_container_width=True):
+            st.session_state['show_feedback_modal'] = True
+            st.rerun()
+
+    with nav_cols[5]:
+        # User info button (triggers dropdown)
+        user_label = user_name.split()[0] + " ▾"  # First name + dropdown arrow
+        if st.button(user_label, key="nav_user_menu", use_container_width=True):
+            st.session_state['show_user_menu'] = not st.session_state.get('show_user_menu', False)
+            st.rerun()
+
+    with nav_cols[6]:
+        if st.button("Logout", key="nav_logout", use_container_width=True):
+            st.session_state['authenticated'] = False
+            st.session_state['user'] = None
+            if 'contacts_df' in st.session_state:
+                del st.session_state['contacts_df']
+            st.success("Logged out successfully!")
+            st.rerun()
+
+    # User menu dropdown (if active)
+    if st.session_state.get('show_user_menu'):
+        st.markdown(f"""
+<div style='background: white; border: 1px solid var(--border-light); border-radius: var(--radius-md);
+     padding: 1rem; margin: -1rem 0 1rem auto; max-width: 300px; box-shadow: var(--shadow-lg);'>
+    <p style='font-size: 0.875rem; color: var(--text-tertiary); margin: 0 0 0.5rem 0;'>Signed in as</p>
+    <p style='font-size: 1rem; font-weight: 600; color: var(--text-primary); margin: 0;'>{user_name}</p>
+    <p style='font-size: 0.875rem; color: var(--text-secondary); margin: 0.25rem 0 0 0;'>{user_email}</p>
+    {f"<p style='font-size: 0.875rem; color: var(--text-secondary); margin: 0.75rem 0 0 0;'>{contact_count:,} contacts saved</p>" if contact_count > 0 else ""}
 </div>
 """, unsafe_allow_html=True)
+
 else:
-    # Not logged in: Show login button
-    st.markdown("""
-<div class='top-nav'>
-<div class='top-nav-logo'>NetworkAI</div>
-<div class='top-nav-links'>
-</div>
-</div>
-""", unsafe_allow_html=True)
+    # Anonymous user navigation
+    nav_cols = st.columns([2, 5, 1, 1.2])
+
+    with nav_cols[2]:
+        if st.button("Log In", key="nav_login", use_container_width=True):
+            st.session_state['show_register'] = False
+            st.session_state['show_forgot_password'] = False
+            st.session_state['show_login'] = True
+            st.rerun()
+
+    with nav_cols[3]:
+        if st.button("Sign Up", key="nav_signup", use_container_width=True, type="primary"):
+            st.session_state['show_register'] = True
+            st.session_state['show_login'] = False
+            st.rerun()
+
+st.markdown("---")
+
+# Feedback Modal (shown when feedback button clicked)
+if st.session_state.get('show_feedback_modal'):
+    st.markdown("### 📋 Report an Issue or Give Feedback")
+    st.markdown("<p style='color: var(--text-secondary); margin-bottom: 1rem;'>Help us improve! Let us know if something isn't working or if you have ideas.</p>", unsafe_allow_html=True)
+
+    feedback_type = st.selectbox(
+        "Type of feedback",
+        ["Bug Report", "Feature Request", "General Feedback", "Praise"],
+        key="feedback_type_modal"
+    )
+
+    feedback_text = st.text_area(
+        "Your feedback",
+        placeholder="Describe what happened or what you'd like to see...",
+        height=120,
+        key="feedback_text_modal"
+    )
+
+    # For anonymous users, optionally collect email
+    feedback_email = None
+    if not st.session_state.get('authenticated'):
+        feedback_email = st.text_input(
+            "Email (optional)",
+            placeholder="your@email.com",
+            help="We'll only use this to follow up on your feedback",
+            key="feedback_email_modal"
+        )
+
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        if st.button("Submit Feedback", use_container_width=True, type="primary", key="feedback_submit_modal"):
+            if feedback_text and feedback_text.strip():
+                # Get user info
+                user_id = st.session_state.get('user', {}).get('id')
+                user_email = st.session_state.get('user', {}).get('email') or feedback_email
+
+                # Get page context
+                page_context = "Main Dashboard"
+                if 'contacts_df' not in st.session_state:
+                    page_context = "Empty State (No Contacts)"
+                elif st.session_state.get('show_connections'):
+                    page_context = "Connections Page"
+
+                # Submit feedback
+                result = feedback.submit_feedback(
+                    feedback_text=feedback_text,
+                    feedback_type=feedback_type.lower().replace(" ", "_"),
+                    page_context=page_context,
+                    user_id=user_id,
+                    user_email=user_email
+                )
+
+                if result['success']:
+                    st.success(result['message'])
+                    st.session_state['show_feedback_modal'] = False
+                    st.rerun()
+                else:
+                    st.error(result['message'])
+            else:
+                st.warning("Please enter your feedback before submitting")
+
+    with col2:
+        if st.button("Cancel", use_container_width=True, key="feedback_cancel_modal"):
+            st.session_state['show_feedback_modal'] = False
+            st.rerun()
+
+    st.markdown("---")
 
 def parse_linkedin_csv(uploaded_file):
     """Parse LinkedIn CSV export and return a dataframe"""
@@ -2041,125 +2203,11 @@ def main():
 </div>
 """, unsafe_allow_html=True)
 
-    # === SIDEBAR: Clean Flow Design ===
-    with st.sidebar:
-        if st.session_state.get('authenticated'):
-            # Logged-in user sidebar
-            st.markdown(f"<p style='font-size: 0.875rem; color: var(--text-tertiary); margin-bottom: var(--space-2);'>Signed in as</p>", unsafe_allow_html=True)
-            st.markdown(f"<p style='font-size: 1rem; font-weight: 600; color: var(--text-primary); margin-bottom: var(--space-1);'>{st.session_state['user']['full_name']}</p>", unsafe_allow_html=True)
-            st.markdown(f"<p style='font-size: 0.875rem; color: var(--text-secondary); margin-bottom: var(--space-6);'>{st.session_state['user']['email']}</p>", unsafe_allow_html=True)
-
-            # Contact count
-            contact_count = auth.get_contact_count(st.session_state['user']['id'])
-            if contact_count > 0:
-                st.markdown(f"<div style='padding: var(--space-3); background: var(--bg-tertiary); border-radius: var(--radius-md); margin-bottom: var(--space-4);'><p style='font-size: 0.875rem; color: var(--text-secondary); margin: 0;'>{contact_count:,} contacts saved</p></div>", unsafe_allow_html=True)
-
-            st.markdown("---")
-
-            # Logout button
-            if st.button("Logout", use_container_width=True, key="logout_button"):
-                st.session_state['authenticated'] = False
-                st.session_state['user'] = None
-                if 'contacts_df' in st.session_state:
-                    del st.session_state['contacts_df']
-                st.success("Logged out successfully!")
-                st.rerun()
-
-            # No admin section needed
-        else:
-            # Anonymous user sidebar - Login/Signup CTAs
-            st.markdown("<p style='font-size: 1.125rem; font-weight: 600; color: var(--text-primary); margin-bottom: var(--space-3);'>Welcome!</p>", unsafe_allow_html=True)
-            st.markdown("<p style='font-size: 0.9375rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: var(--space-6);'>Sign up to save your contacts and access them from anywhere.</p>", unsafe_allow_html=True)
-
-            if st.button("Sign Up", use_container_width=True, key="sidebar_signup", type="primary"):
-                st.session_state['show_register'] = True
-                st.session_state['show_login'] = False
-                st.rerun()
-
-            if st.button("Log In", use_container_width=True, key="sidebar_login"):
-                st.session_state['show_register'] = False
-                st.session_state['show_forgot_password'] = False
-                st.session_state['show_login'] = True
-                st.rerun()
-
-            # Show session contact count for anonymous users
-            if 'contacts_df' in st.session_state:
-                st.markdown("---")
-                st.markdown(f"<div style='padding: var(--space-3); background: rgba(37, 99, 235, 0.05); border: 1px solid var(--primary); border-radius: var(--radius-md); margin-top: var(--space-4);'><p style='font-size: 0.875rem; color: var(--text-secondary); margin: 0;'>{len(st.session_state['contacts_df']):,} contacts (session only)</p><p style='font-size: 0.8125rem; color: var(--text-tertiary); margin: var(--space-1) 0 0 0;'>Sign up to save permanently</p></div>", unsafe_allow_html=True)
-
-        # === FEEDBACK FORM (Always visible at bottom of sidebar) ===
-        st.markdown("---")
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        with st.expander("Report an Issue or Give Feedback"):
-            st.markdown("<p style='font-size: 0.9375rem; color: var(--text-secondary); margin-bottom: var(--space-4);'>Help us improve! Let us know if something isn't working or if you have ideas.</p>", unsafe_allow_html=True)
-
-            feedback_type = st.selectbox(
-                "Type of feedback",
-                ["Bug Report", "Feature Request", "General Feedback", "Praise"],
-                key="feedback_type_select"
-            )
-
-            feedback_text = st.text_area(
-                "Your feedback",
-                placeholder="Describe what happened or what you'd like to see...",
-                height=120,
-                key="feedback_text_input"
-            )
-
-            # For anonymous users, optionally collect email
-            feedback_email = None
-            if not st.session_state.get('authenticated'):
-                feedback_email = st.text_input(
-                    "Email (optional)",
-                    placeholder="your@email.com",
-                    help="We'll only use this to follow up on your feedback",
-                    key="feedback_email_input"
-                )
-
-            if st.button("Submit Feedback", use_container_width=True, type="primary", key="feedback_submit_btn"):
-                if feedback_text and feedback_text.strip():
-                    # Get user info
-                    user_id = st.session_state.get('user', {}).get('id')
-                    user_email = st.session_state.get('user', {}).get('email') or feedback_email
-
-                    # Get page context
-                    page_context = "Main Dashboard"
-                    if 'contacts_df' not in st.session_state:
-                        page_context = "Empty State (No Contacts)"
-                    elif st.session_state.get('show_register'):
-                        page_context = "Registration Page"
-                    elif st.session_state.get('show_login'):
-                        page_context = "Login Page"
-
-                    # Submit feedback
-                    result = feedback.submit_feedback(
-                        feedback_text=feedback_text,
-                        feedback_type=feedback_type.lower().replace(" ", "_"),
-                        page_context=page_context,
-                        user_id=user_id,
-                        user_email=user_email
-                    )
-
-                    if result['success']:
-                        st.success(result['message'])
-                        # Clear form
-                        st.session_state['feedback_text_input'] = ""
-                        if 'feedback_email_input' in st.session_state:
-                            st.session_state['feedback_email_input'] = ""
-                    else:
-                        st.error(result['message'])
-                else:
-                    st.warning("Please enter your feedback before submitting")
-
-        # Hide auto-generated page navigation
-        st.markdown("""
-        <style>
-            section[data-testid="stSidebarNav"] {
-                display: none !important;
-            }
-        </style>
-        """, unsafe_allow_html=True)
+    # === SIDEBAR REMOVED (Phase 1) ===
+    # All sidebar functionality moved to unified top navigation bar
+    # - User info/menu: Now in top-right user dropdown
+    # - Login/Signup buttons: Now in top-right for anonymous users
+    # - Feedback form: Now accessible via "Feedback" button in nav bar
 
     # Show login/register modal for anonymous users if requested
     if not st.session_state.get('authenticated'):
@@ -2173,35 +2221,8 @@ def main():
             show_login_page()
             return
 
-    # Get user_id for logged-in users
-    user_id = st.session_state.get('user', {}).get('id', 'anonymous')
-
-    # Top Navigation Bar (for authenticated users) - MUST RENDER BEFORE PAGE ROUTING
-    if st.session_state.get('authenticated'):
-        pending_requests_count = 0
-        if user_id != 'anonymous':
-            pending_requests_list = collaboration.get_pending_connection_requests(user_id)
-            pending_requests_count = len(pending_requests_list)
-
-        user_name = st.session_state.get('user', {}).get('full_name', 'User')
-
-        # Navigation buttons - horizontal layout
-        col1, col2, col3, col4 = st.columns([2, 1, 1, 2])
-
-        with col2:
-            if st.button("Dashboard", key="nav_dashboard", use_container_width=True, type="secondary" if st.session_state.get('show_connections') else "primary"):
-                st.session_state['show_connections'] = False
-                st.rerun()
-
-        with col3:
-            connections_label = f"Connections ({pending_requests_count})" if pending_requests_count > 0 else "Connections"
-            if st.button(connections_label, key="nav_connections", use_container_width=True, type="primary" if st.session_state.get('show_connections') else "secondary"):
-                st.session_state['show_connections'] = True
-                st.rerun()
-
-        # User info display
-        st.markdown(f"<p style='text-align: right; color: var(--text-secondary); font-size: 0.875rem; margin-top: -2rem;'>Signed in as {user_name}</p>", unsafe_allow_html=True)
-        st.markdown("---")
+    # === DUPLICATE NAVIGATION REMOVED (Phase 1) ===
+    # Old navigation buttons removed - now handled by unified top nav bar
 
     # Show connections page if requested (requires authentication)
     if st.session_state.get('show_connections'):
