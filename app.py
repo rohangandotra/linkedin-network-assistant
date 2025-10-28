@@ -869,10 +869,10 @@ if st.session_state.get('authenticated'):
 
 else:
     # Anonymous user navigation
-    nav_cols = st.columns([2, 5, 1, 1.2])
+    nav_cols = st.columns([2, 5, 1.2, 1.2])
 
     with nav_cols[2]:
-        if st.button("Log In", key="nav_login", use_container_width=True):
+        if st.button("Login", key="nav_login", use_container_width=True):
             st.session_state['show_register'] = False
             st.session_state['show_forgot_password'] = False
             st.session_state['show_login'] = True
