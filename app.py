@@ -44,6 +44,9 @@ import collaboration
 # Import security module
 import security
 
+# Import feedback module
+import feedback
+
 # Phase 3B: Import new hybrid search system
 try:
     from search_integration import (
@@ -1784,6 +1787,71 @@ def main():
             if 'contacts_df' in st.session_state:
                 st.markdown("---")
                 st.markdown(f"<div style='padding: var(--space-3); background: rgba(37, 99, 235, 0.05); border: 1px solid var(--primary); border-radius: var(--radius-md); margin-top: var(--space-4);'><p style='font-size: 0.875rem; color: var(--text-secondary); margin: 0;'>{len(st.session_state['contacts_df']):,} contacts (session only)</p><p style='font-size: 0.8125rem; color: var(--text-tertiary); margin: var(--space-1) 0 0 0;'>Sign up to save permanently</p></div>", unsafe_allow_html=True)
+
+        # === FEEDBACK FORM (Always visible at bottom of sidebar) ===
+        st.markdown("---")
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        with st.expander("Report an Issue or Give Feedback"):
+            st.markdown("<p style='font-size: 0.9375rem; color: var(--text-secondary); margin-bottom: var(--space-4);'>Help us improve! Let us know if something isn't working or if you have ideas.</p>", unsafe_allow_html=True)
+
+            feedback_type = st.selectbox(
+                "Type of feedback",
+                ["Bug Report", "Feature Request", "General Feedback", "Praise"],
+                key="feedback_type_select"
+            )
+
+            feedback_text = st.text_area(
+                "Your feedback",
+                placeholder="Describe what happened or what you'd like to see...",
+                height=120,
+                key="feedback_text_input"
+            )
+
+            # For anonymous users, optionally collect email
+            feedback_email = None
+            if not st.session_state.get('authenticated'):
+                feedback_email = st.text_input(
+                    "Email (optional)",
+                    placeholder="your@email.com",
+                    help="We'll only use this to follow up on your feedback",
+                    key="feedback_email_input"
+                )
+
+            if st.button("Submit Feedback", use_container_width=True, type="primary", key="feedback_submit_btn"):
+                if feedback_text and feedback_text.strip():
+                    # Get user info
+                    user_id = st.session_state.get('user', {}).get('id')
+                    user_email = st.session_state.get('user', {}).get('email') or feedback_email
+
+                    # Get page context
+                    page_context = "Main Dashboard"
+                    if 'contacts_df' not in st.session_state:
+                        page_context = "Empty State (No Contacts)"
+                    elif st.session_state.get('show_register'):
+                        page_context = "Registration Page"
+                    elif st.session_state.get('show_login'):
+                        page_context = "Login Page"
+
+                    # Submit feedback
+                    result = feedback.submit_feedback(
+                        feedback_text=feedback_text,
+                        feedback_type=feedback_type.lower().replace(" ", "_"),
+                        page_context=page_context,
+                        user_id=user_id,
+                        user_email=user_email
+                    )
+
+                    if result['success']:
+                        st.success(result['message'])
+                        # Clear form
+                        st.session_state['feedback_text_input'] = ""
+                        if 'feedback_email_input' in st.session_state:
+                            st.session_state['feedback_email_input'] = ""
+                    else:
+                        st.error(result['message'])
+                else:
+                    st.warning("Please enter your feedback before submitting")
 
         # Hide auto-generated page navigation
         st.markdown("""
