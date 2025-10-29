@@ -898,17 +898,40 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Top navigation bar container
-st.markdown('<div class="top-nav-bar"><div class="top-nav-logo">NetworkAI</div><div class="top-nav-buttons"></div></div>', unsafe_allow_html=True)
+# CSS for text-link style buttons (no boxes)
+st.markdown("""
+<style>
+.text-link-button button {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: var(--text-secondary) !important;
+    font-weight: 500 !important;
+    padding: 8px 12px !important;
+    transition: color 0.15s ease !important;
+}
+.text-link-button button:hover {
+    background: transparent !important;
+    color: var(--primary) !important;
+}
+.text-link-button button:focus, .text-link-button button:active {
+    background: transparent !important;
+    box-shadow: none !important;
+}
+</style>
+""", unsafe_allow_html=True)
 
-# Navigation buttons in clean horizontal layout
+# Top navigation bar container
+st.markdown('<div class="top-nav-bar"><div class="top-nav-logo">6th Degree AI</div><div class="top-nav-buttons"></div></div>', unsafe_allow_html=True)
+
+# Top bar navigation - only Feedback, User, Logout (no boxes)
 if st.session_state.get('authenticated'):
     # Authenticated user navigation
     user_id = st.session_state.get('user', {}).get('id', 'anonymous')
     user_name = st.session_state['user']['full_name']
     user_email = st.session_state['user']['email']
 
-    # Get pending requests count
+    # Get pending requests count (for later use)
     pending_requests_count = 0
     if user_id != 'anonymous':
         pending_requests_list = collaboration.get_pending_connection_requests(user_id)
@@ -917,51 +940,39 @@ if st.session_state.get('authenticated'):
     # Get contact count
     contact_count = auth.get_contact_count(user_id)
 
-    # Clean layout: Logo on left, buttons on right with even spacing
-    # Gap columns (0.15) create spacing between buttons
-    nav_cols = st.columns([2, 1, 0.15, 1.3, 3, 0.9, 0.15, 1, 0.15, 0.8])
+    # Top bar: Logo on left, Feedback/User/Logout on right (no boxes)
+    top_nav_cols = st.columns([2, 6, 0.9, 0.15, 1, 0.15, 0.8])
 
-    with nav_cols[1]:
-        if st.button("Dashboard", key="nav_dashboard",
-                    type="primary" if not st.session_state.get('show_connections') else "secondary"):
-            st.session_state['show_connections'] = False
-            st.rerun()
-
-    # nav_cols[2] is gap
-
-    with nav_cols[3]:
-        connections_label = f"Connections ({pending_requests_count})" if pending_requests_count > 0 else "Connections"
-        if st.button(connections_label, key="nav_connections",
-                    type="primary" if st.session_state.get('show_connections') else "secondary"):
-            st.session_state['show_connections'] = True
-            st.rerun()
-
-    # nav_cols[4] is spacer
-
-    with nav_cols[5]:
-        if st.button("Feedback", key="nav_feedback", type="secondary"):
+    with top_nav_cols[2]:
+        st.markdown('<div class="text-link-button">', unsafe_allow_html=True)
+        if st.button("Feedback", key="top_nav_feedback"):
             st.session_state['show_feedback_modal'] = True
             st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
-    # nav_cols[6] is gap
+    # top_nav_cols[3] is gap
 
-    with nav_cols[7]:
+    with top_nav_cols[4]:
+        st.markdown('<div class="text-link-button">', unsafe_allow_html=True)
         # User info button (triggers dropdown)
         user_label = user_name.split()[0] + " ▾"  # First name + dropdown arrow
-        if st.button(user_label, key="nav_user_menu", type="secondary"):
+        if st.button(user_label, key="top_nav_user_menu"):
             st.session_state['show_user_menu'] = not st.session_state.get('show_user_menu', False)
             st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
-    # nav_cols[8] is gap
+    # top_nav_cols[5] is gap
 
-    with nav_cols[9]:
-        if st.button("Logout", key="nav_logout", type="secondary"):
+    with top_nav_cols[6]:
+        st.markdown('<div class="text-link-button">', unsafe_allow_html=True)
+        if st.button("Logout", key="top_nav_logout"):
             st.session_state['authenticated'] = False
             st.session_state['user'] = None
             if 'contacts_df' in st.session_state:
                 del st.session_state['contacts_df']
             st.success("Logged out successfully!")
             st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
     # User menu dropdown (if active)
     if st.session_state.get('show_user_menu'):
@@ -2304,6 +2315,81 @@ def main():
             }
         </style>
         """, unsafe_allow_html=True)
+
+    # Lower navigation - Dashboard/Connections (only show for authenticated users with contacts)
+    if st.session_state.get('authenticated') and 'contacts_df' in st.session_state:
+        # Get pending requests count (reuse from top nav)
+        user_id = st.session_state.get('user', {}).get('id', 'anonymous')
+        pending_requests_count = 0
+        if user_id != 'anonymous':
+            pending_requests_list = collaboration.get_pending_connection_requests(user_id)
+            pending_requests_count = len(pending_requests_list)
+
+        # CSS for inactive navigation button (no box)
+        st.markdown("""
+<style>
+.inactive-nav-button button {
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    box-shadow: none !important;
+    color: var(--text-secondary) !important;
+    font-weight: 500 !important;
+    padding: 12px 20px !important;
+    border-radius: 8px !important;
+    min-width: 120px !important;
+    height: 40px !important;
+    font-size: 15px !important;
+    transition: all 0.15s ease !important;
+}
+.inactive-nav-button button:hover {
+    background: rgba(43, 108, 176, 0.05) !important;
+    color: var(--primary) !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+        # Check which page we're on
+        on_connections_page = st.session_state.get('show_connections', False)
+
+        # Lower navigation buttons
+        lower_nav_cols = st.columns([0.9, 0.15, 1.1, 7])
+
+        with lower_nav_cols[0]:
+            # Dashboard button - has box if on dashboard, no box if on connections
+            if not on_connections_page:
+                # Active - show box
+                if st.button("Dashboard", key="lower_nav_dashboard", type="secondary"):
+                    st.session_state['show_connections'] = False
+                    st.rerun()
+            else:
+                # Inactive - no box
+                st.markdown('<div class="inactive-nav-button">', unsafe_allow_html=True)
+                if st.button("Dashboard", key="lower_nav_dashboard_inactive"):
+                    st.session_state['show_connections'] = False
+                    st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
+
+        # lower_nav_cols[1] is gap
+
+        with lower_nav_cols[2]:
+            # Connections button - has box if on connections, no box if on dashboard
+            if on_connections_page:
+                # Active - show box
+                connections_label = f"Connections ({pending_requests_count})" if pending_requests_count > 0 else "Connections"
+                if st.button(connections_label, key="lower_nav_connections", type="secondary"):
+                    st.session_state['show_connections'] = True
+                    st.rerun()
+            else:
+                # Inactive - no box
+                st.markdown('<div class="inactive-nav-button">', unsafe_allow_html=True)
+                connections_label = f"Connections ({pending_requests_count})" if pending_requests_count > 0 else "Connections"
+                if st.button(connections_label, key="lower_nav_connections_inactive"):
+                    st.session_state['show_connections'] = True
+                    st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
+
+        # Add spacing below nav
+        st.markdown('<div style="height: 24px;"></div>', unsafe_allow_html=True)
 
     # Hero section - Flow-inspired minimal design
     st.markdown("""
