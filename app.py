@@ -48,7 +48,7 @@ import security
 import feedback
 
 # Import profile module
-import profile
+import user_profile
 
 # Phase 3B: Import new hybrid search system
 try:
@@ -1865,27 +1865,27 @@ def show_profile_page():
         return
 
     # Get current profile
-    user_profile = profile.get_profile(user_id)
+    user_profile_data = user_profile.get_profile(user_id)
 
-    if not user_profile:
+    if not user_profile_data:
         st.error("Profile not found. Please complete onboarding.")
         return
 
     # Parse JSON fields
     import json
-    goals = user_profile.get('goals', [])
+    goals = user_profile_data.get('goals', [])
     if isinstance(goals, str):
         goals = json.loads(goals)
 
-    interests = user_profile.get('interests', [])
+    interests = user_profile_data.get('interests', [])
     if isinstance(interests, str):
         interests = json.loads(interests)
 
-    seeking_connections = user_profile.get('seeking_connections', [])
+    seeking_connections = user_profile_data.get('seeking_connections', [])
     if isinstance(seeking_connections, str):
         seeking_connections = json.loads(seeking_connections)
 
-    privacy_settings = user_profile.get('privacy_settings', {})
+    privacy_settings = user_profile_data.get('privacy_settings', {})
     if isinstance(privacy_settings, str):
         privacy_settings = json.loads(privacy_settings)
 
@@ -1924,7 +1924,7 @@ def show_profile_page():
         st.markdown(f"""
 <div class='card' style='padding: var(--space-5); margin-bottom: var(--space-4);'>
     <p style='font-size: 0.875rem; color: var(--text-tertiary); margin: 0 0 var(--space-1) 0;'>Current Role {visibility_icon}</p>
-    <p style='font-size: 1.125rem; font-weight: 600; color: var(--text-primary); margin: 0;'>{user_profile.get('current_role', 'N/A')}</p>
+    <p style='font-size: 1.125rem; font-weight: 600; color: var(--text-primary); margin: 0;'>{user_profile_data.get('current_role', 'N/A')}</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -1933,7 +1933,7 @@ def show_profile_page():
         st.markdown(f"""
 <div class='card' style='padding: var(--space-5); margin-bottom: var(--space-4);'>
     <p style='font-size: 0.875rem; color: var(--text-tertiary); margin: 0 0 var(--space-1) 0;'>Current Company {visibility_icon}</p>
-    <p style='font-size: 1.125rem; font-weight: 600; color: var(--text-primary); margin: 0;'>{user_profile.get('current_company', 'N/A')}</p>
+    <p style='font-size: 1.125rem; font-weight: 600; color: var(--text-primary); margin: 0;'>{user_profile_data.get('current_company', 'N/A')}</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -1942,26 +1942,26 @@ def show_profile_page():
         st.markdown(f"""
 <div class='card' style='padding: var(--space-5); margin-bottom: var(--space-4);'>
     <p style='font-size: 0.875rem; color: var(--text-tertiary); margin: 0 0 var(--space-1) 0;'>Industry {visibility_icon}</p>
-    <p style='font-size: 1.125rem; font-weight: 600; color: var(--text-primary); margin: 0;'>{user_profile.get('industry', 'N/A')}</p>
+    <p style='font-size: 1.125rem; font-weight: 600; color: var(--text-primary); margin: 0;'>{user_profile_data.get('industry', 'N/A')}</p>
 </div>
 """, unsafe_allow_html=True)
 
         # Company Stage (if provided)
-        if user_profile.get('company_stage'):
+        if user_profile_data.get('company_stage'):
             visibility_icon = "🔓" if privacy_settings.get('company_stage', True) else "🔒"
             st.markdown(f"""
 <div class='card' style='padding: var(--space-5); margin-bottom: var(--space-4);'>
     <p style='font-size: 0.875rem; color: var(--text-tertiary); margin: 0 0 var(--space-1) 0;'>Company Stage {visibility_icon}</p>
-    <p style='font-size: 1.125rem; font-weight: 600; color: var(--text-primary); margin: 0;'>{user_profile.get('company_stage')}</p>
+    <p style='font-size: 1.125rem; font-weight: 600; color: var(--text-primary); margin: 0;'>{user_profile_data.get('company_stage')}</p>
 </div>
 """, unsafe_allow_html=True)
 
         # Location
         visibility_icon_city = "🔓" if privacy_settings.get('location_city', True) else "🔒"
         visibility_icon_country = "🔓" if privacy_settings.get('location_country', True) else "🔒"
-        location_str = user_profile.get('location_city', 'N/A')
-        if user_profile.get('location_country'):
-            location_str += f", {user_profile.get('location_country')}"
+        location_str = user_profile_data.get('location_city', 'N/A')
+        if user_profile_data.get('location_country'):
+            location_str += f", {user_profile_data.get('location_country')}"
         st.markdown(f"""
 <div class='card' style='padding: var(--space-5); margin-bottom: var(--space-4);'>
     <p style='font-size: 0.875rem; color: var(--text-tertiary); margin: 0 0 var(--space-1) 0;'>Location {visibility_icon_city}</p>
@@ -2038,9 +2038,9 @@ def show_profile_page():
             col1, col2 = st.columns([3, 1])
             with col1:
                 current_industry_index = 0
-                if user_profile.get('industry') in profile.INDUSTRY_OPTIONS:
-                    current_industry_index = profile.INDUSTRY_OPTIONS.index(user_profile.get('industry'))
-                new_industry = st.selectbox("Industry", options=profile.INDUSTRY_OPTIONS, index=current_industry_index)
+                if user_profile_data.get('industry') in user_profile.INDUSTRY_OPTIONS:
+                    current_industry_index = user_profile.INDUSTRY_OPTIONS.index(user_profile_data.get('industry'))
+                new_industry = st.selectbox("Industry", options=user_profile.INDUSTRY_OPTIONS, index=current_industry_index)
             with col2:
                 st.markdown("<p style='font-size: 0.875rem; color: var(--text-tertiary); margin-top: 2rem;'>Visibility</p>", unsafe_allow_html=True)
                 industry_visible = st.checkbox("Public", value=privacy_settings.get('industry', True), key="privacy_industry")
@@ -2049,9 +2049,9 @@ def show_profile_page():
             col1, col2 = st.columns([3, 1])
             with col1:
                 current_stage_index = 0
-                all_stage_options = [''] + profile.COMPANY_STAGE_OPTIONS
-                if user_profile.get('company_stage') in profile.COMPANY_STAGE_OPTIONS:
-                    current_stage_index = all_stage_options.index(user_profile.get('company_stage'))
+                all_stage_options = [''] + user_profile.COMPANY_STAGE_OPTIONS
+                if user_profile_data.get('company_stage') in user_profile.COMPANY_STAGE_OPTIONS:
+                    current_stage_index = all_stage_options.index(user_profile_data.get('company_stage'))
                 new_company_stage = st.selectbox("Company Stage (Optional)", options=all_stage_options, index=current_stage_index)
             with col2:
                 st.markdown("<p style='font-size: 0.875rem; color: var(--text-tertiary); margin-top: 2rem;'>Visibility</p>", unsafe_allow_html=True)
@@ -2060,9 +2060,9 @@ def show_profile_page():
             # Location
             col1, col2, col3 = st.columns([2, 1, 1])
             with col1:
-                new_location_city = st.text_input("City", value=user_profile.get('location_city', ''))
+                new_location_city = st.text_input("City", value=user_profile_data.get('location_city', ''))
             with col2:
-                new_location_country = st.text_input("Country", value=user_profile.get('location_country', ''))
+                new_location_country = st.text_input("Country", value=user_profile_data.get('location_country', ''))
             with col3:
                 st.markdown("<p style='font-size: 0.875rem; color: var(--text-tertiary); margin-top: 2rem;'>Visibility</p>", unsafe_allow_html=True)
                 location_visible = st.checkbox("Public", value=privacy_settings.get('location_city', True), key="privacy_location")
@@ -2073,7 +2073,7 @@ def show_profile_page():
             # Goals
             col1, col2 = st.columns([3, 1])
             with col1:
-                new_goals = st.multiselect("Goals (Optional)", options=profile.GOAL_OPTIONS, default=goals)
+                new_goals = st.multiselect("Goals (Optional)", options=user_profile.GOAL_OPTIONS, default=goals)
             with col2:
                 st.markdown("<p style='font-size: 0.875rem; color: var(--text-tertiary); margin-top: 2rem;'>Visibility</p>", unsafe_allow_html=True)
                 goals_visible = st.checkbox("Public", value=privacy_settings.get('goals', False), key="privacy_goals")
@@ -2081,7 +2081,7 @@ def show_profile_page():
             # Interests
             col1, col2 = st.columns([3, 1])
             with col1:
-                new_interests = st.multiselect("Interests (Optional)", options=profile.INTEREST_OPTIONS, default=interests)
+                new_interests = st.multiselect("Interests (Optional)", options=user_profile.INTEREST_OPTIONS, default=interests)
             with col2:
                 st.markdown("<p style='font-size: 0.875rem; color: var(--text-tertiary); margin-top: 2rem;'>Visibility</p>", unsafe_allow_html=True)
                 interests_visible = st.checkbox("Public", value=privacy_settings.get('interests', True), key="privacy_interests")
@@ -2089,7 +2089,7 @@ def show_profile_page():
             # Seeking Connections
             col1, col2 = st.columns([3, 1])
             with col1:
-                new_seeking_connections = st.multiselect("Seeking Connections (Optional)", options=profile.CONNECTION_TYPE_OPTIONS, default=seeking_connections)
+                new_seeking_connections = st.multiselect("Seeking Connections (Optional)", options=user_profile.CONNECTION_TYPE_OPTIONS, default=seeking_connections)
             with col2:
                 st.markdown("<p style='font-size: 0.875rem; color: var(--text-tertiary); margin-top: 2rem;'>Visibility</p>", unsafe_allow_html=True)
                 seeking_visible = st.checkbox("Public", value=privacy_settings.get('seeking_connections', True), key="privacy_seeking")
@@ -2141,7 +2141,7 @@ def show_profile_page():
                         updates['location_country'] = new_location_country
 
                     # Update profile
-                    result = profile.update_profile(user_id, updates)
+                    result = user_profile.update_profile(user_id, updates)
 
                     if result['success']:
                         st.success("Profile updated successfully!")
@@ -2549,7 +2549,7 @@ def show_profile_onboarding(user_id: str):
         st.markdown("### 3. Which industry are you in?")
         industry = st.selectbox(
             "Industry",
-            options=profile.INDUSTRY_OPTIONS,
+            options=user_profile.INDUSTRY_OPTIONS,
             label_visibility="collapsed"
         )
 
@@ -2559,7 +2559,7 @@ def show_profile_onboarding(user_id: str):
         st.markdown("### 4. What's your company stage? (Optional)")
         company_stage = st.selectbox(
             "Company Stage",
-            options=[''] + profile.COMPANY_STAGE_OPTIONS,
+            options=[''] + user_profile.COMPANY_STAGE_OPTIONS,
             label_visibility="collapsed"
         )
 
@@ -2590,7 +2590,7 @@ def show_profile_onboarding(user_id: str):
         st.caption("Select all that apply")
         goals = st.multiselect(
             "Goals",
-            options=profile.GOAL_OPTIONS,
+            options=user_profile.GOAL_OPTIONS,
             label_visibility="collapsed"
         )
 
@@ -2601,7 +2601,7 @@ def show_profile_onboarding(user_id: str):
         st.caption("Select all that apply")
         interests = st.multiselect(
             "Interests",
-            options=profile.INTEREST_OPTIONS,
+            options=user_profile.INTEREST_OPTIONS,
             label_visibility="collapsed"
         )
 
@@ -2612,7 +2612,7 @@ def show_profile_onboarding(user_id: str):
         st.caption("Select all that apply")
         seeking_connections = st.multiselect(
             "Seeking Connections",
-            options=profile.CONNECTION_TYPE_OPTIONS,
+            options=user_profile.CONNECTION_TYPE_OPTIONS,
             label_visibility="collapsed"
         )
 
@@ -2628,7 +2628,7 @@ def show_profile_onboarding(user_id: str):
                 st.error("Please fill in all required fields (Role, Company, Industry, and City)")
             else:
                 # Create profile
-                result = profile.create_profile(
+                result = user_profile.create_profile(
                     user_id=user_id,
                     current_role=current_role,
                     current_company=current_company,
@@ -2945,7 +2945,7 @@ div[data-testid="column"] > div > .stButton > button[kind="secondary"] {
     # === PROFILE ONBOARDING (Required for authenticated users) ===
     if st.session_state.get('authenticated') and user_id != 'anonymous':
         # Check if user has completed profile
-        if not profile.profile_exists(user_id):
+        if not user_profile.profile_exists(user_id):
             # Show profile onboarding modal (blocking - can't dismiss)
             show_profile_onboarding(user_id)
             return  # Don't show rest of app until profile complete
