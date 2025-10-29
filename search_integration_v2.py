@@ -21,7 +21,19 @@ def get_search_engine():
     Get or create search engine instance
     Stored in session state to persist across reruns
     """
+    # Check if we need to recreate the engine (e.g., after code update)
+    needs_recreation = False
+
     if 'integrated_search_engine' not in st.session_state:
+        needs_recreation = True
+    else:
+        # Check if the instance has the new methods (indexes_exist, load_indexes)
+        engine = st.session_state['integrated_search_engine']
+        if not hasattr(engine, 'indexes_exist') or not hasattr(engine, 'load_indexes'):
+            print("⚠️  Detected old search engine instance, recreating...")
+            needs_recreation = True
+
+    if needs_recreation:
         # Initialize with OpenAI client (for LLM fallback in parser)
         try:
             from app import get_client
