@@ -1019,8 +1019,8 @@ if st.session_state.get('authenticated'):
 </div>
 """, unsafe_allow_html=True)
 
-        # My Profile button
-        if st.button("My Profile", key="nav_profile", use_container_width=True):
+        # My Profile button (integrated within dropdown)
+        if st.button("My Profile", key="nav_profile", use_container_width=True, type="secondary"):
             st.session_state['show_profile'] = True
             st.session_state['show_connections'] = False
             st.session_state['show_user_menu'] = False
@@ -1920,7 +1920,7 @@ def show_profile_page():
         st.markdown("### Professional Information")
 
         # Current Role
-        visibility_icon = "🔓" if privacy_settings.get('current_role', True) else "🔒"
+        visibility_icon = "" if privacy_settings.get('current_role', True) else "🔒"
         st.markdown(f"""
 <div class='card' style='padding: var(--space-5); margin-bottom: var(--space-4);'>
     <p style='font-size: 0.875rem; color: var(--text-tertiary); margin: 0 0 var(--space-1) 0;'>Current Role {visibility_icon}</p>
@@ -1929,7 +1929,7 @@ def show_profile_page():
 """, unsafe_allow_html=True)
 
         # Current Company
-        visibility_icon = "🔓" if privacy_settings.get('current_company', True) else "🔒"
+        visibility_icon = "" if privacy_settings.get('current_company', True) else "🔒"
         st.markdown(f"""
 <div class='card' style='padding: var(--space-5); margin-bottom: var(--space-4);'>
     <p style='font-size: 0.875rem; color: var(--text-tertiary); margin: 0 0 var(--space-1) 0;'>Current Company {visibility_icon}</p>
@@ -1938,7 +1938,7 @@ def show_profile_page():
 """, unsafe_allow_html=True)
 
         # Industry
-        visibility_icon = "🔓" if privacy_settings.get('industry', True) else "🔒"
+        visibility_icon = "" if privacy_settings.get('industry', True) else "🔒"
         st.markdown(f"""
 <div class='card' style='padding: var(--space-5); margin-bottom: var(--space-4);'>
     <p style='font-size: 0.875rem; color: var(--text-tertiary); margin: 0 0 var(--space-1) 0;'>Industry {visibility_icon}</p>
@@ -1948,7 +1948,7 @@ def show_profile_page():
 
         # Company Stage (if provided)
         if user_profile_data.get('company_stage'):
-            visibility_icon = "🔓" if privacy_settings.get('company_stage', True) else "🔒"
+            visibility_icon = "" if privacy_settings.get('company_stage', True) else "🔒"
             st.markdown(f"""
 <div class='card' style='padding: var(--space-5); margin-bottom: var(--space-4);'>
     <p style='font-size: 0.875rem; color: var(--text-tertiary); margin: 0 0 var(--space-1) 0;'>Company Stage {visibility_icon}</p>
@@ -1974,7 +1974,7 @@ def show_profile_page():
 
         # Goals
         if goals:
-            visibility_icon = "🔓" if privacy_settings.get('goals', False) else "🔒"
+            visibility_icon = "" if privacy_settings.get('goals', False) else "🔒"
             goals_str = ", ".join(goals) if goals else "None specified"
             st.markdown(f"""
 <div class='card' style='padding: var(--space-5); margin-bottom: var(--space-4);'>
@@ -1985,7 +1985,7 @@ def show_profile_page():
 
         # Interests
         if interests:
-            visibility_icon = "🔓" if privacy_settings.get('interests', True) else "🔒"
+            visibility_icon = "" if privacy_settings.get('interests', True) else "🔒"
             interests_str = ", ".join(interests) if interests else "None specified"
             st.markdown(f"""
 <div class='card' style='padding: var(--space-5); margin-bottom: var(--space-4);'>
@@ -1996,7 +1996,7 @@ def show_profile_page():
 
         # Seeking Connections
         if seeking_connections:
-            visibility_icon = "🔓" if privacy_settings.get('seeking_connections', True) else "🔒"
+            visibility_icon = "" if privacy_settings.get('seeking_connections', True) else "🔒"
             seeking_str = ", ".join(seeking_connections) if seeking_connections else "None specified"
             st.markdown(f"""
 <div class='card' style='padding: var(--space-5); margin-bottom: var(--space-4);'>
@@ -2006,7 +2006,7 @@ def show_profile_page():
 """, unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown("<p style='font-size: 0.875rem; color: var(--text-tertiary);'>🔓 = Visible to others | 🔒 = Private</p>", unsafe_allow_html=True)
+        st.markdown("<p style='font-size: 0.875rem; color: var(--text-tertiary);'>🔒 = Private (not visible to others)</p>", unsafe_allow_html=True)
 
     else:
         # ============================================
@@ -2801,8 +2801,8 @@ def main():
         </style>
         """, unsafe_allow_html=True)
 
-    # Lower navigation - Dashboard/Connections (only show for authenticated users with contacts)
-    if st.session_state.get('authenticated') and 'contacts_df' in st.session_state:
+    # Lower navigation - Dashboard/Connections (only show for authenticated users with contacts, NOT on profile page)
+    if st.session_state.get('authenticated') and 'contacts_df' in st.session_state and not st.session_state.get('show_profile'):
         # Get pending requests count (reuse from top nav)
         user_id = st.session_state.get('user', {}).get('id', 'anonymous')
         pending_requests_count = 0
@@ -2910,8 +2910,9 @@ div[data-testid="column"] > div > .stButton > button[kind="secondary"] {
         # Add spacing below nav
         st.markdown('<div style="height: 24px;"></div>', unsafe_allow_html=True)
 
-    # Hero section - Flow-inspired minimal design
-    st.markdown("""
+    # Hero section - Flow-inspired minimal design (only show when NOT on profile page)
+    if not st.session_state.get('show_profile'):
+        st.markdown("""
 <div style='text-align: center; padding: var(--space-24) 0 var(--space-16) 0;'>
 <h1 class='hero-title'>Get the most out of your network<br>using our advanced AI solution</h1>
 <p class='hero-subtitle'>Search your network naturally. Find the right person, instantly.</p>
