@@ -901,8 +901,13 @@ st.markdown("""
 # CSS for text-link style buttons (no boxes) and inactive nav buttons
 st.markdown("""
 <style>
-/* Top bar buttons - absolutely no borders or backgrounds */
-.text-link-button button {
+/* Top bar buttons - absolutely no borders or backgrounds - HIGH SPECIFICITY */
+.text-link-button > .stButton {
+    margin: 0 !important;
+}
+
+.text-link-button > .stButton > button,
+.text-link-button .stButton > button {
     background: transparent !important;
     border: 0px solid transparent !important;
     box-shadow: none !important;
@@ -910,14 +915,22 @@ st.markdown("""
     color: var(--text-secondary) !important;
     font-weight: 500 !important;
     padding: 8px 12px !important;
+    min-width: auto !important;
     transition: color 0.15s ease !important;
 }
-.text-link-button button:hover {
+
+.text-link-button > .stButton > button:hover,
+.text-link-button .stButton > button:hover {
     background: transparent !important;
     border: 0px solid transparent !important;
+    box-shadow: none !important;
     color: var(--primary) !important;
 }
-.text-link-button button:focus, .text-link-button button:active {
+
+.text-link-button > .stButton > button:focus,
+.text-link-button > .stButton > button:active,
+.text-link-button .stButton > button:focus,
+.text-link-button .stButton > button:active {
     background: transparent !important;
     border: 0px solid transparent !important;
     box-shadow: none !important;
@@ -2347,10 +2360,16 @@ def main():
             pending_requests_list = collaboration.get_pending_connection_requests(user_id)
             pending_requests_count = len(pending_requests_list)
 
-        # CSS for inactive navigation button (no box at all)
+        # CSS for inactive navigation button (no box at all) - HIGH SPECIFICITY
         st.markdown("""
 <style>
-.inactive-nav-button button {
+/* Remove margins and ensure alignment */
+.inactive-nav-button > .stButton {
+    margin: 0 !important;
+}
+
+.inactive-nav-button > .stButton > button,
+.inactive-nav-button .stButton > button {
     background: transparent !important;
     border: 0px solid transparent !important;
     box-shadow: none !important;
@@ -2364,16 +2383,36 @@ def main():
     font-size: 15px !important;
     transition: all 0.15s ease !important;
     line-height: 1 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
-.inactive-nav-button button:hover {
+
+.inactive-nav-button > .stButton > button:hover,
+.inactive-nav-button .stButton > button:hover {
     background: rgba(43, 108, 176, 0.05) !important;
     color: var(--primary) !important;
     border: 0px solid transparent !important;
+    box-shadow: none !important;
 }
-.inactive-nav-button button:focus, .inactive-nav-button button:active {
+
+.inactive-nav-button > .stButton > button:focus,
+.inactive-nav-button > .stButton > button:active,
+.inactive-nav-button .stButton > button:focus,
+.inactive-nav-button .stButton > button:active {
     background: transparent !important;
     border: 0px solid transparent !important;
+    box-shadow: none !important;
     outline: none !important;
+}
+
+/* Ensure active nav buttons also have proper height and alignment */
+div[data-testid="column"] > div > .stButton > button[kind="secondary"] {
+    height: 40px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
 }
 </style>
 """, unsafe_allow_html=True)
