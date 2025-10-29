@@ -898,13 +898,15 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# CSS for text-link style buttons (no boxes)
+# CSS for text-link style buttons (no boxes) and inactive nav buttons
 st.markdown("""
 <style>
+/* Top bar buttons - absolutely no borders or backgrounds */
 .text-link-button button {
     background: transparent !important;
-    border: none !important;
+    border: 0px solid transparent !important;
     box-shadow: none !important;
+    outline: none !important;
     color: var(--text-secondary) !important;
     font-weight: 500 !important;
     padding: 8px 12px !important;
@@ -912,17 +914,27 @@ st.markdown("""
 }
 .text-link-button button:hover {
     background: transparent !important;
+    border: 0px solid transparent !important;
     color: var(--primary) !important;
 }
 .text-link-button button:focus, .text-link-button button:active {
     background: transparent !important;
+    border: 0px solid transparent !important;
     box-shadow: none !important;
+    outline: none !important;
+}
+
+/* Logo text styling */
+.nav-logo-text {
+    font-family: var(--font-serif);
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 40px;
+    margin: 0;
 }
 </style>
 """, unsafe_allow_html=True)
-
-# Top navigation bar container
-st.markdown('<div class="top-nav-bar"><div class="top-nav-logo">6th Degree AI</div><div class="top-nav-buttons"></div></div>', unsafe_allow_html=True)
 
 # Top bar navigation - only Feedback, User, Logout (no boxes)
 if st.session_state.get('authenticated'):
@@ -940,8 +952,13 @@ if st.session_state.get('authenticated'):
     # Get contact count
     contact_count = auth.get_contact_count(user_id)
 
-    # Top bar: Logo on left, Feedback/User/Logout on right (no boxes)
-    top_nav_cols = st.columns([2, 6, 0.9, 0.15, 1, 0.15, 0.8])
+    # Top bar: Logo + Feedback/User/Logout (all in one row, no boxes on right buttons)
+    top_nav_cols = st.columns([1.5, 6.5, 0.9, 0.15, 1, 0.15, 0.8])
+
+    with top_nav_cols[0]:
+        st.markdown('<p class="nav-logo-text">6th Degree AI</p>', unsafe_allow_html=True)
+
+    # top_nav_cols[1] is spacer
 
     with top_nav_cols[2]:
         st.markdown('<div class="text-link-button">', unsafe_allow_html=True)
@@ -987,8 +1004,13 @@ if st.session_state.get('authenticated'):
 """, unsafe_allow_html=True)
 
 else:
-    # Anonymous user navigation - simpler layout with gap between buttons
-    nav_cols = st.columns([2, 6.5, 0.8, 0.15, 0.9])
+    # Anonymous user navigation - logo + login/signup buttons
+    nav_cols = st.columns([1.5, 6.5, 0.8, 0.15, 0.9])
+
+    with nav_cols[0]:
+        st.markdown('<p class="nav-logo-text">6th Degree AI</p>', unsafe_allow_html=True)
+
+    # nav_cols[1] is spacer
 
     with nav_cols[2]:
         if st.button("Login", key="nav_login", type="secondary"):
@@ -2325,13 +2347,14 @@ def main():
             pending_requests_list = collaboration.get_pending_connection_requests(user_id)
             pending_requests_count = len(pending_requests_list)
 
-        # CSS for inactive navigation button (no box)
+        # CSS for inactive navigation button (no box at all)
         st.markdown("""
 <style>
 .inactive-nav-button button {
     background: transparent !important;
-    border: 1px solid transparent !important;
+    border: 0px solid transparent !important;
     box-shadow: none !important;
+    outline: none !important;
     color: var(--text-secondary) !important;
     font-weight: 500 !important;
     padding: 12px 20px !important;
@@ -2340,10 +2363,17 @@ def main():
     height: 40px !important;
     font-size: 15px !important;
     transition: all 0.15s ease !important;
+    line-height: 1 !important;
 }
 .inactive-nav-button button:hover {
     background: rgba(43, 108, 176, 0.05) !important;
     color: var(--primary) !important;
+    border: 0px solid transparent !important;
+}
+.inactive-nav-button button:focus, .inactive-nav-button button:active {
+    background: transparent !important;
+    border: 0px solid transparent !important;
+    outline: none !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -2351,13 +2381,13 @@ def main():
         # Check which page we're on
         on_connections_page = st.session_state.get('show_connections', False)
 
-        # Lower navigation buttons
-        lower_nav_cols = st.columns([0.9, 0.15, 1.1, 7])
+        # Lower navigation buttons - single row with proper alignment
+        lower_nav_cols = st.columns([1, 0.1, 1.2, 8])
 
         with lower_nav_cols[0]:
-            # Dashboard button - has box if on dashboard, no box if on connections
+            # Dashboard button
             if not on_connections_page:
-                # Active - show box
+                # Active - show with box (type="secondary" gives it border)
                 if st.button("Dashboard", key="lower_nav_dashboard", type="secondary"):
                     st.session_state['show_connections'] = False
                     st.rerun()
@@ -2369,20 +2399,20 @@ def main():
                     st.rerun()
                 st.markdown('</div>', unsafe_allow_html=True)
 
-        # lower_nav_cols[1] is gap
+        # lower_nav_cols[1] is small gap
 
         with lower_nav_cols[2]:
-            # Connections button - has box if on connections, no box if on dashboard
+            # Connections button
+            connections_label = f"Connections ({pending_requests_count})" if pending_requests_count > 0 else "Connections"
+
             if on_connections_page:
-                # Active - show box
-                connections_label = f"Connections ({pending_requests_count})" if pending_requests_count > 0 else "Connections"
+                # Active - show with box
                 if st.button(connections_label, key="lower_nav_connections", type="secondary"):
                     st.session_state['show_connections'] = True
                     st.rerun()
             else:
                 # Inactive - no box
                 st.markdown('<div class="inactive-nav-button">', unsafe_allow_html=True)
-                connections_label = f"Connections ({pending_requests_count})" if pending_requests_count > 0 else "Connections"
                 if st.button(connections_label, key="lower_nav_connections_inactive"):
                     st.session_state['show_connections'] = True
                     st.rerun()
