@@ -898,103 +898,8 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Top navigation bar container
-st.markdown('<div class="top-nav-bar"><div class="top-nav-logo">NetworkAI</div><div class="top-nav-buttons"></div></div>', unsafe_allow_html=True)
-
-# Navigation buttons in clean horizontal layout
-if st.session_state.get('authenticated'):
-    # Authenticated user navigation
-    user_id = st.session_state.get('user', {}).get('id', 'anonymous')
-    user_name = st.session_state['user']['full_name']
-    user_email = st.session_state['user']['email']
-
-    # Get pending requests count
-    pending_requests_count = 0
-    if user_id != 'anonymous':
-        pending_requests_list = collaboration.get_pending_connection_requests(user_id)
-        pending_requests_count = len(pending_requests_list)
-
-    # Get contact count
-    contact_count = auth.get_contact_count(user_id)
-
-    # Clean layout: Logo on left, buttons on right with even spacing
-    # Gap columns (0.15) create spacing between buttons
-    nav_cols = st.columns([2, 1, 0.15, 1.3, 3, 0.9, 0.15, 1, 0.15, 0.8])
-
-    with nav_cols[1]:
-        if st.button("Dashboard", key="nav_dashboard",
-                    type="primary" if not st.session_state.get('show_connections') else "secondary"):
-            st.session_state['show_connections'] = False
-            st.rerun()
-
-    # nav_cols[2] is gap
-
-    with nav_cols[3]:
-        connections_label = f"Connections ({pending_requests_count})" if pending_requests_count > 0 else "Connections"
-        if st.button(connections_label, key="nav_connections",
-                    type="primary" if st.session_state.get('show_connections') else "secondary"):
-            st.session_state['show_connections'] = True
-            st.rerun()
-
-    # nav_cols[4] is spacer
-
-    with nav_cols[5]:
-        if st.button("Feedback", key="nav_feedback", type="secondary"):
-            st.session_state['show_feedback_modal'] = True
-            st.rerun()
-
-    # nav_cols[6] is gap
-
-    with nav_cols[7]:
-        # User info button (triggers dropdown)
-        user_label = user_name.split()[0] + " ▾"  # First name + dropdown arrow
-        if st.button(user_label, key="nav_user_menu", type="secondary"):
-            st.session_state['show_user_menu'] = not st.session_state.get('show_user_menu', False)
-            st.rerun()
-
-    # nav_cols[8] is gap
-
-    with nav_cols[9]:
-        if st.button("Logout", key="nav_logout", type="secondary"):
-            st.session_state['authenticated'] = False
-            st.session_state['user'] = None
-            if 'contacts_df' in st.session_state:
-                del st.session_state['contacts_df']
-            st.success("Logged out successfully!")
-            st.rerun()
-
-    # User menu dropdown (if active)
-    if st.session_state.get('show_user_menu'):
-        st.markdown(f"""
-<div style='background: white; border: 1px solid #e5e7eb; border-radius: 8px;
-     padding: 1rem; margin: -0.5rem 0 1rem auto; max-width: 300px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);'>
-    <p style='font-size: 0.875rem; color: var(--text-tertiary); margin: 0 0 0.5rem 0;'>Signed in as</p>
-    <p style='font-size: 1rem; font-weight: 600; color: var(--text-primary); margin: 0;'>{user_name}</p>
-    <p style='font-size: 0.875rem; color: var(--text-secondary); margin: 0.25rem 0 0 0;'>{user_email}</p>
-    {f"<p style='font-size: 0.875rem; color: var(--text-secondary); margin: 0.75rem 0 0 0;'>{contact_count:,} contacts saved</p>" if contact_count > 0 else ""}
-</div>
-""", unsafe_allow_html=True)
-
-else:
-    # Anonymous user navigation - simpler layout with gap between buttons
-    nav_cols = st.columns([2, 6.5, 0.8, 0.15, 0.9])
-
-    with nav_cols[2]:
-        if st.button("Login", key="nav_login", type="secondary"):
-            st.session_state['show_register'] = False
-            st.session_state['show_forgot_password'] = False
-            st.session_state['show_login'] = True
-            st.rerun()
-
-    # nav_cols[3] is gap
-
-    with nav_cols[4]:
-        if st.button("Sign Up", key="nav_signup", type="primary"):
-            st.session_state['show_register'] = True
-            st.session_state['show_login'] = False
-            st.rerun()
-
-st.markdown('<div style="height: 32px;"></div>', unsafe_allow_html=True)
+# Simple logo at top
+st.markdown('<div style="padding: 1rem 0; text-align: center;"><h2 style="margin: 0; font-size: 1.5rem; font-weight: 600; color: var(--text-primary);">Sixth Degree AI</h2></div>', unsafe_allow_html=True)
 
 # Feedback Modal (shown when feedback button clicked)
 if st.session_state.get('show_feedback_modal'):
@@ -2508,6 +2413,103 @@ def main():
 
     else:
         contacts_df = st.session_state['contacts_df']
+
+        # Text-link navigation (no button boxes)
+        if st.session_state.get('authenticated'):
+            user_name = st.session_state['user']['full_name'].split()[0]  # First name only
+            user_id = st.session_state.get('user', {}).get('id', 'anonymous')
+
+            # Get pending requests count for badge
+            pending_requests_count = 0
+            if user_id != 'anonymous':
+                pending_requests_list = collaboration.get_pending_connection_requests(user_id)
+                pending_requests_count = len(pending_requests_list)
+
+            # CSS to make buttons look like text links
+            st.markdown("""
+            <style>
+            /* Make navigation buttons look like text links */
+            .text-link-nav button {
+                background: none !important;
+                border: none !important;
+                padding: 0 !important;
+                color: var(--text-secondary) !important;
+                text-decoration: none !important;
+                font-size: 0.9375rem !important;
+                font-weight: 500 !important;
+                cursor: pointer !important;
+                transition: color 0.15s ease !important;
+                box-shadow: none !important;
+                min-width: auto !important;
+                height: auto !important;
+            }
+            .text-link-nav button:hover {
+                color: var(--primary) !important;
+                background: none !important;
+            }
+            .text-link-nav button:active, .text-link-nav button:focus {
+                background: none !important;
+                box-shadow: none !important;
+            }
+            </style>
+            """, unsafe_allow_html=True)
+
+            # Navigation layout
+            nav_left, nav_spacer, nav_right = st.columns([2, 6, 4])
+
+            with nav_left:
+                st.markdown('<div class="text-link-nav">', unsafe_allow_html=True)
+                col_dash, col_conn = st.columns([1, 1])
+                with col_dash:
+                    if st.button("Dashboard", key="text_nav_dashboard"):
+                        st.session_state['show_connections'] = False
+                        st.rerun()
+                with col_conn:
+                    conn_label = f"Connections ({pending_requests_count})" if pending_requests_count > 0 else "Connections"
+                    if st.button(conn_label, key="text_nav_connections"):
+                        st.session_state['show_connections'] = True
+                        st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
+
+            with nav_right:
+                st.markdown('<div class="text-link-nav">', unsafe_allow_html=True)
+                col_fb, col_user, col_logout = st.columns([1, 1, 1])
+                with col_fb:
+                    if st.button("Feedback", key="text_nav_feedback"):
+                        st.session_state['show_feedback_modal'] = True
+                        st.rerun()
+                with col_user:
+                    if st.button(user_name, key="text_nav_user"):
+                        st.session_state['show_user_menu'] = not st.session_state.get('show_user_menu', False)
+                        st.rerun()
+                with col_logout:
+                    if st.button("Logout", key="text_nav_logout"):
+                        st.session_state['authenticated'] = False
+                        st.session_state['user'] = None
+                        if 'contacts_df' in st.session_state:
+                            del st.session_state['contacts_df']
+                        st.success("Logged out successfully!")
+                        st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
+
+            # Divider line
+            st.markdown('<div style="border-bottom: 1px solid #e5e7eb; margin: 0.5rem 0 1.5rem 0;"></div>', unsafe_allow_html=True)
+
+            # User menu dropdown (if active)
+            if st.session_state.get('show_user_menu'):
+                user_email = st.session_state['user']['email']
+                full_name = st.session_state['user']['full_name']
+                contact_count = auth.get_contact_count(user_id)
+
+                st.markdown(f"""
+                <div style='background: white; border: 1px solid #e5e7eb; border-radius: 8px;
+                     padding: 1rem; margin: -0.5rem 0 1rem auto; max-width: 300px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);'>
+                    <p style='font-size: 0.875rem; color: var(--text-tertiary); margin: 0 0 0.5rem 0;'>Signed in as</p>
+                    <p style='font-size: 1rem; font-weight: 600; color: var(--text-primary); margin: 0;'>{full_name}</p>
+                    <p style='font-size: 0.875rem; color: var(--text-secondary); margin: 0.25rem 0 0 0;'>{user_email}</p>
+                    {f"<p style='font-size: 0.875rem; color: var(--text-secondary); margin: 0.75rem 0 0 0;'>{contact_count:,} contacts saved</p>" if contact_count > 0 else ""}
+                </div>
+                """, unsafe_allow_html=True)
 
         # Initialize network selector in session state
         if 'search_network_selection' not in st.session_state:
