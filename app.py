@@ -2513,8 +2513,16 @@ def main():
         if 'search_network_selection' not in st.session_state:
             st.session_state['search_network_selection'] = 'My Network'
 
+        # Helper function to round down to nearest 100 and format
+        def format_count(count):
+            if count == 0:
+                return "0"
+            rounded = (count // 100) * 100
+            return f"{rounded:,}+"
+
         # Get connection counts for display
         my_network_count = len(contacts_df)
+        my_network_display = format_count(my_network_count)
 
         # Get extended network count (only if authenticated)
         extended_count = 0
@@ -2528,47 +2536,44 @@ def main():
                 print(f"DEBUG - Error getting extended network count: {e}")
                 extended_count = 0
 
-        # Network Selector - Radio buttons styled as checkboxes
+        extended_network_display = format_count(extended_count)
+
+        # Initialize checkbox states in session state
+        if 'search_my_network' not in st.session_state:
+            st.session_state['search_my_network'] = True  # Default: My Network checked
+        if 'search_extended_network' not in st.session_state:
+            st.session_state['search_extended_network'] = False  # Default: Extended unchecked
+
+        # Network Selector - Checkboxes (can select both)
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # Create radio button options with counts
-        network_options = [
-            f"Search My Network ({my_network_count:,} contacts)",
-            f"Search Extended Network ({extended_count:,} contacts)"
-        ]
+        col1, col2 = st.columns([1, 1])
 
-        # Map display text to internal values
-        option_to_value = {
-            network_options[0]: "My Network",
-            network_options[1]: "Extended Network"
-        }
-        value_to_option = {v: k for k, v in option_to_value.items()}
+        with col1:
+            search_my = st.checkbox(
+                f"Search My Network ({my_network_display} contacts)",
+                value=st.session_state['search_my_network'],
+                key="checkbox_my_network"
+            )
+            st.session_state['search_my_network'] = search_my
 
-        # Get current selection
-        current_selection = st.session_state.get('search_network_selection', 'My Network')
-        current_option = value_to_option[current_selection]
-
-        # Radio button selector
-        selected_option = st.radio(
-            "Select network to search:",
-            options=network_options,
-            index=network_options.index(current_option),
-            key="network_radio_selector",
-            horizontal=True,
-            label_visibility="collapsed"
-        )
-
-        # Update session state if selection changed
-        new_selection = option_to_value[selected_option]
-        if new_selection != st.session_state.get('search_network_selection'):
-            st.session_state['search_network_selection'] = new_selection
-            st.rerun()
+        with col2:
+            search_extended = st.checkbox(
+                f"Search Extended Network ({extended_network_display} contacts)",
+                value=st.session_state['search_extended_network'],
+                key="checkbox_extended_network"
+            )
+            st.session_state['search_extended_network'] = search_extended
 
         # Dynamic placeholder based on selection
-        if st.session_state['search_network_selection'] == 'My Network':
+        if search_my and search_extended:
+            search_placeholder = "Search both networks..."
+        elif search_my:
             search_placeholder = "Search your contacts..."
-        else:
+        elif search_extended:
             search_placeholder = "Search connected networks..."
+        else:
+            search_placeholder = "Select at least one network to search..."
 
         # Unified Search Interface - handles both search and analytics
         with st.form(key='unified_search_form', clear_on_submit=False):
@@ -2632,24 +2637,46 @@ def main():
                         st.error(f"Analysis failed: {result.get('error', 'Unknown error')}")
             else:
                 # Handle search query (find people)
-                # Determine which dataset to search based on network selection
-                selected_network = st.session_state.get('search_network_selection', 'My Network')
+                # Check which networks to search based on checkbox selections
+                search_my = st.session_state.get('search_my_network', True)
+                search_extended = st.session_state.get('search_extended_network', False)
 
-                if selected_network == 'Extended Network':
-                    # Search extended network
-                    spinner_text = "Searching connected networks..."
-                    try:
-                        search_contacts_df = collaboration.get_contacts_from_connected_users(user_id)
-                        if search_contacts_df.empty:
-                            st.info("No contacts available in extended network yet.")
-                            search_contacts_df = None
-                    except Exception as e:
-                        st.error(f"Failed to load extended network: {e}")
-                        search_contacts_df = None
+                # Validate at least one network is selected
+                if not search_my and not search_extended:
+                    st.warning("Please select at least one network to search.")
+                    search_contacts_df = None
                 else:
-                    # Search my network
-                    spinner_text = "Searching your network..."
-                    search_contacts_df = contacts_df
+                    # Build combined dataset based on selections
+                    datasets_to_search = []
+                    search_network_names = []
+
+                    if search_my:
+                        datasets_to_search.append(contacts_df)
+                        search_network_names.append("My Network")
+
+                    if search_extended:
+                        try:
+                            extended_contacts_df = collaboration.get_contacts_from_connected_users(user_id)
+                            if not extended_contacts_df.empty:
+                                datasets_to_search.append(extended_contacts_df)
+                                search_network_names.append("Extended Network")
+                        except Exception as e:
+                            print(f"Error loading extended network: {e}")
+
+                    # Combine datasets if multiple selected
+                    if len(datasets_to_search) == 0:
+                        st.info("No contacts available in selected network(s).")
+                        search_contacts_df = None
+                    elif len(datasets_to_search) == 1:
+                        search_contacts_df = datasets_to_search[0]
+                        spinner_text = f"Searching {search_network_names[0]}..."
+                    else:
+                        # Combine both networks
+                        search_contacts_df = pd.concat(datasets_to_search, ignore_index=True)
+                        # Remove duplicates based on email (if present)
+                        if 'email' in search_contacts_df.columns:
+                            search_contacts_df = search_contacts_df.drop_duplicates(subset=['email'], keep='first')
+                        spinner_text = "Searching both networks..."
 
                 # Only proceed if we have contacts to search
                 if search_contacts_df is not None and not search_contacts_df.empty:
@@ -2786,9 +2813,11 @@ def main():
             if not filtered_df.empty:
                 st.markdown("<br>", unsafe_allow_html=True)
 
-                # Check which network we're displaying results from
-                selected_network = st.session_state.get('search_network_selection', 'My Network')
-                is_extended_network = (selected_network == 'Extended Network')
+                # Check which networks were searched
+                search_my = st.session_state.get('search_my_network', True)
+                search_extended = st.session_state.get('search_extended_network', False)
+                searching_both = search_my and search_extended
+                searching_only_extended = search_extended and not search_my
 
                 # Pagination setup
                 contacts_per_page = 10
@@ -2807,23 +2836,22 @@ def main():
 
                 current_page = st.session_state['current_page']
 
-                # Different headers based on network type
-                if is_extended_network:
-                    # Extended Network - no selection, show pagination only
-                    col_header1, col_header2 = st.columns([3, 1])
-                    with col_header1:
+                # Header - always show selection controls since results may contain mixed sources
+                col_header1, col_header2, col_header3 = st.columns([2, 1, 1])
+                with col_header1:
+                    if searching_both:
+                        st.markdown("### Results from Both Networks")
+                    elif searching_only_extended:
                         st.markdown("### Results from Extended Network")
-                    with col_header2:
-                        st.markdown(f"<div style='text-align: right; padding-top: 0.5rem; color: #666;'>Page {current_page} of {total_pages}</div>", unsafe_allow_html=True)
-                else:
-                    # My Network - show selection controls
-                    col_header1, col_header2, col_header3 = st.columns([2, 1, 1])
-                    with col_header1:
+                    else:
                         st.markdown("### Select Contacts")
-                    with col_header2:
-                        st.markdown(f"<div style='text-align: right; padding-top: 0.5rem; color: #666;'>Page {current_page} of {total_pages}</div>", unsafe_allow_html=True)
-                    with col_header3:
+                with col_header2:
+                    st.markdown(f"<div style='text-align: right; padding-top: 0.5rem; color: #666;'>Page {current_page} of {total_pages}</div>", unsafe_allow_html=True)
+                with col_header3:
+                    if search_my:  # Only show select all if my network is included
                         select_all_page = st.checkbox("Select All on Page", key="select_all_page_checkbox")
+                    else:
+                        select_all_page = False
 
                 # Calculate pagination slice
                 start_idx = (current_page - 1) * contacts_per_page
@@ -2838,20 +2866,29 @@ def main():
                     if col in filtered_df.columns:
                         display_cols.append(col)
 
-                # Initialize selected contacts in session state (only for My Network)
-                if not is_extended_network:
-                    if 'selected_contacts' not in st.session_state:
-                        st.session_state['selected_contacts'] = set()
+                # Initialize selected contacts in session state
+                if 'selected_contacts' not in st.session_state:
+                    st.session_state['selected_contacts'] = set()
 
-                    # Handle select all on page
-                    if select_all_page:
-                        for i in range(start_idx, end_idx):
+                # Handle select all on page (only if my network is included)
+                if search_my and select_all_page:
+                    for i in range(start_idx, end_idx):
+                        # Only add My Network contacts (those without owner_user_id)
+                        row_data = filtered_df.iloc[i]
+                        if pd.isna(row_data.get('owner_user_id')):
                             st.session_state['selected_contacts'].add(i)
-                    elif not select_all_page:
-                        # Check if all on current page are selected, if so deselect
-                        all_on_page_selected = all(i in st.session_state['selected_contacts'] for i in range(start_idx, end_idx))
+                elif search_my and not select_all_page:
+                    # Check if all My Network contacts on current page are selected, if so deselect
+                    my_network_indices = []
+                    for i in range(start_idx, end_idx):
+                        row_data = filtered_df.iloc[i]
+                        if pd.isna(row_data.get('owner_user_id')):
+                            my_network_indices.append(i)
+
+                    if my_network_indices:
+                        all_on_page_selected = all(i in st.session_state['selected_contacts'] for i in my_network_indices)
                         if all_on_page_selected:
-                            for i in range(start_idx, end_idx):
+                            for i in my_network_indices:
                                 st.session_state['selected_contacts'].discard(i)
 
                 # Display each contact card
@@ -2859,8 +2896,12 @@ def main():
                     # Actual index in the full filtered_df
                     actual_idx = start_idx + page_idx
 
-                    if is_extended_network:
-                        # Extended Network: Show contact with "Request Intro" button
+                    # Determine if this contact is from extended network
+                    # Extended network contacts have an owner_user_id field
+                    is_extended_contact = not pd.isna(row.get('owner_user_id'))
+
+                    if is_extended_contact:
+                        # Extended Network Contact: Show contact with "Request Intro" button
                         col1, col2 = st.columns([3, 1])
 
                         with col1:
@@ -2983,8 +3024,8 @@ opacity: 1;
 
                     st.markdown(f"<div style='text-align: center; color: #666; margin-top: 0.5rem; font-size: 0.9rem;'>Showing {start_idx + 1}-{end_idx} of {total_contacts} contacts</div>", unsafe_allow_html=True)
 
-                # Show intro request form if contact selected (Extended Network only)
-                if is_extended_network and 'intro_request_contact' in st.session_state:
+                # Show intro request form if extended network contact selected
+                if 'intro_request_contact' in st.session_state:
                     contact = st.session_state['intro_request_contact']
 
                     st.markdown("---")
@@ -3053,8 +3094,9 @@ opacity: 1;
                             del st.session_state['intro_request_contact']
                             st.rerun()
 
-                # Action buttons for selected contacts (My Network only)
-                if not is_extended_network and 'selected_contacts' in st.session_state and len(st.session_state['selected_contacts']) > 0:
+                # Action buttons for selected contacts (My Network contacts only)
+                # Only show if we searched My Network and have selections
+                if search_my and 'selected_contacts' in st.session_state and len(st.session_state['selected_contacts']) > 0:
                     st.markdown("<br>", unsafe_allow_html=True)
                     st.markdown(f"**{len(st.session_state['selected_contacts'])} contact(s) selected**")
 
