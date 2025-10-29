@@ -1019,6 +1019,13 @@ if st.session_state.get('authenticated'):
 </div>
 """, unsafe_allow_html=True)
 
+        # My Profile button
+        if st.button("My Profile", key="nav_profile", use_container_width=True):
+            st.session_state['show_profile'] = True
+            st.session_state['show_connections'] = False
+            st.session_state['show_user_menu'] = False
+            st.rerun()
+
 else:
     # Anonymous user navigation - logo + login/signup buttons
     nav_cols = st.columns([1.5, 6.5, 0.8, 0.15, 0.9])
@@ -1847,6 +1854,303 @@ def show_password_reset_form(token):
                                 st.error(result['message'])
 
 
+def show_profile_page():
+    """Display user profile page with view and edit functionality"""
+
+    # Get user ID
+    user_id = st.session_state.get('user', {}).get('id')
+
+    if not user_id or user_id == 'anonymous':
+        st.warning("Please log in to view your profile")
+        return
+
+    # Get current profile
+    user_profile = profile.get_profile(user_id)
+
+    if not user_profile:
+        st.error("Profile not found. Please complete onboarding.")
+        return
+
+    # Parse JSON fields
+    import json
+    goals = user_profile.get('goals', [])
+    if isinstance(goals, str):
+        goals = json.loads(goals)
+
+    interests = user_profile.get('interests', [])
+    if isinstance(interests, str):
+        interests = json.loads(interests)
+
+    seeking_connections = user_profile.get('seeking_connections', [])
+    if isinstance(seeking_connections, str):
+        seeking_connections = json.loads(seeking_connections)
+
+    privacy_settings = user_profile.get('privacy_settings', {})
+    if isinstance(privacy_settings, str):
+        privacy_settings = json.loads(privacy_settings)
+
+    # Header with Back to Dashboard button
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.markdown("<h1 class='hero-title' style='font-family: var(--font-serif); font-size: 3rem; font-weight: 700; margin-bottom: var(--space-2);'>My Profile</h1>", unsafe_allow_html=True)
+    with col2:
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("Back to Dashboard", key="profile_back_dashboard"):
+            st.session_state['show_profile'] = False
+            st.rerun()
+
+    st.markdown("<hr style='margin: var(--space-6) 0; border: none; border-top: 1px solid var(--border-light);'>", unsafe_allow_html=True)
+
+    # Check if in edit mode
+    edit_mode = st.session_state.get('profile_edit_mode', False)
+
+    if not edit_mode:
+        # ============================================
+        # VIEW MODE
+        # ============================================
+
+        # Edit Profile button
+        if st.button("Edit Profile", type="primary", key="profile_edit_btn"):
+            st.session_state['profile_edit_mode'] = True
+            st.rerun()
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # Display profile fields in cards
+        st.markdown("### Professional Information")
+
+        # Current Role
+        visibility_icon = "🔓" if privacy_settings.get('current_role', True) else "🔒"
+        st.markdown(f"""
+<div class='card' style='padding: var(--space-5); margin-bottom: var(--space-4);'>
+    <p style='font-size: 0.875rem; color: var(--text-tertiary); margin: 0 0 var(--space-1) 0;'>Current Role {visibility_icon}</p>
+    <p style='font-size: 1.125rem; font-weight: 600; color: var(--text-primary); margin: 0;'>{user_profile.get('current_role', 'N/A')}</p>
+</div>
+""", unsafe_allow_html=True)
+
+        # Current Company
+        visibility_icon = "🔓" if privacy_settings.get('current_company', True) else "🔒"
+        st.markdown(f"""
+<div class='card' style='padding: var(--space-5); margin-bottom: var(--space-4);'>
+    <p style='font-size: 0.875rem; color: var(--text-tertiary); margin: 0 0 var(--space-1) 0;'>Current Company {visibility_icon}</p>
+    <p style='font-size: 1.125rem; font-weight: 600; color: var(--text-primary); margin: 0;'>{user_profile.get('current_company', 'N/A')}</p>
+</div>
+""", unsafe_allow_html=True)
+
+        # Industry
+        visibility_icon = "🔓" if privacy_settings.get('industry', True) else "🔒"
+        st.markdown(f"""
+<div class='card' style='padding: var(--space-5); margin-bottom: var(--space-4);'>
+    <p style='font-size: 0.875rem; color: var(--text-tertiary); margin: 0 0 var(--space-1) 0;'>Industry {visibility_icon}</p>
+    <p style='font-size: 1.125rem; font-weight: 600; color: var(--text-primary); margin: 0;'>{user_profile.get('industry', 'N/A')}</p>
+</div>
+""", unsafe_allow_html=True)
+
+        # Company Stage (if provided)
+        if user_profile.get('company_stage'):
+            visibility_icon = "🔓" if privacy_settings.get('company_stage', True) else "🔒"
+            st.markdown(f"""
+<div class='card' style='padding: var(--space-5); margin-bottom: var(--space-4);'>
+    <p style='font-size: 0.875rem; color: var(--text-tertiary); margin: 0 0 var(--space-1) 0;'>Company Stage {visibility_icon}</p>
+    <p style='font-size: 1.125rem; font-weight: 600; color: var(--text-primary); margin: 0;'>{user_profile.get('company_stage')}</p>
+</div>
+""", unsafe_allow_html=True)
+
+        # Location
+        visibility_icon_city = "🔓" if privacy_settings.get('location_city', True) else "🔒"
+        visibility_icon_country = "🔓" if privacy_settings.get('location_country', True) else "🔒"
+        location_str = user_profile.get('location_city', 'N/A')
+        if user_profile.get('location_country'):
+            location_str += f", {user_profile.get('location_country')}"
+        st.markdown(f"""
+<div class='card' style='padding: var(--space-5); margin-bottom: var(--space-4);'>
+    <p style='font-size: 0.875rem; color: var(--text-tertiary); margin: 0 0 var(--space-1) 0;'>Location {visibility_icon_city}</p>
+    <p style='font-size: 1.125rem; font-weight: 600; color: var(--text-primary); margin: 0;'>{location_str}</p>
+</div>
+""", unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("### Goals & Interests")
+
+        # Goals
+        if goals:
+            visibility_icon = "🔓" if privacy_settings.get('goals', False) else "🔒"
+            goals_str = ", ".join(goals) if goals else "None specified"
+            st.markdown(f"""
+<div class='card' style='padding: var(--space-5); margin-bottom: var(--space-4);'>
+    <p style='font-size: 0.875rem; color: var(--text-tertiary); margin: 0 0 var(--space-1) 0;'>Goals {visibility_icon}</p>
+    <p style='font-size: 1rem; color: var(--text-primary); margin: 0;'>{goals_str}</p>
+</div>
+""", unsafe_allow_html=True)
+
+        # Interests
+        if interests:
+            visibility_icon = "🔓" if privacy_settings.get('interests', True) else "🔒"
+            interests_str = ", ".join(interests) if interests else "None specified"
+            st.markdown(f"""
+<div class='card' style='padding: var(--space-5); margin-bottom: var(--space-4);'>
+    <p style='font-size: 0.875rem; color: var(--text-tertiary); margin: 0 0 var(--space-1) 0;'>Interests {visibility_icon}</p>
+    <p style='font-size: 1rem; color: var(--text-primary); margin: 0;'>{interests_str}</p>
+</div>
+""", unsafe_allow_html=True)
+
+        # Seeking Connections
+        if seeking_connections:
+            visibility_icon = "🔓" if privacy_settings.get('seeking_connections', True) else "🔒"
+            seeking_str = ", ".join(seeking_connections) if seeking_connections else "None specified"
+            st.markdown(f"""
+<div class='card' style='padding: var(--space-5); margin-bottom: var(--space-4);'>
+    <p style='font-size: 0.875rem; color: var(--text-tertiary); margin: 0 0 var(--space-1) 0;'>Seeking Connections {visibility_icon}</p>
+    <p style='font-size: 1rem; color: var(--text-primary); margin: 0;'>{seeking_str}</p>
+</div>
+""", unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("<p style='font-size: 0.875rem; color: var(--text-tertiary);'>🔓 = Visible to others | 🔒 = Private</p>", unsafe_allow_html=True)
+
+    else:
+        # ============================================
+        # EDIT MODE
+        # ============================================
+
+        st.markdown("<h2 style='font-family: var(--font-serif); font-size: 2rem; font-weight: 600; margin-bottom: var(--space-6);'>Edit Profile</h2>", unsafe_allow_html=True)
+
+        with st.form("edit_profile_form"):
+            st.markdown("### Professional Information")
+
+            # Current Role
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                new_current_role = st.text_input("Current Role", value=user_profile.get('current_role', ''), help="Your job title")
+            with col2:
+                st.markdown("<p style='font-size: 0.875rem; color: var(--text-tertiary); margin-top: 2rem;'>Visibility</p>", unsafe_allow_html=True)
+                role_visible = st.checkbox("Public", value=privacy_settings.get('current_role', True), key="privacy_role")
+
+            # Current Company
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                new_current_company = st.text_input("Current Company", value=user_profile.get('current_company', ''), help="Your company")
+            with col2:
+                st.markdown("<p style='font-size: 0.875rem; color: var(--text-tertiary); margin-top: 2rem;'>Visibility</p>", unsafe_allow_html=True)
+                company_visible = st.checkbox("Public", value=privacy_settings.get('current_company', True), key="privacy_company")
+
+            # Industry
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                current_industry_index = 0
+                if user_profile.get('industry') in profile.INDUSTRY_OPTIONS:
+                    current_industry_index = profile.INDUSTRY_OPTIONS.index(user_profile.get('industry'))
+                new_industry = st.selectbox("Industry", options=profile.INDUSTRY_OPTIONS, index=current_industry_index)
+            with col2:
+                st.markdown("<p style='font-size: 0.875rem; color: var(--text-tertiary); margin-top: 2rem;'>Visibility</p>", unsafe_allow_html=True)
+                industry_visible = st.checkbox("Public", value=privacy_settings.get('industry', True), key="privacy_industry")
+
+            # Company Stage
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                current_stage_index = 0
+                all_stage_options = [''] + profile.COMPANY_STAGE_OPTIONS
+                if user_profile.get('company_stage') in profile.COMPANY_STAGE_OPTIONS:
+                    current_stage_index = all_stage_options.index(user_profile.get('company_stage'))
+                new_company_stage = st.selectbox("Company Stage (Optional)", options=all_stage_options, index=current_stage_index)
+            with col2:
+                st.markdown("<p style='font-size: 0.875rem; color: var(--text-tertiary); margin-top: 2rem;'>Visibility</p>", unsafe_allow_html=True)
+                stage_visible = st.checkbox("Public", value=privacy_settings.get('company_stage', True), key="privacy_stage")
+
+            # Location
+            col1, col2, col3 = st.columns([2, 1, 1])
+            with col1:
+                new_location_city = st.text_input("City", value=user_profile.get('location_city', ''))
+            with col2:
+                new_location_country = st.text_input("Country", value=user_profile.get('location_country', ''))
+            with col3:
+                st.markdown("<p style='font-size: 0.875rem; color: var(--text-tertiary); margin-top: 2rem;'>Visibility</p>", unsafe_allow_html=True)
+                location_visible = st.checkbox("Public", value=privacy_settings.get('location_city', True), key="privacy_location")
+
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown("### Goals & Interests")
+
+            # Goals
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                new_goals = st.multiselect("Goals (Optional)", options=profile.GOAL_OPTIONS, default=goals)
+            with col2:
+                st.markdown("<p style='font-size: 0.875rem; color: var(--text-tertiary); margin-top: 2rem;'>Visibility</p>", unsafe_allow_html=True)
+                goals_visible = st.checkbox("Public", value=privacy_settings.get('goals', False), key="privacy_goals")
+
+            # Interests
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                new_interests = st.multiselect("Interests (Optional)", options=profile.INTEREST_OPTIONS, default=interests)
+            with col2:
+                st.markdown("<p style='font-size: 0.875rem; color: var(--text-tertiary); margin-top: 2rem;'>Visibility</p>", unsafe_allow_html=True)
+                interests_visible = st.checkbox("Public", value=privacy_settings.get('interests', True), key="privacy_interests")
+
+            # Seeking Connections
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                new_seeking_connections = st.multiselect("Seeking Connections (Optional)", options=profile.CONNECTION_TYPE_OPTIONS, default=seeking_connections)
+            with col2:
+                st.markdown("<p style='font-size: 0.875rem; color: var(--text-tertiary); margin-top: 2rem;'>Visibility</p>", unsafe_allow_html=True)
+                seeking_visible = st.checkbox("Public", value=privacy_settings.get('seeking_connections', True), key="privacy_seeking")
+
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            # Form buttons
+            col1, col2 = st.columns(2)
+            with col1:
+                save_button = st.form_submit_button("Save Changes", type="primary", use_container_width=True)
+            with col2:
+                cancel_button = st.form_submit_button("Cancel", use_container_width=True)
+
+            if cancel_button:
+                st.session_state['profile_edit_mode'] = False
+                st.rerun()
+
+            if save_button:
+                # Validate required fields
+                if not new_current_role or not new_current_company or not new_location_city:
+                    st.error("Please fill in all required fields (Role, Company, City)")
+                else:
+                    # Build updates dict
+                    updates = {
+                        'current_role': new_current_role,
+                        'current_company': new_current_company,
+                        'industry': new_industry,
+                        'location_city': new_location_city,
+                        'goals': new_goals,
+                        'interests': new_interests,
+                        'seeking_connections': new_seeking_connections,
+                        'privacy_settings': {
+                            'current_role': role_visible,
+                            'current_company': company_visible,
+                            'industry': industry_visible,
+                            'company_stage': stage_visible,
+                            'location_city': location_visible,
+                            'location_country': location_visible,
+                            'goals': goals_visible,
+                            'interests': interests_visible,
+                            'seeking_connections': seeking_visible
+                        }
+                    }
+
+                    # Add optional fields
+                    if new_company_stage:
+                        updates['company_stage'] = new_company_stage
+                    if new_location_country:
+                        updates['location_country'] = new_location_country
+
+                    # Update profile
+                    result = profile.update_profile(user_id, updates)
+
+                    if result['success']:
+                        st.success("Profile updated successfully!")
+                        st.session_state['profile_edit_mode'] = False
+                        st.rerun()
+                    else:
+                        st.error(f"Failed to update profile: {result['message']}")
+
+
 def show_connections_page():
     """Display Connections page with 3 tabs: My Connections, Find People, Requests"""
 
@@ -2203,6 +2507,147 @@ def show_register_page():
             st.session_state['show_register'] = False
             st.rerun()
 
+
+def show_profile_onboarding(user_id: str):
+    """
+    Show profile onboarding modal (blocking - required to complete)
+    7 questions about user's professional info and goals
+    """
+    st.markdown("""
+<div style='max-width: 700px; margin: 2rem auto; padding: 2rem;'>
+<h1 style='font-family: var(--font-serif); font-size: 2.5rem; text-align: center; margin-bottom: 1rem;'>Complete Your Profile</h1>
+<p style='text-align: center; color: var(--text-secondary); font-size: 1.125rem; margin-bottom: 2rem;'>Help us personalize your experience</p>
+</div>
+""", unsafe_allow_html=True)
+
+    with st.form("profile_onboarding_form"):
+        st.markdown("<div style='max-width: 700px; margin: 0 auto;'>", unsafe_allow_html=True)
+
+        # Question 1: Current Role (required)
+        st.markdown("### 1. What's your current role?")
+        current_role = st.text_input(
+            "Current Role",
+            placeholder="e.g., Product Manager, Software Engineer, CEO",
+            help="Your job title or role",
+            label_visibility="collapsed"
+        )
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # Question 2: Current Company (required)
+        st.markdown("### 2. What company do you work at?")
+        current_company = st.text_input(
+            "Current Company",
+            placeholder="e.g., Google, Stripe, your startup name",
+            help="Your current company or organization",
+            label_visibility="collapsed"
+        )
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # Question 3: Industry (required)
+        st.markdown("### 3. Which industry are you in?")
+        industry = st.selectbox(
+            "Industry",
+            options=profile.INDUSTRY_OPTIONS,
+            label_visibility="collapsed"
+        )
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # Question 4: Company Stage (optional)
+        st.markdown("### 4. What's your company stage? (Optional)")
+        company_stage = st.selectbox(
+            "Company Stage",
+            options=[''] + profile.COMPANY_STAGE_OPTIONS,
+            label_visibility="collapsed"
+        )
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # Question 5: Location (required)
+        st.markdown("### 5. Where are you based?")
+        col1, col2 = st.columns([2, 1])
+        with col1:
+            location_city = st.text_input(
+                "City",
+                placeholder="e.g., San Francisco, New York, London",
+                help="Your city or metro area",
+                label_visibility="collapsed"
+            )
+        with col2:
+            location_country = st.text_input(
+                "Country",
+                placeholder="e.g., USA, UK",
+                help="Optional: Your country",
+                label_visibility="collapsed"
+            )
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # Question 6: Goals (optional, multi-select)
+        st.markdown("### 6. What are your main goals? (Optional)")
+        st.caption("Select all that apply")
+        goals = st.multiselect(
+            "Goals",
+            options=profile.GOAL_OPTIONS,
+            label_visibility="collapsed"
+        )
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # Question 7: Interests (optional, multi-select)
+        st.markdown("### 7. What topics are you interested in? (Optional)")
+        st.caption("Select all that apply")
+        interests = st.multiselect(
+            "Interests",
+            options=profile.INTEREST_OPTIONS,
+            label_visibility="collapsed"
+        )
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # Question 8: Seeking Connections (optional, multi-select)
+        st.markdown("### 8. Who are you most interested in connecting with? (Optional)")
+        st.caption("Select all that apply")
+        seeking_connections = st.multiselect(
+            "Seeking Connections",
+            options=profile.CONNECTION_TYPE_OPTIONS,
+            label_visibility="collapsed"
+        )
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        # Submit button
+        st.markdown("<br>", unsafe_allow_html=True)
+        submitted = st.form_submit_button("Complete Profile", use_container_width=True, type="primary")
+
+        if submitted:
+            # Validate required fields
+            if not current_role or not current_company or not location_city:
+                st.error("Please fill in all required fields (Role, Company, Industry, and City)")
+            else:
+                # Create profile
+                result = profile.create_profile(
+                    user_id=user_id,
+                    current_role=current_role,
+                    current_company=current_company,
+                    industry=industry,
+                    location_city=location_city,
+                    company_stage=company_stage if company_stage else None,
+                    location_country=location_country if location_country else None,
+                    goals=goals if goals else [],
+                    interests=interests if interests else [],
+                    seeking_connections=seeking_connections if seeking_connections else []
+                )
+
+                if result['success']:
+                    st.success("Profile created! Loading your dashboard...")
+                    st.rerun()
+                else:
+                    st.error(f"Failed to create profile: {result['message']}")
+
+
 # Main app
 def main():
     # Handle URL parameters for password reset and email verification
@@ -2248,6 +2693,8 @@ def main():
         st.session_state['show_login'] = False
     if 'show_connections' not in st.session_state:
         st.session_state['show_connections'] = False
+    if 'show_profile' not in st.session_state:
+        st.session_state['show_profile'] = False
 
     # Phase 3B: Migrate existing users to new search (one-time index build)
     if st.session_state.get('authenticated') and HAS_NEW_SEARCH:
@@ -2494,6 +2941,25 @@ div[data-testid="column"] > div > .stButton > button[kind="secondary"] {
 
     # Get user_id for main content area (needed for dashboard and other features)
     user_id = st.session_state.get('user', {}).get('id', 'anonymous')
+
+    # === PROFILE ONBOARDING (Required for authenticated users) ===
+    if st.session_state.get('authenticated') and user_id != 'anonymous':
+        # Check if user has completed profile
+        if not profile.profile_exists(user_id):
+            # Show profile onboarding modal (blocking - can't dismiss)
+            show_profile_onboarding(user_id)
+            return  # Don't show rest of app until profile complete
+
+    # Show profile page if requested (requires authentication)
+    if st.session_state.get('show_profile'):
+        if st.session_state.get('authenticated'):
+            show_profile_page()
+            return
+        else:
+            st.warning("Please log in to view your profile")
+            st.session_state['show_profile'] = False
+            st.session_state['show_login'] = True
+            st.rerun()
 
     # Show connections page if requested (requires authentication)
     if st.session_state.get('show_connections'):
