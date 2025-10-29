@@ -47,6 +47,9 @@ import security
 # Import feedback module
 import feedback
 
+# Import profile module
+import profile
+
 # Phase 3B: Import new hybrid search system
 try:
     from search_integration import (
