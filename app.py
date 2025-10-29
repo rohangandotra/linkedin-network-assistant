@@ -3091,15 +3091,42 @@ opacity: 1;
                     extended_contacts_df = collaboration.get_contacts_from_connected_users(user_id)
 
                     if not extended_contacts_df.empty:
-                        # Filter by query
-                        query_lower = ext_query.lower()
-                        mask = (
-                            extended_contacts_df['full_name'].fillna('').str.lower().str.contains(query_lower) |
-                            extended_contacts_df['company'].fillna('').str.lower().str.contains(query_lower) |
-                            extended_contacts_df['position'].fillna('').str.lower().str.contains(query_lower)
-                        )
+                        # Use Phase 3B smart search for intelligent matching
+                        if HAS_NEW_SEARCH:
+                            try:
+                                # Use advanced hybrid search (same as dashboard search)
+                                search_result = smart_search(ext_query, extended_contacts_df)
 
-                        results = extended_contacts_df[mask]
+                                if search_result.get('success'):
+                                    results = search_result.get('filtered_df', pd.DataFrame())
+
+                                    # Show search performance info
+                                    latency = search_result.get('latency_ms', 0)
+                                    if latency < 100:
+                                        st.caption(f"⚡ Lightning fast search ({latency:.0f}ms) • Advanced AI-powered ranking")
+                                    else:
+                                        st.caption(f"🔍 Searched in {latency:.0f}ms • AI-powered ranking")
+                                else:
+                                    results = pd.DataFrame()
+                            except Exception as e:
+                                print(f"Smart search failed, falling back to simple search: {e}")
+                                # Fallback to simple substring matching
+                                query_lower = ext_query.lower()
+                                mask = (
+                                    extended_contacts_df['full_name'].fillna('').str.lower().str.contains(query_lower) |
+                                    extended_contacts_df['company'].fillna('').str.lower().str.contains(query_lower) |
+                                    extended_contacts_df['position'].fillna('').str.lower().str.contains(query_lower)
+                                )
+                                results = extended_contacts_df[mask]
+                        else:
+                            # Fallback: simple substring matching (legacy behavior)
+                            query_lower = ext_query.lower()
+                            mask = (
+                                extended_contacts_df['full_name'].fillna('').str.lower().str.contains(query_lower) |
+                                extended_contacts_df['company'].fillna('').str.lower().str.contains(query_lower) |
+                                extended_contacts_df['position'].fillna('').str.lower().str.contains(query_lower)
+                            )
+                            results = extended_contacts_df[mask]
 
                         if not results.empty:
                             st.success(f"Found {len(results)} contact(s) in extended network!")
