@@ -2516,121 +2516,53 @@ def main():
         # Get connection counts for display
         my_network_count = len(contacts_df)
 
-        # Get extended network count
+        # Get extended network count (only if authenticated)
         extended_count = 0
         if st.session_state.get('authenticated'):
             try:
                 extended_contacts_df = collaboration.get_contacts_from_connected_users(user_id)
                 extended_count = len(extended_contacts_df) if not extended_contacts_df.empty else 0
-            except:
+                # Debug: Print to console to verify counts
+                print(f"DEBUG - My Network: {my_network_count}, Extended Network: {extended_count}")
+            except Exception as e:
+                print(f"DEBUG - Error getting extended network count: {e}")
                 extended_count = 0
 
-        # CSS for segmented control
-        st.markdown("""
-        <style>
-        /* Segmented Control - Modern iOS/macOS style */
-        .segmented-control-container {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 14px;
+        # Network Selector - Radio buttons styled as checkboxes
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # Create radio button options with counts
+        network_options = [
+            f"Search My Network ({my_network_count:,} contacts)",
+            f"Search Extended Network ({extended_count:,} contacts)"
+        ]
+
+        # Map display text to internal values
+        option_to_value = {
+            network_options[0]: "My Network",
+            network_options[1]: "Extended Network"
         }
+        value_to_option = {v: k for k, v in option_to_value.items()}
 
-        .segmented-control {
-            display: inline-flex;
-            background: #f3f4f6;
-            border-radius: 8px;
-            padding: 4px;
-            gap: 4px;
-        }
+        # Get current selection
+        current_selection = st.session_state.get('search_network_selection', 'My Network')
+        current_option = value_to_option[current_selection]
 
-        .segment-option {
-            padding: 12px 16px;
-            border-radius: 6px;
-            font-size: 15px;
-            font-weight: 500;
-            min-height: 44px;
-            min-width: 44px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            border: 2px solid transparent;
-            white-space: nowrap;
-        }
+        # Radio button selector
+        selected_option = st.radio(
+            "Select network to search:",
+            options=network_options,
+            index=network_options.index(current_option),
+            key="network_radio_selector",
+            horizontal=True,
+            label_visibility="collapsed"
+        )
 
-        .segment-option:focus-visible {
-            outline: 2px solid #2B6CB0;
-            outline-offset: 2px;
-        }
-
-        .segment-option.selected {
-            background: #2B6CB0;
-            color: white;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-        }
-
-        .segment-option.unselected {
-            background: white;
-            color: #2B6CB0;
-            border-color: #2B6CB0;
-        }
-
-        .segment-option.unselected:hover {
-            background: #f0f7ff;
-        }
-
-        .segment-count {
-            color: #6B7280;
-            margin-left: 0.25rem;
-        }
-
-        .segment-option.selected .segment-count {
-            color: rgba(255, 255, 255, 0.8);
-        }
-
-        /* Responsive: stack on mobile */
-        @media (max-width: 767px) {
-            .segmented-control-container {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 14px;
-            }
-
-            .segmented-control {
-                width: 100%;
-            }
-
-            .segment-option {
-                flex: 1;
-            }
-        }
-        </style>
-        """, unsafe_allow_html=True)
-
-        # Network Selector - Segmented Control
-        col1, col2 = st.columns([1, 1])
-
-        with col1:
-            if st.button(
-                f"My Network · {my_network_count:,}",
-                key="segment_my_network",
-                use_container_width=True,
-                type="primary" if st.session_state['search_network_selection'] == 'My Network' else "secondary"
-            ):
-                st.session_state['search_network_selection'] = 'My Network'
-                st.rerun()
-
-        with col2:
-            if st.button(
-                f"Extended Network · {extended_count:,}",
-                key="segment_extended_network",
-                use_container_width=True,
-                type="primary" if st.session_state['search_network_selection'] == 'Extended Network' else "secondary"
-            ):
-                st.session_state['search_network_selection'] = 'Extended Network'
-                st.rerun()
+        # Update session state if selection changed
+        new_selection = option_to_value[selected_option]
+        if new_selection != st.session_state.get('search_network_selection'):
+            st.session_state['search_network_selection'] = new_selection
+            st.rerun()
 
         # Dynamic placeholder based on selection
         if st.session_state['search_network_selection'] == 'My Network':
