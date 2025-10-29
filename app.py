@@ -2582,12 +2582,11 @@ div[data-testid="column"] > div > .stButton > button[kind="secondary"] {
 
                     # Phase 3B: Build search indexes for fast future searches
                     if HAS_NEW_SEARCH:
-                        with st.spinner("Building search indexes for faster searches..."):
-                            try:
-                                initialize_search_for_user(user_id, df)
-                                st.success("Search indexes built! Searches will be 25x faster.")
-                            except Exception as e:
-                                st.warning(f"Could not build search indexes: {e}")
+                        # Force rebuild since user uploaded new CSV
+                        try:
+                            initialize_search_for_user(user_id, df, force_rebuild=True)
+                        except Exception as e:
+                            st.warning(f"Could not build search indexes: {e}")
 
                     # Show preview
                     with st.expander("Preview contacts"):

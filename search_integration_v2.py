@@ -34,29 +34,64 @@ def get_search_engine():
     return st.session_state['integrated_search_engine']
 
 
-def initialize_search_for_user(user_id: str, contacts_df: pd.DataFrame):
+def initialize_search_for_user(user_id: str, contacts_df: pd.DataFrame, force_rebuild: bool = False):
     """
-    Build search indexes for a user
-    Call this after user logs in or uploads contacts
+    Initialize search indexes for a user with three-tier caching
+
+    Three-tier caching strategy:
+    - L1 Cache (Session State): Instant, lasts for session
+    - L2 Cache (Disk): ~500ms, lasts until app restart
+    - L3 Cache (Rebuild): 2-5s, when both fail
 
     Args:
         user_id: User ID
         contacts_df: Contacts DataFrame
+        force_rebuild: Force rebuild indexes even if cached
+
+    Returns:
+        True if indexes are ready, False otherwise
     """
     search_engine = get_search_engine()
 
-    # Build indexes
-    with st.spinner("Building search indexes..."):
+    # Check current contacts version
+    current_version = st.session_state.get('contacts_version', 0)
+    stored_user_id = st.session_state.get('indexed_user_id', None)
+
+    # L1 Cache: Check session state (already in memory)
+    if not force_rebuild and stored_user_id == user_id:
+        # Indexes already loaded in this session
+        print(f"✅ L1 Cache HIT: Using in-memory indexes for user {user_id}")
+        return True
+
+    # L2 Cache: Check disk
+    if not force_rebuild and search_engine.indexes_exist(user_id):
+        with st.spinner("Loading search indexes from cache..."):
+            try:
+                success = search_engine.load_indexes(user_id)
+                if success:
+                    # Store in session state for L1 cache
+                    st.session_state['indexed_user_id'] = user_id
+                    if 'contacts_version' not in st.session_state:
+                        st.session_state['contacts_version'] = current_version + 1
+
+                    print(f"✅ L2 Cache HIT: Loaded indexes from disk for user {user_id}")
+                    st.success("Search indexes loaded! Searches will be fast.")
+                    return True
+                else:
+                    print(f"⚠️  L2 Cache MISS: Failed to load from disk, rebuilding...")
+            except Exception as e:
+                print(f"⚠️  L2 Cache MISS: Error loading from disk: {e}")
+
+    # L3 Cache: Rebuild indexes from scratch
+    with st.spinner("Building search indexes for faster searches..."):
         try:
             search_engine.build_indexes(user_id, contacts_df)
 
-            # Store contacts version for cache invalidation
-            if 'contacts_version' not in st.session_state:
-                st.session_state['contacts_version'] = 1
-            else:
-                st.session_state['contacts_version'] += 1
+            # Store in session state for L1 cache
+            st.session_state['indexed_user_id'] = user_id
+            st.session_state['contacts_version'] = current_version + 1
 
-            print(f"✅ Search indexes built for user {user_id}")
+            print(f"✅ L3 Cache: Built new indexes for user {user_id}")
             return True
 
         except Exception as e:

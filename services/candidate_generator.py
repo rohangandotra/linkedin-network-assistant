@@ -41,6 +41,43 @@ class CandidateGenerator:
         self.tier2 = Tier2SemanticSearch()
         self.openai_client = openai_client
 
+    def indexes_exist(self, user_id: str) -> bool:
+        """
+        Check if indexes exist on disk for user
+
+        Args:
+            user_id: User ID
+
+        Returns:
+            True if both FTS5 and FAISS indexes exist
+        """
+        return self.tier1.index_exists(user_id) and self.tier2.index_exists(user_id)
+
+    def load_indexes(self, user_id: str) -> bool:
+        """
+        Load existing indexes from disk
+
+        Args:
+            user_id: User ID
+
+        Returns:
+            True if loaded successfully, False otherwise
+        """
+        print(f"Loading search indexes for user {user_id}...")
+
+        # Load Tier-1 (FTS5)
+        tier1_loaded = self.tier1.load_index(user_id)
+
+        # Load Tier-2 (FAISS)
+        tier2_loaded = self.tier2.load_index(user_id)
+
+        if tier1_loaded and tier2_loaded:
+            print("✅ Search indexes loaded from disk successfully")
+            return True
+        else:
+            print("⚠️  Failed to load one or more indexes")
+            return False
+
     def build_indexes(self, user_id: str, contacts_df: pd.DataFrame):
         """
         Build search indexes for a user

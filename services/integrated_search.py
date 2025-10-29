@@ -45,6 +45,30 @@ class IntegratedSearchEngine:
         self.diversifier = Diversifier(max_per_company=3, max_per_industry=5)
         self.openai_client = openai_client
 
+    def indexes_exist(self, user_id: str) -> bool:
+        """
+        Check if indexes exist on disk for user
+
+        Args:
+            user_id: User ID
+
+        Returns:
+            True if indexes exist
+        """
+        return self.candidate_generator.indexes_exist(user_id)
+
+    def load_indexes(self, user_id: str) -> bool:
+        """
+        Load existing indexes from disk
+
+        Args:
+            user_id: User ID
+
+        Returns:
+            True if loaded successfully
+        """
+        return self.candidate_generator.load_indexes(user_id)
+
     def build_indexes(self, user_id: str, contacts_df: pd.DataFrame):
         """
         Build search indexes for a user

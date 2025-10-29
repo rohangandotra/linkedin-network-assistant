@@ -46,10 +46,11 @@ class Tier1KeywordSearch:
     Latency: <50ms
     """
 
-    def __init__(self, db_path: str = ':memory:'):
+    def __init__(self, db_path: str = None):
         self.db_path = db_path
         self.conn = None
         self.symspell = None
+        self.current_user_id = None
 
         # Initialize SymSpell for typo correction
         if HAS_SYMSPELL:
@@ -59,6 +60,49 @@ class Tier1KeywordSearch:
         """Initialize SymSpell for fast fuzzy matching"""
         self.symspell = SymSpell(max_dictionary_edit_distance=2, prefix_length=7)
 
+    def _get_db_path(self, user_id: str) -> str:
+        """Get database file path for user"""
+        if self.db_path:
+            return self.db_path
+        return f'search_index_{user_id}.db'
+
+    def index_exists(self, user_id: str) -> bool:
+        """Check if index exists on disk"""
+        db_file = self._get_db_path(user_id)
+        if db_file == ':memory:':
+            return False
+        return os.path.exists(db_file)
+
+    def load_index(self, user_id: str) -> bool:
+        """
+        Load existing index from disk
+
+        Returns:
+            True if loaded successfully, False otherwise
+        """
+        try:
+            db_file = self._get_db_path(user_id)
+            if not os.path.exists(db_file):
+                return False
+
+            # Connect to existing database
+            self.conn = sqlite3.connect(db_file)
+            self.current_user_id = user_id
+
+            # Verify table exists
+            cursor = self.conn.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='contacts_fts'"
+            )
+            if not cursor.fetchone():
+                return False
+
+            print(f"✅ Loaded FTS5 index from disk for user {user_id}")
+            return True
+
+        except Exception as e:
+            print(f"⚠️  Failed to load FTS5 index: {e}")
+            return False
+
     def build_index(self, user_id: str, contacts_df: pd.DataFrame):
         """
         Build FTS5 index for user's contacts
@@ -67,9 +111,10 @@ class Tier1KeywordSearch:
             user_id: User ID
             contacts_df: DataFrame with contacts
         """
-        # Create connection
-        db_file = f'search_index_{user_id}.db' if self.db_path != ':memory:' else ':memory:'
+        # Create connection to disk-based database
+        db_file = self._get_db_path(user_id)
         self.conn = sqlite3.connect(db_file)
+        self.current_user_id = user_id
 
         # Create FTS5 table with field weights
         # FTS5 supports BM25 ranking natively
@@ -304,6 +349,40 @@ class Tier2SemanticSearch:
             print(f"❌ Failed to load embedding model: {e}")
             self.model = None
 
+    def index_exists(self, user_id: str) -> bool:
+        """Check if index exists on disk"""
+        index_file = f'faiss_index_{user_id}.bin'
+        contact_map_file = f'contact_map_{user_id}.json'
+        return os.path.exists(index_file) and os.path.exists(contact_map_file)
+
+    def load_index(self, user_id: str) -> bool:
+        """
+        Load existing index from disk
+
+        Returns:
+            True if loaded successfully, False otherwise
+        """
+        try:
+            index_file = f'faiss_index_{user_id}.bin'
+            contact_map_file = f'contact_map_{user_id}.json'
+
+            if not os.path.exists(index_file) or not os.path.exists(contact_map_file):
+                return False
+
+            # Load FAISS index
+            self.indexes[user_id] = faiss.read_index(index_file)
+
+            # Load contact map
+            with open(contact_map_file, 'r') as f:
+                self.contact_maps[user_id] = json.load(f)
+
+            print(f"✅ Loaded semantic index from disk for user {user_id}")
+            return True
+
+        except Exception as e:
+            print(f"⚠️  Failed to load semantic index: {e}")
+            return False
+
     def build_index(self, user_id: str, contacts_df: pd.DataFrame):
         """
         Build FAISS index for user's contacts
@@ -357,6 +436,11 @@ class Tier2SemanticSearch:
             # Persist to disk
             index_file = f'faiss_index_{user_id}.bin'
             faiss.write_index(index, index_file)
+
+            # Persist contact map to disk
+            contact_map_file = f'contact_map_{user_id}.json'
+            with open(contact_map_file, 'w') as f:
+                json.dump(self.contact_maps[user_id], f)
 
             print(f"✅ Built semantic index: {len(texts)} contacts")
 
