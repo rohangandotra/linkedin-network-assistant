@@ -2509,11 +2509,140 @@ def main():
     else:
         contacts_df = st.session_state['contacts_df']
 
+        # Initialize network selector in session state
+        if 'search_network_selection' not in st.session_state:
+            st.session_state['search_network_selection'] = 'My Network'
+
+        # Get connection counts for display
+        my_network_count = len(contacts_df)
+
+        # Get extended network count
+        extended_count = 0
+        if st.session_state.get('authenticated'):
+            try:
+                extended_contacts_df = collaboration.get_contacts_from_connected_users(user_id)
+                extended_count = len(extended_contacts_df) if not extended_contacts_df.empty else 0
+            except:
+                extended_count = 0
+
+        # CSS for segmented control
+        st.markdown("""
+        <style>
+        /* Segmented Control - Modern iOS/macOS style */
+        .segmented-control-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .segmented-control {
+            display: inline-flex;
+            background: #f3f4f6;
+            border-radius: 8px;
+            padding: 4px;
+            gap: 4px;
+        }
+
+        .segment-option {
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 500;
+            min-height: 44px;
+            min-width: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border: 2px solid transparent;
+            white-space: nowrap;
+        }
+
+        .segment-option:focus-visible {
+            outline: 2px solid #2B6CB0;
+            outline-offset: 2px;
+        }
+
+        .segment-option.selected {
+            background: #2B6CB0;
+            color: white;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .segment-option.unselected {
+            background: white;
+            color: #2B6CB0;
+            border-color: #2B6CB0;
+        }
+
+        .segment-option.unselected:hover {
+            background: #f0f7ff;
+        }
+
+        .segment-count {
+            color: #6B7280;
+            margin-left: 0.25rem;
+        }
+
+        .segment-option.selected .segment-count {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Responsive: stack on mobile */
+        @media (max-width: 767px) {
+            .segmented-control-container {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 14px;
+            }
+
+            .segmented-control {
+                width: 100%;
+            }
+
+            .segment-option {
+                flex: 1;
+            }
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+        # Network Selector - Segmented Control
+        col1, col2 = st.columns([1, 1])
+
+        with col1:
+            if st.button(
+                f"My Network · {my_network_count:,}",
+                key="segment_my_network",
+                use_container_width=True,
+                type="primary" if st.session_state['search_network_selection'] == 'My Network' else "secondary"
+            ):
+                st.session_state['search_network_selection'] = 'My Network'
+                st.rerun()
+
+        with col2:
+            if st.button(
+                f"Extended Network · {extended_count:,}",
+                key="segment_extended_network",
+                use_container_width=True,
+                type="primary" if st.session_state['search_network_selection'] == 'Extended Network' else "secondary"
+            ):
+                st.session_state['search_network_selection'] = 'Extended Network'
+                st.rerun()
+
+        # Dynamic placeholder based on selection
+        if st.session_state['search_network_selection'] == 'My Network':
+            search_placeholder = "Search your contacts..."
+        else:
+            search_placeholder = "Search connected networks..."
+
         # Unified Search Interface - handles both search and analytics
         with st.form(key='unified_search_form', clear_on_submit=False):
             query = st.text_input(
-                "Ask anything about your network...",
-                placeholder='e.g., "Who works in venture capital?" or "What industry do I have most contacts in?"',
+                "Search...",
+                placeholder=search_placeholder,
                 label_visibility="collapsed",
                 key="unified_search_query"
             )
@@ -2571,76 +2700,97 @@ def main():
                         st.error(f"Analysis failed: {result.get('error', 'Unknown error')}")
             else:
                 # Handle search query (find people)
-                # Phase 3B: Use new hybrid search for 95% cost reduction + 25x speed
-                if HAS_NEW_SEARCH:
-                    with st.spinner("Searching your network..."):
-                        # Clear any previous analytics result
-                        if 'analytics_result' in st.session_state:
-                            del st.session_state['analytics_result']
+                # Determine which dataset to search based on network selection
+                selected_network = st.session_state.get('search_network_selection', 'My Network')
 
-                        try:
-                            # Use new hybrid search
-                            search_result = smart_search(query, contacts_df)
+                if selected_network == 'Extended Network':
+                    # Search extended network
+                    spinner_text = "Searching connected networks..."
+                    try:
+                        search_contacts_df = collaboration.get_contacts_from_connected_users(user_id)
+                        if search_contacts_df.empty:
+                            st.info("No contacts available in extended network yet.")
+                            search_contacts_df = None
+                    except Exception as e:
+                        st.error(f"Failed to load extended network: {e}")
+                        search_contacts_df = None
+                else:
+                    # Search my network
+                    spinner_text = "Searching your network..."
+                    search_contacts_df = contacts_df
 
-                            if search_result.get('use_legacy_gpt'):
-                                # Complex query - fall back to old GPT search
-                                st.caption("Using AI reasoning for complex query...")
+                # Only proceed if we have contacts to search
+                if search_contacts_df is not None and not search_contacts_df.empty:
+                    # Phase 3B: Use new hybrid search for 95% cost reduction + 25x speed
+                    if HAS_NEW_SEARCH:
+                        with st.spinner(spinner_text):
+                            # Clear any previous analytics result
+                            if 'analytics_result' in st.session_state:
+                                del st.session_state['analytics_result']
+
+                            try:
+                                # Use new hybrid search
+                                search_result = smart_search(query, search_contacts_df)
+
+                                if search_result.get('use_legacy_gpt'):
+                                    # Complex query - fall back to old GPT search
+                                    st.caption("Using AI reasoning for complex query...")
+                                    intent = extract_search_intent(query, contacts_df)
+
+                                    if intent:
+                                        st.session_state['last_intent'] = intent
+                                        filtered_df = filter_contacts(contacts_df, intent)
+                                        st.session_state['filtered_df'] = filtered_df
+                                        summary = generate_summary(filtered_df, intent)
+                                        st.session_state['summary'] = summary
+                                else:
+                                    # Fast hybrid search result
+                                    filtered_df = search_result.get('filtered_df', pd.DataFrame())
+                                    st.session_state['filtered_df'] = filtered_df
+
+                                    # Generate summary
+                                    if not filtered_df.empty:
+                                        # Use new search summary
+                                        summary_text = get_search_summary(search_result, query)
+                                        tier_info = f" • Method: {search_result.get('tier_used', 'unknown')}"
+                                        latency_info = f" • Time: {search_result.get('latency_ms', 0):.0f}ms"
+                                        cached_info = " • Cached" if search_result.get('cached') else ""
+
+                                        summary = f"""
+                                        <strong>Search Results for "{query}"</strong><br>
+                                        Found {len(filtered_df)} matches{tier_info}{latency_info}{cached_info}
+                                        """
+                                    else:
+                                        summary = f"No results found for '{query}'"
+
+                                    st.session_state['summary'] = summary
+
+                                    # Show performance badge
+                                    if search_result.get('cached'):
+                                        st.success(f"Instant search (cached) • {len(filtered_df)} results")
+                                    elif search_result.get('latency_ms', 0) < 100:
+                                        st.success(f"Lightning fast ({search_result.get('latency_ms', 0):.0f}ms) • {len(filtered_df)} results")
+
+                                # Log search query
+                                analytics.log_search_query(
+                                    query=query,
+                                    results_count=len(st.session_state.get('filtered_df', pd.DataFrame())),
+                                    intent={'query': query, 'tier': search_result.get('tier_used', 'unknown')},
+                                    session_id=st.session_state['session_id']
+                                )
+
+                            except Exception as e:
+                                st.error(f"Search error: {e}")
+                                st.caption("Falling back to legacy search...")
+
+                                # Fallback to old search
                                 intent = extract_search_intent(query, contacts_df)
-
                                 if intent:
                                     st.session_state['last_intent'] = intent
                                     filtered_df = filter_contacts(contacts_df, intent)
                                     st.session_state['filtered_df'] = filtered_df
                                     summary = generate_summary(filtered_df, intent)
                                     st.session_state['summary'] = summary
-                            else:
-                                # Fast hybrid search result
-                                filtered_df = search_result.get('filtered_df', pd.DataFrame())
-                                st.session_state['filtered_df'] = filtered_df
-
-                                # Generate summary
-                                if not filtered_df.empty:
-                                    # Use new search summary
-                                    summary_text = get_search_summary(search_result, query)
-                                    tier_info = f" • Method: {search_result.get('tier_used', 'unknown')}"
-                                    latency_info = f" • Time: {search_result.get('latency_ms', 0):.0f}ms"
-                                    cached_info = " • Cached" if search_result.get('cached') else ""
-
-                                    summary = f"""
-                                    <strong>Search Results for "{query}"</strong><br>
-                                    Found {len(filtered_df)} matches{tier_info}{latency_info}{cached_info}
-                                    """
-                                else:
-                                    summary = f"No results found for '{query}'"
-
-                                st.session_state['summary'] = summary
-
-                                # Show performance badge
-                                if search_result.get('cached'):
-                                    st.success(f"Instant search (cached) • {len(filtered_df)} results")
-                                elif search_result.get('latency_ms', 0) < 100:
-                                    st.success(f"Lightning fast ({search_result.get('latency_ms', 0):.0f}ms) • {len(filtered_df)} results")
-
-                            # Log search query
-                            analytics.log_search_query(
-                                query=query,
-                                results_count=len(st.session_state.get('filtered_df', pd.DataFrame())),
-                                intent={'query': query, 'tier': search_result.get('tier_used', 'unknown')},
-                                session_id=st.session_state['session_id']
-                            )
-
-                        except Exception as e:
-                            st.error(f"Search error: {e}")
-                            st.caption("Falling back to legacy search...")
-
-                            # Fallback to old search
-                            intent = extract_search_intent(query, contacts_df)
-                            if intent:
-                                st.session_state['last_intent'] = intent
-                                filtered_df = filter_contacts(contacts_df, intent)
-                                st.session_state['filtered_df'] = filtered_df
-                                summary = generate_summary(filtered_df, intent)
-                                st.session_state['summary'] = summary
 
                 else:
                     # Legacy search (if new search not available)
@@ -2704,6 +2854,10 @@ def main():
             if not filtered_df.empty:
                 st.markdown("<br>", unsafe_allow_html=True)
 
+                # Check which network we're displaying results from
+                selected_network = st.session_state.get('search_network_selection', 'My Network')
+                is_extended_network = (selected_network == 'Extended Network')
+
                 # Pagination setup
                 contacts_per_page = 10
                 total_contacts = len(filtered_df)
@@ -2721,14 +2875,23 @@ def main():
 
                 current_page = st.session_state['current_page']
 
-                # Selection header with action buttons and pagination info
-                col_header1, col_header2, col_header3 = st.columns([2, 1, 1])
-                with col_header1:
-                    st.markdown("### Select Contacts")
-                with col_header2:
-                    st.markdown(f"<div style='text-align: right; padding-top: 0.5rem; color: #666;'>Page {current_page} of {total_pages}</div>", unsafe_allow_html=True)
-                with col_header3:
-                    select_all_page = st.checkbox("Select All on Page", key="select_all_page_checkbox")
+                # Different headers based on network type
+                if is_extended_network:
+                    # Extended Network - no selection, show pagination only
+                    col_header1, col_header2 = st.columns([3, 1])
+                    with col_header1:
+                        st.markdown("### Results from Extended Network")
+                    with col_header2:
+                        st.markdown(f"<div style='text-align: right; padding-top: 0.5rem; color: #666;'>Page {current_page} of {total_pages}</div>", unsafe_allow_html=True)
+                else:
+                    # My Network - show selection controls
+                    col_header1, col_header2, col_header3 = st.columns([2, 1, 1])
+                    with col_header1:
+                        st.markdown("### Select Contacts")
+                    with col_header2:
+                        st.markdown(f"<div style='text-align: right; padding-top: 0.5rem; color: #666;'>Page {current_page} of {total_pages}</div>", unsafe_allow_html=True)
+                    with col_header3:
+                        select_all_page = st.checkbox("Select All on Page", key="select_all_page_checkbox")
 
                 # Calculate pagination slice
                 start_idx = (current_page - 1) * contacts_per_page
@@ -2743,43 +2906,93 @@ def main():
                     if col in filtered_df.columns:
                         display_cols.append(col)
 
-                # Initialize selected contacts in session state
-                if 'selected_contacts' not in st.session_state:
-                    st.session_state['selected_contacts'] = set()
+                # Initialize selected contacts in session state (only for My Network)
+                if not is_extended_network:
+                    if 'selected_contacts' not in st.session_state:
+                        st.session_state['selected_contacts'] = set()
 
-                # Handle select all on page
-                if select_all_page:
-                    for i in range(start_idx, end_idx):
-                        st.session_state['selected_contacts'].add(i)
-                elif not select_all_page:
-                    # Check if all on current page are selected, if so deselect
-                    all_on_page_selected = all(i in st.session_state['selected_contacts'] for i in range(start_idx, end_idx))
-                    if all_on_page_selected:
+                    # Handle select all on page
+                    if select_all_page:
                         for i in range(start_idx, end_idx):
-                            st.session_state['selected_contacts'].discard(i)
+                            st.session_state['selected_contacts'].add(i)
+                    elif not select_all_page:
+                        # Check if all on current page are selected, if so deselect
+                        all_on_page_selected = all(i in st.session_state['selected_contacts'] for i in range(start_idx, end_idx))
+                        if all_on_page_selected:
+                            for i in range(start_idx, end_idx):
+                                st.session_state['selected_contacts'].discard(i)
 
-                # Display each contact as a selectable card
+                # Display each contact card
                 for page_idx, (idx, row) in enumerate(page_contacts.iterrows()):
                     # Actual index in the full filtered_df
                     actual_idx = start_idx + page_idx
-                    contact_selected = actual_idx in st.session_state['selected_contacts']
 
-                    col1, col2 = st.columns([0.1, 0.9])
+                    if is_extended_network:
+                        # Extended Network: Show contact with "Request Intro" button
+                        col1, col2 = st.columns([3, 1])
 
-                    with col1:
-                        if st.checkbox("", key=f"contact_{actual_idx}_{idx}", value=contact_selected, label_visibility="collapsed"):
-                            st.session_state['selected_contacts'].add(actual_idx)
-                        else:
-                            st.session_state['selected_contacts'].discard(actual_idx)
+                        with col1:
+                            name = row.get('full_name', 'No Name')
+                            job_position = row.get('position', 'No Position')
+                            company = row.get('company', 'No Company')
+                            owner_name = row.get('owner_name', 'Unknown')
 
-                    with col2:
-                        name = row.get('full_name', 'No Name')
-                        job_position = row.get('position', 'No Position')
-                        company = row.get('company', 'No Company')
-                        email = row.get('email', '')
+                            st.markdown(f"""
+                            <div style='background: #f0f9ff; padding: 1.5rem; border-radius: 10px;
+                                        border-left: 4px solid #3b82f6; margin-bottom: 1rem;'>
+                                <div style='font-weight: 600; font-size: 1.05rem; color: #1a1a1a; margin-bottom: 0.5rem;'>
+                                    {name}
+                                </div>
+                                <div style='color: #666666; font-size: 0.95rem; margin-bottom: 0.3rem;'>
+                                    {job_position}
+                                </div>
+                                <div style='color: #999999; font-size: 0.9rem; margin-bottom: 0.8rem;'>
+                                    {company}
+                                </div>
+                                <div style='background: white; padding: 0.5rem; border-radius: 6px;'>
+                                    <span style='color: #075985; font-size: 0.85rem; font-weight: 600;'>
+                                        In {owner_name}'s network
+                                    </span>
+                                </div>
+                            </div>
+                            """, unsafe_allow_html=True)
 
-                        # Modern contact card with gradient border and hover effects
-                        st.markdown(f"""<div class='contact-card' style='background: white; padding: 1.25rem; border-radius: var(--radius-xl); border: 2px solid var(--gray-200); margin-bottom: 0.75rem; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: var(--shadow-sm); position: relative; overflow: hidden;'>
+                        with col2:
+                            st.markdown("<br>", unsafe_allow_html=True)
+                            # Request intro button
+                            if st.button(f"Request Intro", key=f"req_intro_{actual_idx}_{idx}", use_container_width=True):
+                                # Store contact info in session state to show request form
+                                st.session_state['intro_request_contact'] = {
+                                    'contact_id': row.get('id'),
+                                    'target_name': row.get('full_name', ''),
+                                    'target_company': row.get('company', ''),
+                                    'target_position': row.get('position', ''),
+                                    'target_email': row.get('email', ''),
+                                    'connector_id': row.get('owner_user_id'),
+                                    'connector_name': row.get('owner_name'),
+                                    'connector_email': row.get('owner_email')
+                                }
+                                st.rerun()
+                    else:
+                        # My Network: Show contact with checkbox for selection
+                        contact_selected = actual_idx in st.session_state['selected_contacts']
+
+                        col1, col2 = st.columns([0.1, 0.9])
+
+                        with col1:
+                            if st.checkbox("", key=f"contact_{actual_idx}_{idx}", value=contact_selected, label_visibility="collapsed"):
+                                st.session_state['selected_contacts'].add(actual_idx)
+                            else:
+                                st.session_state['selected_contacts'].discard(actual_idx)
+
+                        with col2:
+                            name = row.get('full_name', 'No Name')
+                            job_position = row.get('position', 'No Position')
+                            company = row.get('company', 'No Company')
+                            email = row.get('email', '')
+
+                            # Modern contact card with gradient border and hover effects
+                            st.markdown(f"""<div class='contact-card' style='background: white; padding: 1.25rem; border-radius: var(--radius-xl); border: 2px solid var(--gray-200); margin-bottom: 0.75rem; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: var(--shadow-sm); position: relative; overflow: hidden;'>
 <div style='position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--primary-500) 0%, var(--secondary-500) 50%, var(--accent-500) 100%); opacity: 0; transition: opacity 0.3s ease;' class='card-gradient-bar'></div>
 <div style='display: flex; align-items: flex-start; gap: 1rem;'>
 <div style='flex-shrink: 0; width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-500) 0%, var(--secondary-500) 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.25rem; box-shadow: var(--shadow-md);'>{name[0].upper() if name and name != 'No Name' else '?'}</div>
@@ -2838,8 +3051,78 @@ opacity: 1;
 
                     st.markdown(f"<div style='text-align: center; color: #666; margin-top: 0.5rem; font-size: 0.9rem;'>Showing {start_idx + 1}-{end_idx} of {total_contacts} contacts</div>", unsafe_allow_html=True)
 
-                # Action buttons for selected contacts
-                if len(st.session_state['selected_contacts']) > 0:
+                # Show intro request form if contact selected (Extended Network only)
+                if is_extended_network and 'intro_request_contact' in st.session_state:
+                    contact = st.session_state['intro_request_contact']
+
+                    st.markdown("---")
+                    st.markdown("### Request Introduction")
+
+                    st.markdown(f"""
+                    <div style='background: #fffbeb; padding: 1.5rem; border-radius: 10px; border: 1px solid #fbbf24; margin-bottom: 1.5rem;'>
+                        <div style='font-weight: 600; font-size: 1rem; color: #1a1a1a; margin-bottom: 0.5rem;'>
+                            Requesting intro to: <span style='color: #3b82f6;'>{contact['target_name']}</span>
+                        </div>
+                        <div style='color: #666; font-size: 0.9rem; margin-bottom: 0.3rem;'>
+                            {contact['target_position']} at {contact['target_company']}
+                        </div>
+                        <div style='color: #999; font-size: 0.85rem;'>
+                            Via: {contact['connector_name']} ({contact['connector_email']})
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                    with st.form("intro_request_form"):
+                        request_message = st.text_area(
+                            "Why do you want to meet this person? *",
+                            placeholder="e.g., I'm raising a seed round for my fintech startup and would love to get Sarah's advice on product-market fit...",
+                            height=150,
+                            help="This will be shown to the person you want to meet"
+                        )
+
+                        context_for_connector = st.text_area(
+                            "Additional context for your connection (optional)",
+                            placeholder="e.g., We met at the Tech Conference 2024. Remember we talked about my startup idea?",
+                            height=100,
+                            help="Private message to help your connection make the intro"
+                        )
+
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            submit_request = st.form_submit_button("Send Request", type="primary", use_container_width=True)
+                        with col2:
+                            cancel_request = st.form_submit_button("Cancel", use_container_width=True)
+
+                        if submit_request:
+                            if not request_message.strip():
+                                st.error("Please explain why you want this introduction")
+                            else:
+                                # Create intro request
+                                result = collaboration.create_intro_request(
+                                    requester_id=user_id,
+                                    connector_id=contact['connector_id'],
+                                    target_contact_id=contact['contact_id'],
+                                    target_name=contact['target_name'],
+                                    target_company=contact['target_company'],
+                                    target_position=contact['target_position'],
+                                    target_email=contact['target_email'],
+                                    request_message=request_message.strip(),
+                                    context_for_connector=context_for_connector.strip() if context_for_connector.strip() else None
+                                )
+
+                                if result['success']:
+                                    st.success(f"Introduction request sent to {contact['connector_name']}!")
+                                    del st.session_state['intro_request_contact']
+                                    st.rerun()
+                                else:
+                                    st.error(result['message'])
+
+                        if cancel_request:
+                            del st.session_state['intro_request_contact']
+                            st.rerun()
+
+                # Action buttons for selected contacts (My Network only)
+                if not is_extended_network and 'selected_contacts' in st.session_state and len(st.session_state['selected_contacts']) > 0:
                     st.markdown("<br>", unsafe_allow_html=True)
                     st.markdown(f"**{len(st.session_state['selected_contacts'])} contact(s) selected**")
 
@@ -3060,206 +3343,6 @@ opacity: 1;
                         use_container_width=True
                     )
 
-        # === EXTENDED NETWORK SEARCH ===
-        # Search in connected users' networks
-        st.markdown("<br><br>", unsafe_allow_html=True)
-        st.markdown("---")
-        st.markdown("## Extended Network Search")
-        st.markdown("Search contacts in your connections' networks and request introductions")
-
-        # Get connections count
-        connections = collaboration.get_user_connections(user_id, status='accepted')
-        sharing_connections = [c for c in connections if c['network_sharing_enabled']]
-
-        if sharing_connections:
-            st.markdown(f"**Searching across {len(sharing_connections)} connected network(s)**")
-
-            # Extended search form
-            with st.form("extended_search_form"):
-                ext_query = st.text_input(
-                    "Search for people in extended network...",
-                    placeholder='e.g., "Sarah Chen" or "Partner at Sequoia Capital"',
-                    label_visibility="collapsed",
-                    key="extended_search_query"
-                )
-
-                ext_search_button = st.form_submit_button("Search Extended Network", type="secondary")
-
-            if ext_search_button and ext_query:
-                with st.spinner("Searching connected networks..."):
-                    # Get contacts from connected users
-                    extended_contacts_df = collaboration.get_contacts_from_connected_users(user_id)
-
-                    if not extended_contacts_df.empty:
-                        # Use Phase 3B smart search for intelligent matching
-                        if HAS_NEW_SEARCH:
-                            try:
-                                # Use advanced hybrid search (same as dashboard search)
-                                search_result = smart_search(ext_query, extended_contacts_df)
-
-                                if search_result.get('success'):
-                                    results = search_result.get('filtered_df', pd.DataFrame())
-
-                                    # Show search performance info
-                                    latency = search_result.get('latency_ms', 0)
-                                    if latency < 100:
-                                        st.caption(f"⚡ Lightning fast search ({latency:.0f}ms) • Advanced AI-powered ranking")
-                                    else:
-                                        st.caption(f"🔍 Searched in {latency:.0f}ms • AI-powered ranking")
-                                else:
-                                    results = pd.DataFrame()
-                            except Exception as e:
-                                print(f"Smart search failed, falling back to simple search: {e}")
-                                # Fallback to simple substring matching
-                                query_lower = ext_query.lower()
-                                mask = (
-                                    extended_contacts_df['full_name'].fillna('').str.lower().str.contains(query_lower) |
-                                    extended_contacts_df['company'].fillna('').str.lower().str.contains(query_lower) |
-                                    extended_contacts_df['position'].fillna('').str.lower().str.contains(query_lower)
-                                )
-                                results = extended_contacts_df[mask]
-                        else:
-                            # Fallback: simple substring matching (legacy behavior)
-                            query_lower = ext_query.lower()
-                            mask = (
-                                extended_contacts_df['full_name'].fillna('').str.lower().str.contains(query_lower) |
-                                extended_contacts_df['company'].fillna('').str.lower().str.contains(query_lower) |
-                                extended_contacts_df['position'].fillna('').str.lower().str.contains(query_lower)
-                            )
-                            results = extended_contacts_df[mask]
-
-                        if not results.empty:
-                            st.success(f"Found {len(results)} contact(s) in extended network!")
-
-                            # Display results
-                            for idx, row in results.head(20).iterrows():  # Limit to 20 for performance
-                                col1, col2 = st.columns([3, 1])
-
-                                with col1:
-                                    st.markdown(f"""
-                                    <div style='background: #f0f9ff; padding: 1.5rem; border-radius: 10px;
-                                                border-left: 4px solid #3b82f6; margin-bottom: 1rem;'>
-                                        <div style='font-weight: 600; font-size: 1.05rem; color: #1a1a1a; margin-bottom: 0.5rem;'>
-                                            {row.get('full_name', 'Unknown')}
-                                        </div>
-                                        <div style='color: #666666; font-size: 0.95rem; margin-bottom: 0.3rem;'>
-                                            {row.get('position', 'Position unknown')}
-                                        </div>
-                                        <div style='color: #999999; font-size: 0.9rem; margin-bottom: 0.8rem;'>
-                                            {row.get('company', 'Company unknown')}
-                                        </div>
-                                        <div style='background: white; padding: 0.5rem; border-radius: 6px;'>
-                                            <span style='color: #075985; font-size: 0.85rem; font-weight: 600;'>
-                                                In {row.get('owner_name', 'Unknown')}'s network
-                                            </span>
-                                        </div>
-                                    </div>
-                                    """, unsafe_allow_html=True)
-
-                                with col2:
-                                    st.markdown("<br>", unsafe_allow_html=True)
-                                    # Request intro button
-                                    if st.button(f"Request Intro", key=f"req_intro_{idx}", use_container_width=True):
-                                        # Store contact info in session state to show request form
-                                        st.session_state['intro_request_contact'] = {
-                                            'contact_id': row.get('id'),
-                                            'target_name': row.get('full_name', ''),
-                                            'target_company': row.get('company', ''),
-                                            'target_position': row.get('position', ''),
-                                            'target_email': row.get('email', ''),
-                                            'connector_id': row.get('owner_user_id'),
-                                            'connector_name': row.get('owner_name'),
-                                            'connector_email': row.get('owner_email')
-                                        }
-                                        st.rerun()
-
-                            if len(results) > 20:
-                                st.info(f"Showing first 20 of {len(results)} results. Refine your search for more specific matches.")
-
-                        else:
-                            st.info(f"No contacts found matching '{ext_query}' in extended network.")
-                    else:
-                        st.info("No contacts available in extended network yet.")
-
-            # Show intro request form if contact selected
-            if 'intro_request_contact' in st.session_state:
-                contact = st.session_state['intro_request_contact']
-
-                st.markdown("---")
-                st.markdown("### Request Introduction")
-
-                st.markdown(f"""
-                <div style='background: #fffbeb; padding: 1.5rem; border-radius: 10px; border: 1px solid #fbbf24; margin-bottom: 1.5rem;'>
-                    <div style='font-weight: 600; font-size: 1rem; color: #1a1a1a; margin-bottom: 0.5rem;'>
-                        Requesting intro to: <span style='color: #3b82f6;'>{contact['target_name']}</span>
-                    </div>
-                    <div style='color: #666; font-size: 0.9rem; margin-bottom: 0.3rem;'>
-                        {contact['target_position']} at {contact['target_company']}
-                    </div>
-                    <div style='color: #999; font-size: 0.85rem;'>
-                        Via: {contact['connector_name']} ({contact['connector_email']})
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-
-                with st.form("intro_request_form"):
-                    request_message = st.text_area(
-                        "Why do you want to meet this person? *",
-                        placeholder="e.g., I'm raising a seed round for my fintech startup and would love to get Sarah's advice on product-market fit...",
-                        height=150,
-                        help="This will be shown to the person you want to meet"
-                    )
-
-                    context_for_connector = st.text_area(
-                        "Additional context for your connection (optional)",
-                        placeholder="e.g., We met at the Tech Conference 2024. Remember we talked about my startup idea?",
-                        height=100,
-                        help="Private message to help your connection make the intro"
-                    )
-
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        submit_request = st.form_submit_button("Send Request", type="primary", use_container_width=True)
-                    with col2:
-                        cancel_request = st.form_submit_button("Cancel", use_container_width=True)
-
-                    if submit_request:
-                        if not request_message.strip():
-                            st.error("Please explain why you want this introduction")
-                        else:
-                            # Create intro request
-                            result = collaboration.create_intro_request(
-                                requester_id=user_id,
-                                connector_id=contact['connector_id'],
-                                target_contact_id=contact['contact_id'],
-                                target_name=contact['target_name'],
-                                target_company=contact['target_company'],
-                                target_position=contact['target_position'],
-                                target_email=contact['target_email'],
-                                request_message=request_message.strip(),
-                                context_for_connector=context_for_connector.strip() if context_for_connector.strip() else None
-                            )
-
-                            if result['success']:
-                                st.success(f"Introduction request sent to {contact['connector_name']}!")
-                                del st.session_state['intro_request_contact']
-                                st.rerun()
-                            else:
-                                st.error(result['message'])
-
-                    if cancel_request:
-                        del st.session_state['intro_request_contact']
-                        st.rerun()
-
-        else:
-            st.info("Connect with other users to search their networks and request introductions!")
-            st.markdown("""
-            **How to build your extended network:**
-            1. Go to the **Connections** page
-            2. Search for people by name or organization
-            3. Send connection requests
-            4. Once connected, you can search each other's networks!
-            """)
 
 if __name__ == "__main__":
     # Check for API key
