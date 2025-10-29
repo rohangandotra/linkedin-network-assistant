@@ -952,7 +952,47 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Top bar navigation - only Feedback, User, Logout (no boxes)
+# ============================================
+# PROFESSIONAL HEADER BAR (SaaS Style)
+# ============================================
+
+# Header container with shadow and border
+st.markdown("""
+<style>
+.header-container {
+    background: white;
+    padding: 1rem 2rem;
+    border-bottom: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    margin: -1rem -1rem 0 -1rem;
+}
+
+.header-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0;
+    line-height: 2.5rem;
+}
+
+.header-button {
+    background: transparent;
+    border: none;
+    color: #6b7280;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: color 0.15s;
+    line-height: 2.5rem;
+}
+
+.header-button:hover {
+    color: #2563eb;
+}
+</style>
+""", unsafe_allow_html=True)
+
 if st.session_state.get('authenticated'):
     # Authenticated user navigation
     user_id = st.session_state.get('user', {}).get('id', 'anonymous')
@@ -968,35 +1008,30 @@ if st.session_state.get('authenticated'):
     # Get contact count
     contact_count = auth.get_contact_count(user_id)
 
-    # Top bar: Logo + Feedback/User/Logout (all in one row, no boxes on right buttons)
-    top_nav_cols = st.columns([1.5, 6.5, 0.9, 0.15, 1, 0.15, 0.8])
+    # Clean header with logo left, buttons right
+    header_cols = st.columns([2, 6, 1, 1, 1])
 
-    with top_nav_cols[0]:
-        st.markdown('<p class="nav-logo-text">6th Degree AI</p>', unsafe_allow_html=True)
+    with header_cols[0]:
+        st.markdown('<h1 class="header-title">6th Degree AI</h1>', unsafe_allow_html=True)
 
-    # top_nav_cols[1] is spacer
+    # header_cols[1] is spacer
 
-    with top_nav_cols[2]:
+    with header_cols[2]:
         st.markdown('<div class="text-link-button">', unsafe_allow_html=True)
         if st.button("Feedback", key="top_nav_feedback"):
             st.session_state['show_feedback_modal'] = True
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # top_nav_cols[3] is gap
-
-    with top_nav_cols[4]:
+    with header_cols[3]:
         st.markdown('<div class="text-link-button">', unsafe_allow_html=True)
-        # User info button (triggers dropdown)
-        user_label = user_name.split()[0] + " ▾"  # First name + dropdown arrow
+        user_label = user_name.split()[0] + " ▾"
         if st.button(user_label, key="top_nav_user_menu"):
             st.session_state['show_user_menu'] = not st.session_state.get('show_user_menu', False)
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # top_nav_cols[5] is gap
-
-    with top_nav_cols[6]:
+    with header_cols[4]:
         st.markdown('<div class="text-link-button">', unsafe_allow_html=True)
         if st.button("Logout", key="top_nav_logout"):
             st.session_state['authenticated'] = False
@@ -1007,11 +1042,11 @@ if st.session_state.get('authenticated'):
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # User menu dropdown (if active)
+    # User dropdown menu (appears below header)
     if st.session_state.get('show_user_menu'):
         st.markdown(f"""
 <div style='background: white; border: 1px solid #e5e7eb; border-radius: 8px;
-     padding: 1rem; margin: -0.5rem 0 1rem auto; max-width: 300px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);'>
+     padding: 1rem; margin: 0.5rem 0 1rem auto; max-width: 300px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);'>
     <p style='font-size: 0.875rem; color: var(--text-tertiary); margin: 0 0 0.5rem 0;'>Signed in as</p>
     <p style='font-size: 1rem; font-weight: 600; color: var(--text-primary); margin: 0;'>{user_name}</p>
     <p style='font-size: 0.875rem; color: var(--text-secondary); margin: 0.25rem 0 0 0;'>{user_email}</p>
@@ -1019,7 +1054,7 @@ if st.session_state.get('authenticated'):
 </div>
 """, unsafe_allow_html=True)
 
-        # My Profile button (integrated within dropdown)
+        # My Profile button
         if st.button("My Profile", key="nav_profile", use_container_width=True, type="secondary"):
             st.session_state['show_profile'] = True
             st.session_state['show_connections'] = False
@@ -1027,30 +1062,29 @@ if st.session_state.get('authenticated'):
             st.rerun()
 
 else:
-    # Anonymous user navigation - logo + login/signup buttons
-    nav_cols = st.columns([1.5, 6.5, 0.8, 0.15, 0.9])
+    # Anonymous user navigation
+    header_cols = st.columns([2, 7, 1, 1])
 
-    with nav_cols[0]:
-        st.markdown('<p class="nav-logo-text">6th Degree AI</p>', unsafe_allow_html=True)
+    with header_cols[0]:
+        st.markdown('<h1 class="header-title">6th Degree AI</h1>', unsafe_allow_html=True)
 
-    # nav_cols[1] is spacer
+    # header_cols[1] is spacer
 
-    with nav_cols[2]:
+    with header_cols[2]:
         if st.button("Login", key="nav_login", type="secondary"):
             st.session_state['show_register'] = False
             st.session_state['show_forgot_password'] = False
             st.session_state['show_login'] = True
             st.rerun()
 
-    # nav_cols[3] is gap
-
-    with nav_cols[4]:
+    with header_cols[3]:
         if st.button("Sign Up", key="nav_signup", type="primary"):
             st.session_state['show_register'] = True
             st.session_state['show_login'] = False
             st.rerun()
 
-st.markdown('<div style="height: 32px;"></div>', unsafe_allow_html=True)
+# Clean spacing after header
+st.markdown('<div style="height: 2rem;"></div>', unsafe_allow_html=True)
 
 # Feedback Modal (shown when feedback button clicked)
 if st.session_state.get('show_feedback_modal'):
