@@ -6,30 +6,20 @@ CREATE TABLE user_profiles (
     user_id UUID REFERENCES users(id) ON DELETE CASCADE UNIQUE NOT NULL,
 
     -- Professional Info (Questions 1-5, mandatory)
-    current_role VARCHAR(255) NOT NULL,
-    current_company VARCHAR(255),
-    industry VARCHAR(100) NOT NULL,
-    company_stage VARCHAR(50),
-    location_city VARCHAR(255) NOT NULL,
-    location_country VARCHAR(100),
+    "current_role" VARCHAR(255) NOT NULL,
+    "current_company" VARCHAR(255) NOT NULL,
+    "industry" VARCHAR(100) NOT NULL,
+    "company_stage" VARCHAR(50),
+    "location_city" VARCHAR(255) NOT NULL,
+    "location_country" VARCHAR(100),
 
     -- Goals & Interests (Questions 6-7, optional, stored as JSON arrays)
     goals JSONB DEFAULT '[]'::jsonb,  -- ['fundraising', 'hiring', 'partnerships', 'career', 'learning', 'other']
     interests JSONB DEFAULT '[]'::jsonb,  -- ['ai', 'web3', 'saas', 'climate', etc.]
     seeking_connections JSONB DEFAULT '[]'::jsonb,  -- ['investors', 'engineers', 'designers', 'executives', etc.]
 
-    -- Privacy Settings (per-field visibility)
-    privacy_settings JSONB DEFAULT '{
-        "current_role": true,
-        "current_company": true,
-        "industry": true,
-        "company_stage": true,
-        "location_city": true,
-        "location_country": true,
-        "goals": false,
-        "interests": true,
-        "seeking_connections": true
-    }'::jsonb,
+    -- Privacy Settings (per-field visibility, default all visible except goals)
+    privacy_settings JSONB DEFAULT '{"current_role": true, "current_company": true, "industry": true, "company_stage": true, "location_city": true, "location_country": true, "goals": false, "interests": true, "seeking_connections": true}'::jsonb,
 
     -- Profile Metadata
     profile_completed BOOLEAN DEFAULT TRUE,  -- Set to true when user completes onboarding
@@ -42,8 +32,8 @@ CREATE TABLE user_profiles (
 
 -- Indexes for performance
 CREATE INDEX idx_user_profiles_user_id ON user_profiles(user_id);
-CREATE INDEX idx_user_profiles_industry ON user_profiles(industry);
-CREATE INDEX idx_user_profiles_location_city ON user_profiles(location_city);
+CREATE INDEX idx_user_profiles_industry ON user_profiles("industry");
+CREATE INDEX idx_user_profiles_location_city ON user_profiles("location_city");
 
 -- Enable Row Level Security
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;

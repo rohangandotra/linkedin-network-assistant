@@ -64,9 +64,9 @@ def profile_exists(user_id: str) -> bool:
 def create_profile(
     user_id: str,
     current_role: str,
+    current_company: str,
     industry: str,
     location_city: str,
-    current_company: str = None,
     company_stage: str = None,
     location_country: str = None,
     goals: List[str] = None,
@@ -80,9 +80,9 @@ def create_profile(
     Args:
         user_id: User's UUID
         current_role: User's current job title (required)
+        current_company: User's current company (required)
         industry: User's industry (required)
         location_city: User's city (required)
-        current_company: User's current company (optional)
         company_stage: Company stage (optional)
         location_country: User's country (optional)
         goals: List of user goals (optional)
@@ -108,6 +108,7 @@ def create_profile(
         profile_data = {
             'user_id': user_id,
             'current_role': current_role,
+            'current_company': current_company,
             'industry': industry,
             'location_city': location_city,
             'profile_completed': True,
@@ -115,8 +116,6 @@ def create_profile(
         }
 
         # Add optional fields
-        if current_company:
-            profile_data['current_company'] = current_company
         if company_stage:
             profile_data['company_stage'] = company_stage
         if location_country:
