@@ -2021,7 +2021,7 @@ def show_profile_page():
             # Current Role
             col1, col2 = st.columns([3, 1])
             with col1:
-                new_current_role = st.text_input("Current Role", value=user_profile.get('current_role', ''), help="Your job title")
+                new_current_role = st.text_input("Current Role", value=user_profile_data.get('current_role', ''), help="Your job title")
             with col2:
                 st.markdown("<p style='font-size: 0.875rem; color: var(--text-tertiary); margin-top: 2rem;'>Visibility</p>", unsafe_allow_html=True)
                 role_visible = st.checkbox("Public", value=privacy_settings.get('current_role', True), key="privacy_role")
@@ -2029,7 +2029,7 @@ def show_profile_page():
             # Current Company
             col1, col2 = st.columns([3, 1])
             with col1:
-                new_current_company = st.text_input("Current Company", value=user_profile.get('current_company', ''), help="Your company")
+                new_current_company = st.text_input("Current Company", value=user_profile_data.get('current_company', ''), help="Your company")
             with col2:
                 st.markdown("<p style='font-size: 0.875rem; color: var(--text-tertiary); margin-top: 2rem;'>Visibility</p>", unsafe_allow_html=True)
                 company_visible = st.checkbox("Public", value=privacy_settings.get('current_company', True), key="privacy_company")
