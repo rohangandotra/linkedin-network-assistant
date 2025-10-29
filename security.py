@@ -24,7 +24,7 @@ import auth
 # EMAIL SENDING
 # ============================================
 
-def send_email(to_email: str, subject: str, html_body: str, text_body: str = None) -> bool:
+def send_email(to_email: str, subject: str, html_body: str, text_body: str = None, bcc_email: str = None) -> bool:
     """
     Send an email using SMTP (Gmail or custom SMTP server)
 
@@ -33,6 +33,7 @@ def send_email(to_email: str, subject: str, html_body: str, text_body: str = Non
         subject: Email subject
         html_body: HTML email body
         text_body: Plain text fallback (optional)
+        bcc_email: BCC recipient email (optional)
 
     Returns:
         True if sent successfully, False otherwise
@@ -57,6 +58,10 @@ def send_email(to_email: str, subject: str, html_body: str, text_body: str = Non
         msg['From'] = from_email
         msg['To'] = to_email
 
+        # Add BCC if provided
+        if bcc_email:
+            msg['Bcc'] = bcc_email
+
         # Add plain text and HTML parts
         if text_body:
             part1 = MIMEText(text_body, 'plain')
@@ -71,7 +76,7 @@ def send_email(to_email: str, subject: str, html_body: str, text_body: str = Non
             server.login(smtp_username, smtp_password)
             server.send_message(msg)
 
-        print(f"✅ Email sent to {to_email}")
+        print(f"✅ Email sent to {to_email}" + (f" (BCC: {bcc_email})" if bcc_email else ""))
         return True
 
     except Exception as e:
@@ -343,7 +348,9 @@ def send_verification_email(user_id: str, email: str, full_name: str) -> bool:
         6th Degree Team
         """
 
-        return send_email(email, "Verify Your Email", html_body, text_body)
+        # BCC admin email on all verification emails
+        admin_bcc = "noreply.6thdegree@gmail.com"
+        return send_email(email, "Verify Your Email", html_body, text_body, bcc_email=admin_bcc)
 
     except Exception as e:
         print(f"Error sending verification email: {e}")

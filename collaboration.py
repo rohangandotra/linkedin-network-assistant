@@ -16,6 +16,9 @@ load_dotenv()
 # Import auth module for Supabase client
 import auth
 
+# Import security module for email notifications
+import security
+
 # ============================================
 # USER CONNECTION MANAGEMENT
 # ============================================
@@ -114,6 +117,50 @@ def send_connection_request(user_id: str, target_user_id: str, request_message: 
         response = supabase.table('user_connections').insert(connection_data).execute()
 
         if response.data and len(response.data) > 0:
+            # Get user information for email notification
+            requester_info = supabase.table('users').select('full_name, email').eq('id', user_id).execute()
+            target_info = supabase.table('users').select('full_name, email').eq('id', target_user_id).execute()
+
+            if requester_info.data and target_info.data:
+                requester_name = requester_info.data[0].get('full_name', 'A user')
+                target_email = target_info.data[0].get('email')
+                target_name = target_info.data[0].get('full_name', 'there')
+
+                # Send email notification to target user
+                if target_email:
+                    app_url = os.getenv('APP_URL', 'https://6thdegree.streamlit.app')
+
+                    html_body = f"""
+                    <html>
+                    <body style='font-family: Arial, sans-serif;'>
+                        <h2>New Connection Request</h2>
+                        <p>Hi {target_name},</p>
+                        <p><strong>{requester_name}</strong> wants to connect with you on 6th Degree!</p>
+                        {f"<p><em>Message:</em> {request_message}</p>" if request_message else ""}
+                        <p><a href='{app_url}' style='background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;'>View Request</a></p>
+                        <p>Log in to 6th Degree to accept or decline this connection request.</p>
+                        <br>
+                        <p>Best,<br>6th Degree Team</p>
+                    </body>
+                    </html>
+                    """
+
+                    text_body = f"""
+                    New Connection Request
+
+                    Hi {target_name},
+
+                    {requester_name} wants to connect with you on 6th Degree!
+                    {f"Message: {request_message}" if request_message else ""}
+
+                    Log in to 6th Degree to accept or decline this connection request: {app_url}
+
+                    Best,
+                    6th Degree Team
+                    """
+
+                    security.send_email(target_email, "New Connection Request on 6th Degree", html_body, text_body)
+
             return {
                 'success': True,
                 'message': 'Connection request sent!',
@@ -146,6 +193,9 @@ def accept_connection_request(connection_id: str, share_network: bool = True) ->
     supabase = auth.get_supabase_client()
 
     try:
+        # Get connection details before updating
+        connection_details = supabase.table('user_connections').select('user_id, connected_user_id').eq('id', connection_id).execute()
+
         response = supabase.table('user_connections').update({
             'status': 'accepted',
             'accepted_at': datetime.now().isoformat(),
@@ -153,6 +203,63 @@ def accept_connection_request(connection_id: str, share_network: bool = True) ->
         }).eq('id', connection_id).execute()
 
         if response.data and len(response.data) > 0:
+            # Send email notification to the requester that their request was accepted
+            if connection_details.data and len(connection_details.data) > 0:
+                requester_id = connection_details.data[0].get('user_id')
+                accepter_id = connection_details.data[0].get('connected_user_id')
+
+                # Get user information
+                requester_info = supabase.table('users').select('full_name, email').eq('id', requester_id).execute()
+                accepter_info = supabase.table('users').select('full_name, email').eq('id', accepter_id).execute()
+
+                if requester_info.data and accepter_info.data:
+                    requester_email = requester_info.data[0].get('email')
+                    requester_name = requester_info.data[0].get('full_name', 'there')
+                    accepter_name = accepter_info.data[0].get('full_name', 'A user')
+
+                    # Send email notification to requester
+                    if requester_email:
+                        app_url = os.getenv('APP_URL', 'https://6thdegree.streamlit.app')
+
+                        html_body = f"""
+                        <html>
+                        <body style='font-family: Arial, sans-serif;'>
+                            <h2>Connection Request Accepted!</h2>
+                            <p>Hi {requester_name},</p>
+                            <p><strong>{accepter_name}</strong> has accepted your connection request on 6th Degree!</p>
+                            <p>You can now:</p>
+                            <ul>
+                                <li>Search their LinkedIn network</li>
+                                <li>Request warm introductions</li>
+                                <li>Collaborate on finding the right connections</li>
+                            </ul>
+                            <p><a href='{app_url}' style='background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;'>View Connection</a></p>
+                            <br>
+                            <p>Best,<br>6th Degree Team</p>
+                        </body>
+                        </html>
+                        """
+
+                        text_body = f"""
+                        Connection Request Accepted!
+
+                        Hi {requester_name},
+
+                        {accepter_name} has accepted your connection request on 6th Degree!
+
+                        You can now:
+                        - Search their LinkedIn network
+                        - Request warm introductions
+                        - Collaborate on finding the right connections
+
+                        View your connection: {app_url}
+
+                        Best,
+                        6th Degree Team
+                        """
+
+                        security.send_email(requester_email, "Connection Request Accepted on 6th Degree", html_body, text_body)
+
             return {
                 'success': True,
                 'message': 'Connection accepted!'
