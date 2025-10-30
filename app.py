@@ -960,142 +960,14 @@ st.markdown("""
 # ============================================
 # PROFESSIONAL HEADER BAR (SaaS Style)
 # ============================================
+# NOTE: Header rendering moved inside main() function to prevent duplication
 
-# Header container with shadow and border
-st.markdown("""
-<style>
-.header-container {
-    background: white;
-    padding: 1rem 2rem;
-    border-bottom: 1px solid #e5e7eb;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    margin: -1rem -1rem 0 -1rem;
-}
+# Feedback Modal definition (at module level for access from header button)
+def render_feedback_modal():
+    """Render feedback modal when requested"""
+    if not st.session_state.get('show_feedback_modal'):
+        return
 
-.header-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #1a1a1a;
-    margin: 0;
-    line-height: 2.5rem;
-    white-space: nowrap;
-    display: inline-block;
-    vertical-align: middle;
-}
-
-.header-button {
-    background: transparent;
-    border: none;
-    color: #6b7280;
-    font-size: 0.9375rem;
-    font-weight: 500;
-    padding: 0.5rem 1rem;
-    cursor: pointer;
-    transition: color 0.15s;
-    line-height: 2.5rem;
-}
-
-.header-button:hover {
-    color: #2563eb;
-}
-</style>
-""", unsafe_allow_html=True)
-
-if st.session_state.get('authenticated'):
-    # Authenticated user navigation
-    user_id = st.session_state.get('user', {}).get('id', 'anonymous')
-    user_name = st.session_state['user']['full_name']
-    user_email = st.session_state['user']['email']
-
-    # Get pending requests count (for later use)
-    pending_requests_count = 0
-    if user_id != 'anonymous':
-        pending_requests_list = collaboration.get_pending_connection_requests(user_id)
-        pending_requests_count = len(pending_requests_list)
-
-    # Get contact count
-    contact_count = auth.get_contact_count(user_id)
-
-    # Clean header with logo left, buttons right
-    header_cols = st.columns([3, 5, 1, 1, 1])
-
-    with header_cols[0]:
-        st.markdown('<h1 class="header-title">6th Degree AI</h1>', unsafe_allow_html=True)
-
-    # header_cols[1] is spacer
-
-    with header_cols[2]:
-        st.markdown('<div class="text-link-button">', unsafe_allow_html=True)
-        if st.button("Feedback", key="top_nav_feedback"):
-            st.session_state['show_feedback_modal'] = True
-            st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    with header_cols[3]:
-        st.markdown('<div class="text-link-button">', unsafe_allow_html=True)
-        user_label = user_name.split()[0] + " ▾"
-        if st.button(user_label, key="top_nav_user_menu"):
-            st.session_state['show_user_menu'] = not st.session_state.get('show_user_menu', False)
-            st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    with header_cols[4]:
-        st.markdown('<div class="text-link-button">', unsafe_allow_html=True)
-        if st.button("Logout", key="top_nav_logout"):
-            st.session_state['authenticated'] = False
-            st.session_state['user'] = None
-            if 'contacts_df' in st.session_state:
-                del st.session_state['contacts_df']
-            st.success("Logged out successfully!")
-            st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    # User dropdown menu (appears below header)
-    if st.session_state.get('show_user_menu'):
-        st.markdown(f"""
-<div style='background: white; border: 1px solid #e5e7eb; border-radius: 8px;
-     padding: 1rem; margin: 0.5rem 0 1rem auto; max-width: 300px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);'>
-    <p style='font-size: 0.875rem; color: var(--text-tertiary); margin: 0 0 0.5rem 0;'>Signed in as</p>
-    <p style='font-size: 1rem; font-weight: 600; color: var(--text-primary); margin: 0;'>{user_name}</p>
-    <p style='font-size: 0.875rem; color: var(--text-secondary); margin: 0.25rem 0 0 0;'>{user_email}</p>
-    {f"<p style='font-size: 0.875rem; color: var(--text-secondary); margin: 0.75rem 0 0 0;'>{contact_count:,} contacts saved</p>" if contact_count > 0 else ""}
-</div>
-""", unsafe_allow_html=True)
-
-        # My Profile button
-        if st.button("My Profile", key="nav_profile", use_container_width=True, type="secondary"):
-            st.session_state['show_profile'] = True
-            st.session_state['show_connections'] = False
-            st.session_state['show_user_menu'] = False
-            st.rerun()
-
-else:
-    # Anonymous user navigation
-    header_cols = st.columns([3, 6, 1, 1])
-
-    with header_cols[0]:
-        st.markdown('<h1 class="header-title">6th Degree AI</h1>', unsafe_allow_html=True)
-
-    # header_cols[1] is spacer
-
-    with header_cols[2]:
-        if st.button("Login", key="nav_login", type="secondary"):
-            st.session_state['show_register'] = False
-            st.session_state['show_forgot_password'] = False
-            st.session_state['show_login'] = True
-            st.rerun()
-
-    with header_cols[3]:
-        if st.button("Sign Up", key="nav_signup", type="primary"):
-            st.session_state['show_register'] = True
-            st.session_state['show_login'] = False
-            st.rerun()
-
-# Clean spacing after header
-st.markdown('<div style="height: 2rem;"></div>', unsafe_allow_html=True)
-
-# Feedback Modal (shown when feedback button clicked)
-if st.session_state.get('show_feedback_modal'):
     st.markdown("### 📋 Report an Issue or Give Feedback")
     st.markdown("<p style='color: var(--text-secondary); margin-bottom: 1rem;'>Help us improve! Let us know if something isn't working or if you have ideas.</p>", unsafe_allow_html=True)
 
@@ -2737,6 +2609,145 @@ def main():
         st.session_state['show_connections'] = False
     if 'show_profile' not in st.session_state:
         st.session_state['show_profile'] = False
+
+    # ============================================
+    # RENDER PROFESSIONAL HEADER BAR
+    # ============================================
+    # Header CSS
+    st.markdown("""
+<style>
+.header-container {
+    background: white;
+    padding: 1rem 2rem;
+    border-bottom: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    margin: -1rem -1rem 0 -1rem;
+}
+
+.header-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0;
+    line-height: 2.5rem;
+    white-space: nowrap;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.header-button {
+    background: transparent;
+    border: none;
+    color: #6b7280;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: color 0.15s;
+    line-height: 2.5rem;
+}
+
+.header-button:hover {
+    color: #2563eb;
+}
+</style>
+""", unsafe_allow_html=True)
+
+    if st.session_state.get('authenticated'):
+        # Authenticated user navigation
+        user_id = st.session_state.get('user', {}).get('id', 'anonymous')
+        user_name = st.session_state['user']['full_name']
+        user_email = st.session_state['user']['email']
+
+        # Get pending requests count (for later use)
+        pending_requests_count = 0
+        if user_id != 'anonymous':
+            pending_requests_list = collaboration.get_pending_connection_requests(user_id)
+            pending_requests_count = len(pending_requests_list)
+
+        # Get contact count
+        contact_count = auth.get_contact_count(user_id)
+
+        # Clean header with logo left, buttons right
+        header_cols = st.columns([3, 5, 1, 1, 1])
+
+        with header_cols[0]:
+            st.markdown('<h1 class="header-title">6th Degree AI</h1>', unsafe_allow_html=True)
+
+        # header_cols[1] is spacer
+
+        with header_cols[2]:
+            st.markdown('<div class="text-link-button">', unsafe_allow_html=True)
+            if st.button("Feedback", key="top_nav_feedback"):
+                st.session_state['show_feedback_modal'] = True
+                st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
+
+        with header_cols[3]:
+            st.markdown('<div class="text-link-button">', unsafe_allow_html=True)
+            user_label = user_name.split()[0] + " ▾"
+            if st.button(user_label, key="top_nav_user_menu"):
+                st.session_state['show_user_menu'] = not st.session_state.get('show_user_menu', False)
+                st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
+
+        with header_cols[4]:
+            st.markdown('<div class="text-link-button">', unsafe_allow_html=True)
+            if st.button("Logout", key="top_nav_logout"):
+                st.session_state['authenticated'] = False
+                st.session_state['user'] = None
+                if 'contacts_df' in st.session_state:
+                    del st.session_state['contacts_df']
+                st.success("Logged out successfully!")
+                st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
+
+        # User dropdown menu (appears below header)
+        if st.session_state.get('show_user_menu'):
+            st.markdown(f"""
+<div style='background: white; border: 1px solid #e5e7eb; border-radius: 8px;
+     padding: 1rem; margin: 0.5rem 0 1rem auto; max-width: 300px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);'>
+    <p style='font-size: 0.875rem; color: var(--text-tertiary); margin: 0 0 0.5rem 0;'>Signed in as</p>
+    <p style='font-size: 1rem; font-weight: 600; color: var(--text-primary); margin: 0;'>{user_name}</p>
+    <p style='font-size: 0.875rem; color: var(--text-secondary); margin: 0.25rem 0 0 0;'>{user_email}</p>
+    {f"<p style='font-size: 0.875rem; color: var(--text-secondary); margin: 0.75rem 0 0 0;'>{contact_count:,} contacts saved</p>" if contact_count > 0 else ""}
+</div>
+""", unsafe_allow_html=True)
+
+            # My Profile button
+            if st.button("My Profile", key="nav_profile", use_container_width=True, type="secondary"):
+                st.session_state['show_profile'] = True
+                st.session_state['show_connections'] = False
+                st.session_state['show_user_menu'] = False
+                st.rerun()
+
+    else:
+        # Anonymous user navigation
+        header_cols = st.columns([3, 6, 1, 1])
+
+        with header_cols[0]:
+            st.markdown('<h1 class="header-title">6th Degree AI</h1>', unsafe_allow_html=True)
+
+        # header_cols[1] is spacer
+
+        with header_cols[2]:
+            if st.button("Login", key="nav_login", type="secondary"):
+                st.session_state['show_register'] = False
+                st.session_state['show_forgot_password'] = False
+                st.session_state['show_login'] = True
+                st.rerun()
+
+        with header_cols[3]:
+            if st.button("Sign Up", key="nav_signup", type="primary"):
+                st.session_state['show_register'] = True
+                st.session_state['show_login'] = False
+                st.rerun()
+
+    # Clean spacing after header
+    st.markdown('<div style="height: 2rem;"></div>', unsafe_allow_html=True)
+
+    # Render feedback modal if requested
+    render_feedback_modal()
 
     # Phase 3B: Migrate existing users to new search (one-time index build)
     if st.session_state.get('authenticated') and HAS_NEW_SEARCH:
