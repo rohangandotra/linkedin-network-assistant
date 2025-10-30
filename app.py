@@ -920,6 +920,11 @@ st.markdown("""
     padding: 8px 12px !important;
     min-width: auto !important;
     transition: color 0.15s ease !important;
+    line-height: 2.5rem !important;
+    height: 2.5rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    vertical-align: middle !important;
 }
 
 .text-link-button > .stButton > button:hover,
@@ -973,6 +978,9 @@ st.markdown("""
     color: #1a1a1a;
     margin: 0;
     line-height: 2.5rem;
+    white-space: nowrap;
+    display: inline-block;
+    vertical-align: middle;
 }
 
 .header-button {
@@ -1009,7 +1017,7 @@ if st.session_state.get('authenticated'):
     contact_count = auth.get_contact_count(user_id)
 
     # Clean header with logo left, buttons right
-    header_cols = st.columns([2, 6, 1, 1, 1])
+    header_cols = st.columns([3, 5, 1, 1, 1])
 
     with header_cols[0]:
         st.markdown('<h1 class="header-title">6th Degree AI</h1>', unsafe_allow_html=True)
@@ -1063,7 +1071,7 @@ if st.session_state.get('authenticated'):
 
 else:
     # Anonymous user navigation
-    header_cols = st.columns([2, 7, 1, 1])
+    header_cols = st.columns([3, 6, 1, 1])
 
     with header_cols[0]:
         st.markdown('<h1 class="header-title">6th Degree AI</h1>', unsafe_allow_html=True)
