@@ -87,7 +87,6 @@ def initialize_search_for_user(user_id: str, contacts_df: pd.DataFrame, force_re
                         st.session_state['contacts_version'] = current_version + 1
 
                     print(f"✅ L2 Cache HIT: Loaded indexes from disk for user {user_id}")
-                    st.success("Search indexes loaded from cache! Searches will be fast.")
                     return True
                 else:
                     print(f"⚠️  L2 Cache MISS: Failed to load from disk, rebuilding...")
@@ -104,7 +103,6 @@ def initialize_search_for_user(user_id: str, contacts_df: pd.DataFrame, force_re
             st.session_state['contacts_version'] = current_version + 1
 
             print(f"✅ L3 Cache: Built new indexes for user {user_id}")
-            st.success("Search indexes built! Searches will be 25x faster.")
             return True
 
         except Exception as e:
@@ -339,14 +337,8 @@ def migrate_to_new_search():
     if contacts_df is None or contacts_df.empty:
         return
 
-    # Build indexes
-    st.info("Building search indexes for faster searches...")
-    success = initialize_search_for_user(user_id, contacts_df)
-
-    if success:
-        st.success("Search indexes built! Searches will now be faster.")
-    else:
-        st.warning("Could not build search indexes. Search may be slower.")
+    # Build indexes (initialize_search_for_user has its own spinner feedback)
+    initialize_search_for_user(user_id, contacts_df)
 
 
 # Export
