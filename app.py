@@ -904,13 +904,18 @@ st.markdown("""
 # CSS for text-link style buttons (no boxes) and inactive nav buttons
 st.markdown("""
 <style>
-/* Top bar buttons - absolutely no borders or backgrounds - HIGH SPECIFICITY */
+/* Top bar buttons - absolutely no borders or backgrounds - HIGHEST SPECIFICITY */
 .text-link-button > .stButton {
     margin: 0 !important;
 }
 
-.text-link-button > .stButton > button,
-.text-link-button .stButton > button {
+/* Target all button types explicitly with attribute selectors for maximum specificity */
+.text-link-button > .stButton > button[kind="primary"],
+.text-link-button > .stButton > button[kind="secondary"],
+.text-link-button > .stButton > button:not([kind]),
+.text-link-button .stButton > button[kind="primary"],
+.text-link-button .stButton > button[kind="secondary"],
+.text-link-button .stButton > button:not([kind]) {
     background: transparent !important;
     border: 0px solid transparent !important;
     box-shadow: none !important;
@@ -927,18 +932,30 @@ st.markdown("""
     vertical-align: middle !important;
 }
 
-.text-link-button > .stButton > button:hover,
-.text-link-button .stButton > button:hover {
+.text-link-button > .stButton > button[kind="primary"]:hover,
+.text-link-button > .stButton > button[kind="secondary"]:hover,
+.text-link-button > .stButton > button:not([kind]):hover,
+.text-link-button .stButton > button[kind="primary"]:hover,
+.text-link-button .stButton > button[kind="secondary"]:hover,
+.text-link-button .stButton > button:not([kind]):hover {
     background: transparent !important;
     border: 0px solid transparent !important;
     box-shadow: none !important;
     color: var(--primary) !important;
 }
 
-.text-link-button > .stButton > button:focus,
-.text-link-button > .stButton > button:active,
-.text-link-button .stButton > button:focus,
-.text-link-button .stButton > button:active {
+.text-link-button > .stButton > button[kind="primary"]:focus,
+.text-link-button > .stButton > button[kind="primary"]:active,
+.text-link-button > .stButton > button[kind="secondary"]:focus,
+.text-link-button > .stButton > button[kind="secondary"]:active,
+.text-link-button > .stButton > button:not([kind]):focus,
+.text-link-button > .stButton > button:not([kind]):active,
+.text-link-button .stButton > button[kind="primary"]:focus,
+.text-link-button .stButton > button[kind="primary"]:active,
+.text-link-button .stButton > button[kind="secondary"]:focus,
+.text-link-button .stButton > button[kind="secondary"]:active,
+.text-link-button .stButton > button:not([kind]):focus,
+.text-link-button .stButton > button:not([kind]):active {
     background: transparent !important;
     border: 0px solid transparent !important;
     box-shadow: none !important;
@@ -2917,6 +2934,13 @@ div[data-testid="column"] > div > .stButton > button[kind="secondary"] {
     justify-content: center !important;
     line-height: 1 !important;
 }
+
+/* Lower nav container - force vertical alignment for all columns */
+.lower-nav-container [data-testid="column"] {
+    display: flex !important;
+    align-items: center !important;
+    min-height: 40px !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -2924,6 +2948,7 @@ div[data-testid="column"] > div > .stButton > button[kind="secondary"] {
         on_connections_page = st.session_state.get('show_connections', False)
 
         # Lower navigation buttons - single row with proper alignment
+        st.markdown('<div class="lower-nav-container">', unsafe_allow_html=True)
         lower_nav_cols = st.columns([1, 0.1, 1.2, 8])
 
         with lower_nav_cols[0]:
@@ -2959,6 +2984,9 @@ div[data-testid="column"] > div > .stButton > button[kind="secondary"] {
                     st.session_state['show_connections'] = True
                     st.rerun()
                 st.markdown('</div>', unsafe_allow_html=True)
+
+        # Close lower nav container
+        st.markdown('</div>', unsafe_allow_html=True)
 
         # Add spacing below nav
         st.markdown('<div style="height: 24px;"></div>', unsafe_allow_html=True)
