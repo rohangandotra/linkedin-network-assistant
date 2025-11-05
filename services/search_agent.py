@@ -20,13 +20,13 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import threading
 
-# Import the entity resolver for smart search
+# Import the sophisticated search system components
 try:
-    from services.entity_resolver import get_entity_resolver
-    HAS_ENTITY_RESOLVER = True
+    from services.query_parser import parse_query, DictionaryLoader
+    HAS_SMART_SEARCH = True
 except ImportError:
-    HAS_ENTITY_RESOLVER = False
-    print("Warning: Entity resolver not available, using fallback search")
+    HAS_SMART_SEARCH = False
+    print("Warning: Query parser not available, using fallback search")
 
 
 class SearchTools:
@@ -47,16 +47,19 @@ class SearchTools:
         self.contacts_df = contacts_df
         self._init_tool_cache()
 
-        # Load entity resolver for smart query expansion
-        if HAS_ENTITY_RESOLVER:
+        # Load company dictionary as DataFrame for lookups
+        if HAS_SMART_SEARCH:
             try:
-                self.entity_resolver = get_entity_resolver()
-                print(f"Entity resolver loaded: {self.entity_resolver.get_stats()['tech_companies']} tech companies, {self.entity_resolver.get_stats()['vc_firms']} VC firms")
+                import pandas as pd
+                import os
+                data_dir = os.path.join(os.path.dirname(__file__), '..', 'data')
+                company_csv = os.path.join(data_dir, 'company_aliases.csv')
+                self.company_df = pd.read_csv(company_csv)
             except Exception as e:
-                print(f"Error loading entity resolver: {e}")
-                self.entity_resolver = None
+                print(f"Error loading company dictionary: {e}")
+                self.company_df = None
         else:
-            self.entity_resolver = None
+            self.company_df = None
 
     def _init_tool_cache(self):
         """Initialize tool result cache in session state"""
@@ -105,9 +108,8 @@ class SearchTools:
 
     def fast_search(self, keywords: str, max_results: int = 20) -> List[Dict]:
         """
-        Smart keyword search with query expansion
-        - Expands vague terms (tech, VC, AI) to specific companies
-        - Falls back to substring matching if no expansion
+        Fast keyword search across name, company, position
+        Uses case-insensitive substring matching
 
         Args:
             keywords: Search keywords
@@ -119,49 +121,16 @@ class SearchTools:
         if not keywords or keywords.strip() == '':
             return []
 
-        df = self.contacts_df.copy()
         keywords_lower = keywords.lower()
+        df = self.contacts_df.copy()
 
-        # Try smart query expansion first
-        use_expansion = False
-        expanded_companies = []
-
-        if self.entity_resolver is not None:
-            try:
-                resolution = self.entity_resolver.resolve_query(keywords)
-                if resolution['expansion_used'] and resolution['expanded_companies']:
-                    expanded_companies = resolution['expanded_companies']
-                    use_expansion = True
-                    print(f"Query expansion: '{keywords}' → {len(expanded_companies)} companies")
-            except Exception as e:
-                print(f"Entity resolution error: {e}, falling back to substring search")
-
-        # Build search mask
-        if use_expansion and expanded_companies:
-            # Smart search: Match against expanded company list
-            company_masks = []
-            for company_name in expanded_companies:
-                company_mask = df['Company'].fillna('').str.lower().str.contains(
-                    company_name, regex=False, na=False
-                )
-                company_masks.append(company_mask)
-
-            # Combine all company masks with OR
-            if company_masks:
-                mask = company_masks[0]
-                for m in company_masks[1:]:
-                    mask = mask | m
-            else:
-                # No valid masks, fall back to substring
-                mask = df['Company'].fillna('').str.lower().str.contains(keywords_lower, regex=False, na=False)
-        else:
-            # Fallback: Simple substring search across all fields
-            mask = (
-                df['First Name'].fillna('').str.lower().str.contains(keywords_lower, regex=False, na=False) |
-                df['Last Name'].fillna('').str.lower().str.contains(keywords_lower, regex=False, na=False) |
-                df['Company'].fillna('').str.lower().str.contains(keywords_lower, regex=False, na=False) |
-                df['Position'].fillna('').str.lower().str.contains(keywords_lower, regex=False, na=False)
-            )
+        # Simple substring search across all fields
+        mask = (
+            df['First Name'].fillna('').str.lower().str.contains(keywords_lower, regex=False, na=False) |
+            df['Last Name'].fillna('').str.lower().str.contains(keywords_lower, regex=False, na=False) |
+            df['Company'].fillna('').str.lower().str.contains(keywords_lower, regex=False, na=False) |
+            df['Position'].fillna('').str.lower().str.contains(keywords_lower, regex=False, na=False)
+        )
 
         results = df[mask].head(max_results)
 
@@ -798,7 +767,7 @@ def clear_all_caches():
 
 
 # Version marker to force cache clear on code updates
-SEARCH_VERSION = "v3.0"  # v3.0: Added entity resolver for smart query expansion (tech → companies)
+SEARCH_VERSION = "v2.0"  # Increment this when search logic changes
 
 def check_and_clear_old_cache():
     """Clear cache if code version has changed"""
