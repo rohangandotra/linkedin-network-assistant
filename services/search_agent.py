@@ -536,8 +536,8 @@ Important:
                 # Agent has finished reasoning and provided final answer
                 break
 
-        # Extract final answer
-        final_response = messages[-1].content if messages[-1].get('role') == 'assistant' else assistant_message.content
+        # Extract final answer (always use the last assistant_message we received)
+        final_response = assistant_message.content if assistant_message.content else ""
 
         # Parse results from final response (if agent returned contacts)
         results = self._extract_contacts_from_response(messages)
@@ -561,12 +561,12 @@ Important:
 
         return search_result
 
-    def _extract_contacts_from_response(self, messages: List[Dict]) -> List[Dict]:
+    def _extract_contacts_from_response(self, messages: List) -> List[Dict]:
         """
         Extract contact list from tool call results in message history
 
         Args:
-            messages: Conversation messages
+            messages: Conversation messages (mix of dicts and ChatCompletionMessage objects)
 
         Returns:
             List of contact dicts
@@ -575,9 +575,13 @@ Important:
 
         # Look for the last successful tool call that returned contacts
         for msg in reversed(messages):
-            if msg.get('role') == 'tool':
+            # Handle both dict (tool messages) and ChatCompletionMessage objects
+            msg_role = msg.get('role') if isinstance(msg, dict) else getattr(msg, 'role', None)
+
+            if msg_role == 'tool':
                 try:
-                    tool_result = json.loads(msg['content'])
+                    msg_content = msg.get('content') if isinstance(msg, dict) else getattr(msg, 'content', '')
+                    tool_result = json.loads(msg_content)
                     if isinstance(tool_result, list) and len(tool_result) > 0:
                         if 'name' in tool_result[0]:  # Looks like contacts
                             contacts = tool_result
