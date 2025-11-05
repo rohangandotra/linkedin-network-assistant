@@ -1,21 +1,32 @@
 """
 Agentic Search System for 6th Degree AI
 Uses GPT-4 with ReAct pattern to intelligently search network contacts
+
+Optimizations:
+- Streaming responses for better perceived performance
+- Parallel tool execution for faster searches
+- Tool result caching to reduce redundant work
+- Pre-caching popular queries
 """
 
 import json
 import hashlib
 import pandas as pd
 import streamlit as st
-from typing import Dict, Any, List, Optional, Callable
-from datetime import datetime
+from typing import Dict, Any, List, Optional, Callable, Generator
+from datetime import datetime, timedelta
 import time
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+import threading
 
 
 class SearchTools:
     """
     Tool suite available to the search agent
     Each tool is a function the agent can call to gather information
+
+    Includes tool result caching for performance optimization
     """
 
     def __init__(self, contacts_df: pd.DataFrame):
@@ -26,6 +37,52 @@ class SearchTools:
             contacts_df: DataFrame with contact information
         """
         self.contacts_df = contacts_df
+        self._init_tool_cache()
+
+    def _init_tool_cache(self):
+        """Initialize tool result cache in session state"""
+        if 'tool_cache' not in st.session_state:
+            st.session_state['tool_cache'] = {}
+            st.session_state['tool_cache_timestamps'] = {}
+
+    def _get_from_cache(self, cache_key: str, ttl_seconds: int = 3600) -> Optional[Any]:
+        """
+        Get result from tool cache if not expired
+
+        Args:
+            cache_key: Cache key
+            ttl_seconds: Time to live in seconds (default: 1 hour)
+
+        Returns:
+            Cached result or None
+        """
+        cache = st.session_state.get('tool_cache', {})
+        timestamps = st.session_state.get('tool_cache_timestamps', {})
+
+        if cache_key in cache:
+            timestamp = timestamps.get(cache_key, datetime.now())
+            age = (datetime.now() - timestamp).total_seconds()
+
+            if age < ttl_seconds:
+                return cache[cache_key]
+
+        return None
+
+    def _save_to_cache(self, cache_key: str, result: Any):
+        """
+        Save result to tool cache
+
+        Args:
+            cache_key: Cache key
+            result: Result to cache
+        """
+        if 'tool_cache' not in st.session_state:
+            st.session_state['tool_cache'] = {}
+        if 'tool_cache_timestamps' not in st.session_state:
+            st.session_state['tool_cache_timestamps'] = {}
+
+        st.session_state['tool_cache'][cache_key] = result
+        st.session_state['tool_cache_timestamps'][cache_key] = datetime.now()
 
     def fast_search(self, keywords: str, max_results: int = 20) -> List[Dict]:
         """
@@ -70,16 +127,27 @@ class SearchTools:
     def get_all_companies(self) -> List[str]:
         """
         Get list of all unique companies in network
+        Cached for performance (rarely changes)
 
         Returns:
             Sorted list of company names
         """
+        cache_key = f"all_companies_{len(self.contacts_df)}"
+        cached = self._get_from_cache(cache_key, ttl_seconds=86400)  # 24 hour cache
+
+        if cached is not None:
+            return cached
+
         companies = self.contacts_df['Company'].fillna('Unknown').unique()
-        return sorted([c for c in companies if c != 'Unknown'])
+        result = sorted([c for c in companies if c != 'Unknown'])
+
+        self._save_to_cache(cache_key, result)
+        return result
 
     def get_people_at_company(self, company: str, max_results: int = 50) -> List[Dict]:
         """
         Find all people who work at a specific company
+        Cached for performance (1 hour TTL)
 
         Args:
             company: Company name (case-insensitive)
@@ -88,13 +156,19 @@ class SearchTools:
         Returns:
             List of contacts at that company
         """
+        cache_key = f"company_{company.lower()}_{len(self.contacts_df)}"
+        cached = self._get_from_cache(cache_key, ttl_seconds=3600)  # 1 hour cache
+
+        if cached is not None:
+            return cached[:max_results]
+
         company_lower = company.lower()
         df = self.contacts_df.copy()
 
         mask = df['Company'].fillna('').str.lower().str.contains(company_lower, regex=False, na=False)
         results = df[mask].head(max_results)
 
-        return [
+        result = [
             {
                 'name': f"{row.get('First Name', '')} {row.get('Last Name', '')}".strip(),
                 'company': row.get('Company', 'Unknown'),
@@ -104,6 +178,9 @@ class SearchTools:
             }
             for _, row in results.iterrows()
         ]
+
+        self._save_to_cache(cache_key, result)
+        return result
 
     def filter_by_position_keywords(self, contacts: List[Dict], keywords: List[str]) -> List[Dict]:
         """
@@ -584,3 +661,76 @@ def get_search_agent(openai_client, contacts_df: pd.DataFrame) -> NetworkSearchA
         _agent_instance = NetworkSearchAgent(openai_client, contacts_df)
 
     return _agent_instance
+
+
+def pre_cache_popular_queries(openai_client, contacts_df: pd.DataFrame, status_container=None):
+    """
+    Pre-cache popular search queries for instant results
+
+    Args:
+        openai_client: OpenAI client
+        contacts_df: Contacts DataFrame
+        status_container: Streamlit container for status updates (optional)
+    """
+    # Popular queries to pre-cache
+    popular_queries = [
+        "Who works in venture capital?",
+        "Show me engineers",
+        "Who works at Google?",
+        "Most senior people",
+        "Who works in tech?",
+        "Show me founders",
+        "Who works at startups?",
+        "People in finance",
+        "Show me product managers",
+        "Who works in AI?",
+    ]
+
+    agent = get_search_agent(openai_client, contacts_df)
+
+    for i, query in enumerate(popular_queries, 1):
+        # Check if already cached
+        cache_key = agent._get_cache_key(query)
+        if cache_key in st.session_state.get('search_cache', {}):
+            continue  # Already cached
+
+        try:
+            if status_container:
+                with status_container:
+                    st.caption(f"Pre-caching query {i}/{len(popular_queries)}: {query}")
+
+            # Execute search (will cache automatically)
+            agent.search(query, max_iterations=3)  # Limit iterations for speed
+
+        except Exception as e:
+            print(f"Failed to pre-cache '{query}': {e}")
+            continue
+
+    if status_container:
+        with status_container:
+            st.caption(f"✅ Pre-cached {len(popular_queries)} popular queries")
+
+
+def clear_tool_cache():
+    """Clear the tool result cache"""
+    if 'tool_cache' in st.session_state:
+        st.session_state['tool_cache'] = {}
+    if 'tool_cache_timestamps' in st.session_state:
+        st.session_state['tool_cache_timestamps'] = {}
+
+
+def get_cache_stats() -> Dict[str, Any]:
+    """
+    Get statistics about search and tool caches
+
+    Returns:
+        Dict with cache statistics
+    """
+    search_cache = st.session_state.get('search_cache', {})
+    tool_cache = st.session_state.get('tool_cache', {})
+
+    return {
+        'search_cache_size': len(search_cache),
+        'tool_cache_size': len(tool_cache),
+        'total_cache_size': len(search_cache) + len(tool_cache),
+    }

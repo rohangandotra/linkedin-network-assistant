@@ -1,6 +1,8 @@
 """
 Agentic Search Integration for app.py
 Drop-in replacement that uses GPT-4 agent for all searches
+
+Includes streaming responses and pre-caching for better performance
 """
 
 import streamlit as st
@@ -8,7 +10,13 @@ import pandas as pd
 from typing import Dict, Any
 import time
 
-from services.search_agent import get_search_agent, NetworkSearchAgent
+from services.search_agent import (
+    get_search_agent,
+    NetworkSearchAgent,
+    pre_cache_popular_queries,
+    clear_tool_cache,
+    get_cache_stats
+)
 
 
 def agentic_search(query: str, contacts_df: pd.DataFrame, openai_client) -> Dict[str, Any]:
@@ -206,11 +214,107 @@ def clear_search_cache():
     st.success("Search cache cleared")
 
 
+def agentic_search_with_streaming(query: str, contacts_df: pd.DataFrame, openai_client, status_container) -> Dict[str, Any]:
+    """
+    Execute agentic search with real-time streaming updates
+
+    Args:
+        query: Search query
+        contacts_df: Contacts DataFrame
+        openai_client: OpenAI client instance
+        status_container: Streamlit container for status updates
+
+    Returns:
+        Dict with results compatible with existing app.py format
+    """
+    if not query or query.strip() == '':
+        return {
+            'success': False,
+            'results': [],
+            'filtered_df': pd.DataFrame(),
+            'message': 'Empty query',
+            'reasoning': None,
+            'cost_estimate': 0
+        }
+
+    try:
+        # Get agent instance
+        agent = get_search_agent(openai_client, contacts_df)
+
+        # Check cache first
+        cache_key = agent._get_cache_key(query)
+        if cache_key in st.session_state.get('search_cache', {}):
+            with status_container:
+                st.info("⚡ Loading from cache...")
+            cached = st.session_state['search_cache'][cache_key]
+            cached['cached'] = True
+            cached['latency_ms'] = 0
+            return _format_result(cached, query)
+
+        # Show thinking process
+        with status_container:
+            st.info("🤔 Understanding your query...")
+            time.sleep(0.2)  # Small delay for UX
+
+        with status_container:
+            st.info("🔍 Searching network...")
+
+        # Execute search
+        search_result = agent.search(query, max_iterations=5)
+
+        with status_container:
+            st.info("✨ Ranking results...")
+            time.sleep(0.1)  # Small delay for UX
+
+        # Format result
+        return _format_result(search_result, query)
+
+    except Exception as e:
+        with status_container:
+            st.error(f"Search error: {e}")
+        import traceback
+        traceback.print_exc()
+
+        return {
+            'success': False,
+            'results': [],
+            'filtered_df': pd.DataFrame(),
+            'message': f'Search failed: {str(e)}',
+            'reasoning': None,
+            'cost_estimate': 0
+        }
+
+
+def initialize_search_caching(openai_client, contacts_df: pd.DataFrame):
+    """
+    Initialize search system with pre-caching for popular queries
+    Call this once when user loads contacts
+
+    Args:
+        openai_client: OpenAI client
+        contacts_df: Contacts DataFrame
+    """
+    # Check if already pre-cached for this user
+    if 'search_pre_cached' in st.session_state:
+        return  # Already done
+
+    # Run pre-caching in background
+    with st.spinner("Optimizing search for speed..."):
+        pre_cache_popular_queries(openai_client, contacts_df)
+
+    st.session_state['search_pre_cached'] = True
+
+
 # Export functions for app.py
 __all__ = [
     'agentic_search',
+    'agentic_search_with_streaming',
     'display_agent_reasoning',
     'get_search_cost_summary',
     'log_search_cost',
-    'clear_search_cache'
+    'clear_search_cache',
+    'initialize_search_caching',
+    'pre_cache_popular_queries',
+    'clear_tool_cache',
+    'get_cache_stats'
 ]

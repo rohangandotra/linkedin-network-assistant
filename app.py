@@ -87,9 +87,11 @@ except ImportError as e:
 try:
     from agentic_search_integration import (
         agentic_search,
+        agentic_search_with_streaming,
         display_agent_reasoning,
         log_search_cost,
-        get_search_cost_summary
+        get_search_cost_summary,
+        initialize_search_caching
     )
     HAS_AGENTIC_SEARCH = True
     print("✅ Agentic search system loaded")
@@ -3354,6 +3356,14 @@ div[data-testid="column"] > div > .stButton > button[kind="secondary"] {
                             except Exception as e:
                                 st.warning(f"Could not build search indexes: {e}")
 
+                        # Phase 4: Pre-cache popular queries for instant search
+                        if HAS_AGENTIC_SEARCH:
+                            try:
+                                client = get_client()
+                                initialize_search_caching(client, df)
+                            except Exception as e:
+                                print(f"Could not pre-cache queries: {e}")
+
                         # Show preview
                         with st.expander("Preview contacts"):
                             display_cols = [col for col in ['full_name', 'position', 'company'] if col in df.columns]
@@ -3632,54 +3642,59 @@ div[data-testid="column"] > div > .stButton > button[kind="secondary"] {
                 if search_contacts_df is not None and not search_contacts_df.empty:
                     # Phase 4: Use agentic search for best quality results
                     if HAS_AGENTIC_SEARCH:
-                        with st.spinner("🤖 AI is searching your network..."):
-                            # Clear any previous analytics result
-                            if 'analytics_result' in st.session_state:
-                                del st.session_state['analytics_result']
+                        # Clear any previous analytics result
+                        if 'analytics_result' in st.session_state:
+                            del st.session_state['analytics_result']
 
-                            try:
-                                # Get OpenAI client
-                                client = get_client()
+                        try:
+                            # Get OpenAI client
+                            client = get_client()
 
-                                # Use agentic search
-                                search_result = agentic_search(query, search_contacts_df, client)
+                            # Create status container for streaming updates
+                            status_container = st.empty()
 
-                                if search_result.get('success'):
-                                    # Get results
-                                    filtered_df = search_result.get('filtered_df', pd.DataFrame())
-                                    st.session_state['filtered_df'] = filtered_df
+                            # Use agentic search with streaming
+                            search_result = agentic_search_with_streaming(query, search_contacts_df, client, status_container)
 
-                                    # Generate summary
-                                    if not filtered_df.empty:
-                                        tier_info = " • Agentic AI"
-                                        latency_info = f" • {search_result.get('latency_ms', 0):.0f}ms"
-                                        cached_info = " (cached)" if search_result.get('cached') else ""
+                            # Clear status container after search completes
+                            status_container.empty()
 
-                                        summary = f"""
-                                        <strong>Search Results for "{query}"</strong><br>
-                                        Found {len(filtered_df)} matches{tier_info}{latency_info}{cached_info}
-                                        """
-                                    else:
-                                        summary = f"No results found for '{query}'"
+                            if search_result.get('success'):
+                                # Get results
+                                filtered_df = search_result.get('filtered_df', pd.DataFrame())
+                                st.session_state['filtered_df'] = filtered_df
 
-                                    st.session_state['summary'] = summary
+                                # Generate summary
+                                if not filtered_df.empty:
+                                    tier_info = " • Agentic AI"
+                                    latency_info = f" • {search_result.get('latency_ms', 0):.0f}ms"
+                                    cached_info = " (cached)" if search_result.get('cached') else ""
 
-                                    # Display agent reasoning and performance
-                                    display_agent_reasoning(search_result)
-
-                                    # Log cost
-                                    log_search_cost(
-                                        query=query,
-                                        cost=search_result.get('cost_estimate', 0),
-                                        cached=search_result.get('cached', False)
-                                    )
+                                    summary = f"""
+                                    <strong>Search Results for "{query}"</strong><br>
+                                    Found {len(filtered_df)} matches{tier_info}{latency_info}{cached_info}
+                                    """
                                 else:
-                                    st.error(search_result.get('message', 'Search failed'))
+                                    summary = f"No results found for '{query}'"
 
-                            except Exception as e:
-                                st.error(f"Agentic search error: {e}")
-                                import traceback
-                                traceback.print_exc()
+                                st.session_state['summary'] = summary
+
+                                # Display agent reasoning and performance
+                                display_agent_reasoning(search_result)
+
+                                # Log cost
+                                log_search_cost(
+                                    query=query,
+                                    cost=search_result.get('cost_estimate', 0),
+                                    cached=search_result.get('cached', False)
+                                )
+                            else:
+                                st.error(search_result.get('message', 'Search failed'))
+
+                        except Exception as e:
+                            st.error(f"Agentic search error: {e}")
+                            import traceback
+                            traceback.print_exc()
 
                     # Fallback to Phase 3B hybrid search
                     elif HAS_NEW_SEARCH:
