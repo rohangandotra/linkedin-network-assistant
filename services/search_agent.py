@@ -635,8 +635,21 @@ Important:
         # Cost: ~$0.0006 per search
 
         # Very rough estimate (we don't have exact token counts)
-        estimated_input_tokens = sum(len(str(m.get('content', ''))) / 4 for m in messages if m.get('role') in ['system', 'user', 'tool'])
-        estimated_output_tokens = sum(len(str(m.get('content', ''))) / 4 for m in messages if m.get('role') == 'assistant')
+        # Handle both dict and ChatCompletionMessage objects
+        def get_content(msg):
+            if isinstance(msg, dict):
+                return str(msg.get('content', ''))
+            else:
+                return str(getattr(msg, 'content', ''))
+
+        def get_role(msg):
+            if isinstance(msg, dict):
+                return msg.get('role', '')
+            else:
+                return getattr(msg, 'role', '')
+
+        estimated_input_tokens = sum(len(get_content(m)) / 4 for m in messages if get_role(m) in ['system', 'user', 'tool'])
+        estimated_output_tokens = sum(len(get_content(m)) / 4 for m in messages if get_role(m) == 'assistant')
 
         input_cost = (estimated_input_tokens / 1_000_000) * 0.15
         output_cost = (estimated_output_tokens / 1_000_000) * 0.60
