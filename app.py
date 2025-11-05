@@ -1683,6 +1683,10 @@ def show_login_page():
                 st.session_state['unverified_user'] = None
                 st.rerun()
         else:
+            # === SECURITY: Generate CSRF token ===
+            csrf_token = generate_csrf_token('login')
+            st.session_state['login_csrf_token'] = csrf_token
+
             with st.form("login_form"):
                 st.markdown("### Sign In")
                 email = st.text_input("Email", placeholder="your@email.com")
@@ -1691,6 +1695,14 @@ def show_login_page():
                 submit = st.form_submit_button("Login", use_container_width=True, type="primary")
 
                 if submit:
+                    # === SECURITY: Validate CSRF token ===
+                    token_result = validate_csrf_token_detailed('login', st.session_state.get('login_csrf_token', ''))
+
+                    if not token_result['valid']:
+                        st.error(token_result['message'])
+                        log_csrf_failure('login', email if email else 'unknown', token_result['reason'])
+                        st.stop()
+
                     # Strip whitespace from inputs
                     email = email.strip() if email else ""
                     password = password.strip() if password else ""
@@ -1708,10 +1720,17 @@ def show_login_page():
 
                                 result = auth.login_user(email, password)
 
-                                # Log login attempt
-                                security.log_login_attempt(email, result['success'])
-
                                 if result['success']:
+                                    # === SECURITY: Log successful login ===
+                                    log_successful_login(
+                                        user_id=result['user']['id'],
+                                        email=email,
+                                        ip='unknown'  # Streamlit doesn't expose IP easily
+                                    )
+
+                                    # Old logging for backwards compatibility
+                                    security.log_login_attempt(email, True)
+
                                     # Check if email is verified
                                     supabase = auth.get_supabase_client()
                                     user_data = supabase.table('users').select('email_verified').eq('id', result['user']['id']).execute()
@@ -1733,6 +1752,16 @@ def show_login_page():
                                     st.success(f"Welcome back, {result['user']['full_name']}!")
                                     st.rerun()
                                 else:
+                                    # === SECURITY: Log failed login ===
+                                    log_failed_login(
+                                        email=email,
+                                        ip='unknown',  # Streamlit doesn't expose IP easily
+                                        reason=result['message']
+                                    )
+
+                                    # Old logging for backwards compatibility
+                                    security.log_login_attempt(email, False)
+
                                     st.error(result['message'])
                                     if rate_limit.get('remaining_attempts'):
                                         st.caption(f"Remaining attempts: {rate_limit['remaining_attempts']}")
@@ -1766,6 +1795,10 @@ def show_forgot_password_page():
     col1, col2, col3 = st.columns([1, 2, 1])
 
     with col2:
+        # === SECURITY: Generate CSRF token ===
+        csrf_token = generate_csrf_token('forgot_password')
+        st.session_state['forgot_password_csrf_token'] = csrf_token
+
         with st.form("forgot_password_form"):
             st.markdown("### Password Reset")
             email = st.text_input("Email Address", placeholder="your@email.com")
@@ -1773,6 +1806,14 @@ def show_forgot_password_page():
             submit = st.form_submit_button("Send Reset Link", use_container_width=True, type="primary")
 
             if submit:
+                # === SECURITY: Validate CSRF token ===
+                token_result = validate_csrf_token_detailed('forgot_password', st.session_state.get('forgot_password_csrf_token', ''))
+
+                if not token_result['valid']:
+                    st.error(token_result['message'])
+                    log_csrf_failure('forgot_password', email if email else 'unknown', token_result['reason'])
+                    st.stop()
+
                 email = email.strip() if email else ""
 
                 if not email:
@@ -1810,6 +1851,10 @@ def show_password_reset_form(token):
                 st.query_params.clear()
                 st.rerun()
         else:
+            # === SECURITY: Generate CSRF token ===
+            csrf_token = generate_csrf_token('reset_password')
+            st.session_state['reset_password_csrf_token'] = csrf_token
+
             with st.form("reset_password_form"):
                 st.markdown("### New Password")
 
@@ -1819,6 +1864,14 @@ def show_password_reset_form(token):
                 submit = st.form_submit_button("Reset Password", use_container_width=True, type="primary")
 
                 if submit:
+                    # === SECURITY: Validate CSRF token ===
+                    token_result = validate_csrf_token_detailed('reset_password', st.session_state.get('reset_password_csrf_token', ''))
+
+                    if not token_result['valid']:
+                        st.error(token_result['message'])
+                        log_csrf_failure('reset_password', 'password_reset_user', token_result['reason'])
+                        st.stop()
+
                     new_password = new_password.strip() if new_password else ""
                     confirm_password = confirm_password.strip() if confirm_password else ""
 
@@ -2005,6 +2058,10 @@ def show_profile_page():
 
         st.markdown("<h2 style='font-family: var(--font-serif); font-size: 2rem; font-weight: 600; margin-bottom: var(--space-6);'>Edit Profile</h2>", unsafe_allow_html=True)
 
+        # === SECURITY: Generate CSRF token ===
+        csrf_token = generate_csrf_token('edit_profile')
+        st.session_state['edit_profile_csrf_token'] = csrf_token
+
         with st.form("edit_profile_form"):
             st.markdown("### Professional Information")
 
@@ -2098,6 +2155,14 @@ def show_profile_page():
                 st.rerun()
 
             if save_button:
+                # === SECURITY: Validate CSRF token ===
+                token_result = validate_csrf_token_detailed('edit_profile', st.session_state.get('edit_profile_csrf_token', ''))
+
+                if not token_result['valid']:
+                    st.error(token_result['message'])
+                    log_csrf_failure('edit_profile', user_id, token_result['reason'])
+                    st.stop()
+
                 # Validate required fields
                 if not new_current_role or not new_current_company or not new_location_city:
                     st.error("Please fill in all required fields (Role, Company, City)")
@@ -2443,6 +2508,10 @@ def show_register_page():
     col1, col2, col3 = st.columns([1, 2, 1])
 
     with col2:
+        # === SECURITY: Generate CSRF token ===
+        csrf_token = generate_csrf_token('registration')
+        st.session_state['registration_csrf_token'] = csrf_token
+
         with st.form("register_form"):
             st.markdown("### Create Account")
             full_name = st.text_input("Full Name", placeholder="John Doe")
@@ -2454,6 +2523,14 @@ def show_register_page():
             submit = st.form_submit_button("Create Account", use_container_width=True, type="primary")
 
             if submit:
+                # === SECURITY: Validate CSRF token ===
+                token_result = validate_csrf_token_detailed('registration', st.session_state.get('registration_csrf_token', ''))
+
+                if not token_result['valid']:
+                    st.error(token_result['message'])
+                    log_csrf_failure('registration', email if email else 'unknown', token_result['reason'])
+                    st.stop()
+
                 # Strip whitespace from all inputs
                 full_name = full_name.strip() if full_name else ""
                 organization = organization.strip() if organization else None
@@ -2526,6 +2603,10 @@ def show_profile_onboarding(user_id: str):
 <p style='text-align: center; color: var(--text-secondary); font-size: 1.125rem; margin-bottom: 2rem;'>Help us personalize your experience</p>
 </div>
 """, unsafe_allow_html=True)
+
+    # === SECURITY: Generate CSRF token ===
+    csrf_token = generate_csrf_token('profile_onboarding')
+    st.session_state['profile_onboarding_csrf_token'] = csrf_token
 
     with st.form("profile_onboarding_form"):
         st.markdown("<div style='max-width: 700px; margin: 0 auto;'>", unsafe_allow_html=True)
@@ -2630,6 +2711,14 @@ def show_profile_onboarding(user_id: str):
         submitted = st.form_submit_button("Complete Profile", use_container_width=True, type="primary")
 
         if submitted:
+            # === SECURITY: Validate CSRF token ===
+            token_result = validate_csrf_token_detailed('profile_onboarding', st.session_state.get('profile_onboarding_csrf_token', ''))
+
+            if not token_result['valid']:
+                st.error(token_result['message'])
+                log_csrf_failure('profile_onboarding', user_id, token_result['reason'])
+                st.stop()
+
             # Validate required fields
             if not current_role or not current_company or not location_city:
                 st.error("Please fill in all required fields (Role, Company, Industry, and City)")
@@ -2702,6 +2791,31 @@ def main():
         st.session_state['show_connections'] = False
     if 'show_profile' not in st.session_state:
         st.session_state['show_profile'] = False
+
+    # === SECURITY: Clean up expired CSRF tokens ===
+    cleanup_csrf_tokens()
+
+    # === SECURITY: Check session timeout (30 minutes) ===
+    if st.session_state.get('authenticated'):
+        from datetime import datetime, timedelta
+
+        if 'last_activity' in st.session_state:
+            inactive_time = datetime.now() - st.session_state['last_activity']
+
+            if inactive_time > timedelta(minutes=30):
+                # Session expired
+                user_id = st.session_state.get('user', {}).get('id', 'unknown')
+                st.session_state['authenticated'] = False
+                st.session_state['user'] = None
+                st.warning("Session expired due to inactivity. Please log in again.")
+                log_security_event('session_expired', user_id, {
+                    'inactive_minutes': inactive_time.total_seconds() / 60
+                })
+                st.rerun()
+
+        # Update last activity timestamp
+        from datetime import datetime
+        st.session_state['last_activity'] = datetime.now()
 
     # ============================================
     # RENDER PROFESSIONAL HEADER BAR
