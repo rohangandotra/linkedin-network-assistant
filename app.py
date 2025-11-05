@@ -4001,10 +4001,19 @@ div[data-testid="column"] > div > .stButton > button[kind="secondary"] {
                                 st.session_state['selected_contacts'].discard(actual_idx)
 
                         with col2:
+                            # Debug: Log what columns and data we have
+                            if idx == 0:  # Only log first result
+                                print(f"DEBUG: Available columns: {list(row.keys())}")
+                                print(f"DEBUG: Row data sample: {dict(list(row.items())[:5])}")
+
                             name = row.get('full_name', '').strip() or 'No Name'
                             job_position = row.get('position', '').strip() or 'No Position'
                             company = row.get('company', '').strip() or 'No Company'
                             email = row.get('email', '').strip()
+
+                            # Debug: Log the extracted values
+                            if idx == 0:  # Only log first result
+                                print(f"DEBUG: Extracted - name: '{name}', position: '{job_position}', company: '{company}'")
 
                             # === SECURITY: Sanitize all user-generated content to prevent XSS ===
                             safe_name = sanitize_html(name)
