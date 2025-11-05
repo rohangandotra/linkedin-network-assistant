@@ -2200,11 +2200,16 @@ def show_connections_page():
                     sharing_badge = "✓ Sharing network" if conn['network_sharing_enabled'] else "Not sharing"
                     sharing_color = "#10b981" if conn['network_sharing_enabled'] else "#6b7280"
 
+                    # === SECURITY: Sanitize user-generated content ===
+                    safe_full_name = sanitize_html(conn['full_name'])
+                    safe_organization = sanitize_html(conn.get('organization', 'No organization'))
+                    safe_email = sanitize_html(conn['email'])
+
                     st.markdown(f"""
 <div class='card' style='padding: var(--space-5); margin-bottom: var(--space-4);'>
-<h3 style='font-size: 1.125rem; font-weight: 600; color: var(--text-primary); margin: 0 0 var(--space-2) 0;'>{conn['full_name']}</h3>
-<p style='font-size: 0.9375rem; color: var(--text-secondary); margin: 0 0 var(--space-1) 0;'>{conn.get('organization', 'No organization')}</p>
-<p style='font-size: 0.875rem; color: var(--text-tertiary); margin: 0 0 var(--space-3) 0;'>{conn['email']}</p>
+<h3 style='font-size: 1.125rem; font-weight: 600; color: var(--text-primary); margin: 0 0 var(--space-2) 0;'>{safe_full_name}</h3>
+<p style='font-size: 0.9375rem; color: var(--text-secondary); margin: 0 0 var(--space-1) 0;'>{safe_organization}</p>
+<p style='font-size: 0.875rem; color: var(--text-tertiary); margin: 0 0 var(--space-3) 0;'>{safe_email}</p>
 <div style='display: flex; gap: var(--space-4); align-items: center;'>
 <span style='font-size: 0.875rem; color: var(--text-tertiary);'>{contact_count:,} contacts</span>
 <span style='font-size: 0.875rem; color: {sharing_color};'>{sharing_badge}</span>
@@ -2278,11 +2283,16 @@ def show_connections_page():
                     col1, col2 = st.columns([3, 1])
 
                     with col1:
+                        # === SECURITY: Sanitize user-generated content ===
+                        safe_result_name = sanitize_html(result['full_name'])
+                        safe_result_org = sanitize_html(result.get('organization', 'No organization'))
+                        safe_result_email = sanitize_html(result['email'])
+
                         st.markdown(f"""
 <div class='card' style='padding: var(--space-5); margin-bottom: var(--space-4);'>
-<h3 style='font-size: 1.125rem; font-weight: 600; color: var(--text-primary); margin: 0 0 var(--space-2) 0;'>{result['full_name']}</h3>
-<p style='font-size: 0.9375rem; color: var(--text-secondary); margin: 0 0 var(--space-1) 0;'>{result.get('organization', 'No organization')}</p>
-<p style='font-size: 0.875rem; color: var(--text-tertiary); margin: 0 0 var(--space-3) 0;'>{result['email']}</p>
+<h3 style='font-size: 1.125rem; font-weight: 600; color: var(--text-primary); margin: 0 0 var(--space-2) 0;'>{safe_result_name}</h3>
+<p style='font-size: 0.9375rem; color: var(--text-secondary); margin: 0 0 var(--space-1) 0;'>{safe_result_org}</p>
+<p style='font-size: 0.875rem; color: var(--text-tertiary); margin: 0 0 var(--space-3) 0;'>{safe_result_email}</p>
 <span style='font-size: 0.875rem; color: var(--text-tertiary);'>{contact_count:,} contacts</span>
 </div>
 """, unsafe_allow_html=True)
@@ -2313,18 +2323,25 @@ def show_connections_page():
                             col1, col2 = st.columns(2)
                             with col1:
                                 if st.form_submit_button("Send Request", type="primary", use_container_width=True):
-                                    result_send = collaboration.send_connection_request(
-                                        user_id,
-                                        result_user_id,
-                                        request_message if request_message.strip() else None
-                                    )
+                                    # === SECURITY: Rate Limiting ===
+                                    allowed, error_msg = check_rate_limit(user_id, 'connection_request')
 
-                                    if result_send['success']:
-                                        st.success(result_send['message'])
-                                        st.session_state[f'show_connect_modal_{result_user_id}'] = False
-                                        st.rerun()
+                                    if not allowed:
+                                        st.error(error_msg)
+                                        log_rate_limit(user_id, 'connection_request', extract_wait_time(error_msg))
                                     else:
-                                        st.error(result_send['message'])
+                                        result_send = collaboration.send_connection_request(
+                                            user_id,
+                                            result_user_id,
+                                            request_message if request_message.strip() else None
+                                        )
+
+                                        if result_send['success']:
+                                            st.success(result_send['message'])
+                                            st.session_state[f'show_connect_modal_{result_user_id}'] = False
+                                            st.rerun()
+                                        else:
+                                            st.error(result_send['message'])
 
                             with col2:
                                 if st.form_submit_button("Cancel", use_container_width=True):
@@ -3769,17 +3786,23 @@ div[data-testid="column"] > div > .stButton > button[kind="secondary"] {
                             company = row.get('company', 'No Company')
                             email = row.get('email', '')
 
+                            # === SECURITY: Sanitize all user-generated content to prevent XSS ===
+                            safe_name = sanitize_html(name)
+                            safe_position = sanitize_html(job_position)
+                            safe_company = sanitize_html(company)
+                            safe_email = sanitize_html(email) if email else ''
+
                             # Modern contact card with gradient border and hover effects
                             st.markdown(f"""<div class='contact-card' style='background: white; padding: 1.25rem; border-radius: var(--radius-xl); border: 2px solid var(--gray-200); margin-bottom: 0.75rem; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: var(--shadow-sm); position: relative; overflow: hidden;'>
 <div style='position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--primary-500) 0%, var(--secondary-500) 50%, var(--accent-500) 100%); opacity: 0; transition: opacity 0.3s ease;' class='card-gradient-bar'></div>
 <div style='display: flex; align-items: flex-start; gap: 1rem;'>
 <div style='flex-shrink: 0; width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-500) 0%, var(--secondary-500) 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.25rem; box-shadow: var(--shadow-md);'>{name[0].upper() if name and name != 'No Name' else '?'}</div>
 <div style='flex: 1; min-width: 0;'>
-<div style='font-weight: 700; font-size: 1.1rem; color: var(--gray-900); margin-bottom: 0.35rem; line-height: 1.3;'>{name}</div>
-<div style='color: var(--gray-600); font-size: 0.95rem; font-weight: 500; margin-bottom: 0.35rem; line-height: 1.4;'>{job_position}</div>
+<div style='font-weight: 700; font-size: 1.1rem; color: var(--gray-900); margin-bottom: 0.35rem; line-height: 1.3;'>{safe_name}</div>
+<div style='color: var(--gray-600); font-size: 0.95rem; font-weight: 500; margin-bottom: 0.35rem; line-height: 1.4;'>{safe_position}</div>
 <div style='display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;'>
-<span style='color: var(--gray-500); font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.25rem;'>🏢 {company}</span>
-{f'<span style="color: var(--gray-400);">•</span><span style="color: var(--primary-600); font-size: 0.85rem; font-weight: 500;">✉️ {email}</span>' if email else ''}
+<span style='color: var(--gray-500); font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.25rem;'>🏢 {safe_company}</span>
+{f'<span style="color: var(--gray-400);">•</span><span style="color: var(--primary-600); font-size: 0.85rem; font-weight: 500;">✉️ {safe_email}</span>' if email else ''}
 </div>
 </div>
 </div>
