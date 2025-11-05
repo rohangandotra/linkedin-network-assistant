@@ -108,11 +108,11 @@ class SearchTools:
 
     def fast_search(self, keywords: str, max_results: int = 20) -> List[Dict]:
         """
-        Smart keyword search that understands industries and companies
-        Uses query parser and dictionaries for better results
+        Fast keyword search across name, company, position
+        Uses case-insensitive substring matching
 
         Args:
-            keywords: Search keywords (can be industry, company, role, etc.)
+            keywords: Search keywords
             max_results: Maximum results to return
 
         Returns:
@@ -121,71 +121,18 @@ class SearchTools:
         if not keywords or keywords.strip() == '':
             return []
 
+        keywords_lower = keywords.lower()
         df = self.contacts_df.copy()
-        masks = []
 
-        # Try smart search with query parser first
-        if HAS_SMART_SEARCH and self.company_df is not None:
-            try:
-                # Parse the query to extract entities
-                parsed = parse_query(keywords)
+        # Simple substring search across all fields
+        mask = (
+            df['First Name'].fillna('').str.lower().str.contains(keywords_lower, regex=False, na=False) |
+            df['Last Name'].fillna('').str.lower().str.contains(keywords_lower, regex=False, na=False) |
+            df['Company'].fillna('').str.lower().str.contains(keywords_lower, regex=False, na=False) |
+            df['Position'].fillna('').str.lower().str.contains(keywords_lower, regex=False, na=False)
+        )
 
-                # If query mentions an industry, find companies in that industry
-                if parsed.get('targets', {}).get('industries'):
-                    for industry in parsed['targets']['industries']:
-                        # Find all companies in this industry
-                        industry_companies = []
-                        for _, row in self.company_df.iterrows():
-                            if row.get('industry', '').lower() == industry.lower():
-                                # Add both alias and canonical name
-                                industry_companies.append(row.get('alias', '').lower())
-                                industry_companies.append(row.get('canonical', '').lower())
-
-                        if industry_companies:
-                            # Search for any of these companies
-                            for company_name in industry_companies:
-                                if company_name:
-                                    company_mask = df['Company'].fillna('').str.lower().str.contains(
-                                        company_name, regex=False, na=False
-                                    )
-                                    masks.append(company_mask)
-
-                # If query mentions specific companies
-                if parsed.get('targets', {}).get('companies'):
-                    for company in parsed['targets']['companies']:
-                        company_mask = df['Company'].fillna('').str.lower().str.contains(
-                            company.lower(), regex=False, na=False
-                        )
-                        masks.append(company_mask)
-
-                # If query mentions personas/roles
-                if parsed.get('targets', {}).get('personas'):
-                    for persona in parsed['targets']['personas']:
-                        position_mask = df['Position'].fillna('').str.lower().str.contains(
-                            persona.lower(), regex=False, na=False
-                        )
-                        masks.append(position_mask)
-
-            except Exception as e:
-                print(f"Smart search error: {e}")
-                # Fall through to basic search
-
-        # If no smart matches or smart search failed, do basic substring search
-        if not masks:
-            keywords_lower = keywords.lower()
-            masks = [
-                df['First Name'].fillna('').str.lower().str.contains(keywords_lower, regex=False, na=False),
-                df['Last Name'].fillna('').str.lower().str.contains(keywords_lower, regex=False, na=False),
-                df['Company'].fillna('').str.lower().str.contains(keywords_lower, regex=False, na=False),
-                df['Position'].fillna('').str.lower().str.contains(keywords_lower, regex=False, na=False)
-            ]
-
-        # Combine all masks with OR
-        combined_mask = masks[0]
-        for mask in masks[1:]:
-            combined_mask = combined_mask | mask
-
-        results = df[combined_mask].head(max_results)
+        results = df[mask].head(max_results)
 
         # Convert to list of dicts
         return [

@@ -138,14 +138,14 @@ def display_agent_reasoning(search_result: Dict):
 
     # Show performance badge
     if cached:
-        st.success(f"⚡ Instant (cached) • {search_result.get('result_count', 0)} results • $0.00")
+        st.success(f"Instant (cached) • {search_result.get('result_count', 0)} results • $0.00")
     else:
         latency = search_result.get('latency_ms', 0)
-        st.success(f"🤖 AI Search • {search_result.get('result_count', 0)} results • {latency:.0f}ms • ${cost_estimate:.4f}")
+        st.success(f"AI Search • {search_result.get('result_count', 0)} results • {latency:.0f}ms • ${cost_estimate:.4f}")
 
     # Show reasoning in expander
     if reasoning and not cached:
-        with st.expander("🧠 How AI found these results", expanded=False):
+        with st.expander("How AI found these results", expanded=False):
             st.markdown(reasoning)
 
             # Show tool usage
@@ -245,7 +245,7 @@ def agentic_search_with_streaming(query: str, contacts_df: pd.DataFrame, openai_
         cache_key = agent._get_cache_key(query)
         if cache_key in st.session_state.get('search_cache', {}):
             with status_container:
-                st.info("⚡ Loading from cache...")
+                st.info("Loading from cache...")
             cached = st.session_state['search_cache'][cache_key]
             cached['cached'] = True
             cached['latency_ms'] = 0
@@ -253,17 +253,17 @@ def agentic_search_with_streaming(query: str, contacts_df: pd.DataFrame, openai_
 
         # Show thinking process
         with status_container:
-            st.info("🤔 Understanding your query...")
+            st.info("Understanding your query...")
             time.sleep(0.2)  # Small delay for UX
 
         with status_container:
-            st.info("🔍 Searching network...")
+            st.info("Searching network...")
 
         # Execute search
         search_result = agent.search(query, max_iterations=5)
 
         with status_container:
-            st.info("✨ Ranking results...")
+            st.info("Ranking results...")
             time.sleep(0.1)  # Small delay for UX
 
         # Format result
