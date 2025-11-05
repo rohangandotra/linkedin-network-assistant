@@ -44,6 +44,25 @@ import collaboration
 # Import security module
 import security
 
+# Import security services (Week 1 security hardening)
+from services.security import (
+    check_rate_limit,
+    get_remaining_attempts,
+    sanitize_html,
+    validate_email,
+    validate_search_query,
+    sanitize_csv_data,
+    generate_csrf_token,
+    validate_csrf_token_detailed,
+    cleanup_csrf_tokens,
+    log_security_event,
+    log_failed_login,
+    log_successful_login,
+    log_csrf_failure,
+    log_rate_limit,
+    log_malicious_input
+)
+
 # Import feedback module
 import feedback
 
@@ -1016,31 +1035,47 @@ def render_feedback_modal():
         if st.button("Submit Feedback", use_container_width=True, type="primary", key="feedback_submit_modal"):
             if feedback_text and feedback_text.strip():
                 # Get user info
-                user_id = st.session_state.get('user', {}).get('id')
+                user_id = st.session_state.get('user', {}).get('id', 'anonymous')
                 user_email = st.session_state.get('user', {}).get('email') or feedback_email
 
-                # Get page context
-                page_context = "Main Dashboard"
-                if 'contacts_df' not in st.session_state:
-                    page_context = "Empty State (No Contacts)"
-                elif st.session_state.get('show_connections'):
-                    page_context = "Connections Page"
-
-                # Submit feedback
-                result = feedback.submit_feedback(
-                    feedback_text=feedback_text,
-                    feedback_type=feedback_type.lower().replace(" ", "_"),
-                    page_context=page_context,
-                    user_id=user_id,
-                    user_email=user_email
-                )
-
-                if result['success']:
-                    st.success(result['message'])
-                    st.session_state['show_feedback_modal'] = False
-                    st.rerun()
+                # === SECURITY: Rate Limiting ===
+                allowed, error_msg = check_rate_limit(user_id, 'feedback')
+                if not allowed:
+                    st.error(error_msg)
+                    log_rate_limit(user_id, 'feedback', extract_wait_time(error_msg))
                 else:
-                    st.error(result['message'])
+                    # === SECURITY: Input Validation ===
+                    from services.security.input_validator import InputValidator
+                    validation = InputValidator.sanitize_feedback(feedback_text)
+
+                    if not validation['valid']:
+                        st.error(validation['message'])
+                    else:
+                        # Use sanitized feedback
+                        sanitized_feedback = validation['text']
+
+                        # Get page context
+                        page_context = "Main Dashboard"
+                        if 'contacts_df' not in st.session_state:
+                            page_context = "Empty State (No Contacts)"
+                        elif st.session_state.get('show_connections'):
+                            page_context = "Connections Page"
+
+                        # Submit feedback (using sanitized text)
+                        result = feedback.submit_feedback(
+                            feedback_text=sanitized_feedback,
+                            feedback_type=feedback_type.lower().replace(" ", "_"),
+                            page_context=page_context,
+                            user_id=user_id,
+                            user_email=user_email
+                        )
+
+                        if result['success']:
+                            st.success(result['message'])
+                            st.session_state['show_feedback_modal'] = False
+                            st.rerun()
+                        else:
+                            st.error(result['message'])
             else:
                 st.warning("Please enter your feedback before submitting")
 
@@ -1050,6 +1085,30 @@ def render_feedback_modal():
             st.rerun()
 
     st.markdown("---")
+
+# ============================================================================
+# SECURITY HELPER FUNCTIONS
+# ============================================================================
+
+def extract_wait_time(error_msg: str) -> int:
+    """
+    Extract wait time from rate limit error message
+
+    Args:
+        error_msg: Error message like "Rate limit exceeded. You can try again in 5 minute(s)."
+
+    Returns:
+        Wait time in minutes
+    """
+    import re
+    match = re.search(r'(\d+)\s+minute', error_msg)
+    if match:
+        return int(match.group(1))
+    return 0
+
+# ============================================================================
+# CSV PARSING AND DATA PROCESSING
+# ============================================================================
 
 def parse_linkedin_csv(uploaded_file):
     """Parse LinkedIn CSV export and return a dataframe"""
@@ -3086,74 +3145,85 @@ div[data-testid="column"] > div > .stButton > button[kind="secondary"] {
         st.markdown("</div>", unsafe_allow_html=True)  # Close card container
 
         if uploaded_file:
-            with st.spinner("Parsing contacts..."):
-                df = parse_linkedin_csv(uploaded_file)
-                if df is not None:
-                    st.session_state['contacts_df'] = df
+            # === SECURITY: Rate Limiting ===
+            user_id = st.session_state.get('user', {}).get('id', 'anonymous')
+            allowed, error_msg = check_rate_limit(user_id, 'csv_upload')
 
-                    # Get user_id (for both logged-in and anonymous)
-                    user_id = st.session_state.get('user', {}).get('id', 'anonymous')
+            if not allowed:
+                st.error(error_msg)
+                log_rate_limit(user_id, 'csv_upload', extract_wait_time(error_msg))
+            else:
+                with st.spinner("Parsing contacts..."):
+                    df = parse_linkedin_csv(uploaded_file)
+                    if df is not None:
+                        # === SECURITY: Sanitize CSV Data ===
+                        df = sanitize_csv_data(df)
 
-                    if st.session_state.get('authenticated'):
-                        # LOGGED IN: Save to database
-                        if user_has_contacts:
-                            if not replace_contacts:
-                                st.warning("Check 'Replace existing contacts' above to save these to your account.")
-                                st.info(f"Loaded {len(df)} contacts to current session")
-                            else:
-                                # Delete old contacts first
-                                with st.spinner("Replacing contacts..."):
-                                    if auth.delete_user_contacts(user_id):
-                                        save_result = auth.save_contacts_to_db(user_id, df)
-                                        if save_result['success']:
-                                            st.success(f"Replaced with {len(df)} new contacts!")
+                        st.session_state['contacts_df'] = df
+
+                        # Get user_id (for both logged-in and anonymous)
+                        user_id = st.session_state.get('user', {}).get('id', 'anonymous')
+
+                        if st.session_state.get('authenticated'):
+                            # LOGGED IN: Save to database
+                            if user_has_contacts:
+                                if not replace_contacts:
+                                    st.warning("Check 'Replace existing contacts' above to save these to your account.")
+                                    st.info(f"Loaded {len(df)} contacts to current session")
+                                else:
+                                    # Delete old contacts first
+                                    with st.spinner("Replacing contacts..."):
+                                        if auth.delete_user_contacts(user_id):
+                                            save_result = auth.save_contacts_to_db(user_id, df)
+                                            if save_result['success']:
+                                                st.success(f"Replaced with {len(df)} new contacts!")
+                                            else:
+                                                st.error(f"Error saving: {save_result['message']}")
                                         else:
-                                            st.error(f"Error saving: {save_result['message']}")
-                                    else:
-                                        st.error("Error deleting old contacts")
-                        else:
-                            # No existing contacts, just save
-                            save_result = auth.save_contacts_to_db(user_id, df)
-                            if save_result['success']:
-                                st.success(f"Loaded and saved {len(df)} contacts to your account!")
+                                            st.error("Error deleting old contacts")
                             else:
-                                st.warning(f"Loaded {len(df)} contacts (saved to session only)")
+                                # No existing contacts, just save
+                                save_result = auth.save_contacts_to_db(user_id, df)
+                                if save_result['success']:
+                                    st.success(f"Loaded and saved {len(df)} contacts to your account!")
+                                else:
+                                    st.warning(f"Loaded {len(df)} contacts (saved to session only)")
+                        else:
+                            # ANONYMOUS: Session only with upgrade prompt
+                            st.success(f"Loaded {len(df)} contacts!")
+                            st.info("**Sign up** in the sidebar to save your contacts permanently!")
+
+                        # Log CSV upload
+                        analytics.log_csv_upload(
+                            file_name=uploaded_file.name,
+                            num_contacts=len(df),
+                            success=True,
+                            session_id=st.session_state['session_id']
+                        )
+
+                        # Phase 3B: Build search indexes for fast future searches
+                        if HAS_NEW_SEARCH:
+                            # Force rebuild since user uploaded new CSV
+                            try:
+                                initialize_search_for_user(user_id, df, force_rebuild=True)
+                            except Exception as e:
+                                st.warning(f"Could not build search indexes: {e}")
+
+                        # Show preview
+                        with st.expander("Preview contacts"):
+                            display_cols = [col for col in ['full_name', 'position', 'company'] if col in df.columns]
+                            st.dataframe(df[display_cols].head(10), use_container_width=True)
+
+                        st.rerun()
                     else:
-                        # ANONYMOUS: Session only with upgrade prompt
-                        st.success(f"Loaded {len(df)} contacts!")
-                        st.info("**Sign up** in the sidebar to save your contacts permanently!")
-
-                    # Log CSV upload
-                    analytics.log_csv_upload(
-                        file_name=uploaded_file.name,
-                        num_contacts=len(df),
-                        success=True,
-                        session_id=st.session_state['session_id']
-                    )
-
-                    # Phase 3B: Build search indexes for fast future searches
-                    if HAS_NEW_SEARCH:
-                        # Force rebuild since user uploaded new CSV
-                        try:
-                            initialize_search_for_user(user_id, df, force_rebuild=True)
-                        except Exception as e:
-                            st.warning(f"Could not build search indexes: {e}")
-
-                    # Show preview
-                    with st.expander("Preview contacts"):
-                        display_cols = [col for col in ['full_name', 'position', 'company'] if col in df.columns]
-                        st.dataframe(df[display_cols].head(10), use_container_width=True)
-
-                    st.rerun()
-                else:
-                    # Log failed upload
-                    analytics.log_csv_upload(
-                        file_name=uploaded_file.name,
-                        num_contacts=0,
-                        success=False,
-                        error_message="Failed to parse CSV",
-                        session_id=st.session_state['session_id']
-                    )
+                        # Log failed upload
+                        analytics.log_csv_upload(
+                            file_name=uploaded_file.name,
+                            num_contacts=0,
+                            success=False,
+                            error_message="Failed to parse CSV",
+                            session_id=st.session_state['session_id']
+                        )
 
         # Privacy reassurance
         st.markdown("""
@@ -3310,6 +3380,36 @@ div[data-testid="column"] > div > .stButton > button[kind="secondary"] {
             """)
 
         if search_button and query:
+            # === SECURITY: Rate Limiting ===
+            user_id = st.session_state.get('user_id', 'anonymous')
+            allowed, error_msg = check_rate_limit(user_id, 'search')
+
+            if not allowed:
+                st.error(error_msg)
+                log_rate_limit(user_id, 'search', extract_wait_time(error_msg))
+                st.stop()
+
+            # === SECURITY: Input Validation ===
+            validation = validate_search_query(query)
+            if not validation['valid']:
+                st.error(validation['message'])
+
+                # Check if malicious and log
+                from services.security.input_validator import InputValidator
+                detection = InputValidator.detect_malicious_content(query)
+                if detection['is_malicious']:
+                    log_malicious_input(
+                        input_type='search',
+                        user_id=user_id,
+                        patterns=detection['detected_patterns'],
+                        severity=detection['severity']
+                    )
+
+                st.stop()
+
+            # Use sanitized query for the rest of the search
+            query = validation['query']
+
             # Classify query type
             query_type = classify_query_type(query)
 
