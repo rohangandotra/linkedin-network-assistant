@@ -3403,36 +3403,41 @@ div[data-testid="column"] > div > .stButton > button[kind="secondary"] {
 </div>
 """, unsafe_allow_html=True)
 
-        # Example queries - Clean
+        # Example queries - Clean with clickable questions
         st.markdown("<div style='max-width: 700px; margin: 0 auto;'><h3 style='font-size: 1.5rem; font-weight: 600; margin-bottom: var(--space-6);'>Example Searches</h3>", unsafe_allow_html=True)
+        st.markdown("<p style='color: var(--text-secondary); margin-bottom: var(--space-4); font-size: 0.9375rem;'>Click any question to try it:</p>", unsafe_allow_html=True)
+
         col1, col2, col3 = st.columns(3)
 
         with col1:
-            st.markdown("""
-<div class='card'>
-<h4 style='margin-bottom: var(--space-3); color: var(--text-primary); font-weight: 600; font-size: 1rem;'>By Industry</h4>
-<p style='color: var(--text-secondary); margin-bottom: var(--space-2); font-size: 0.9375rem; line-height: 1.6;'>"Who works in venture capital?"</p>
-<p style='color: var(--text-secondary); font-size: 0.9375rem; line-height: 1.6;'>"Show me people in tech"</p>
-</div>
-""", unsafe_allow_html=True)
+            st.markdown("<div class='card'><h4 style='margin-bottom: var(--space-3); color: var(--text-primary); font-weight: 600; font-size: 1rem;'>By Industry</h4>", unsafe_allow_html=True)
+            if st.button("Who works in venture capital?", key="example_vc", use_container_width=True, type="secondary"):
+                st.session_state['auto_execute_query'] = "Who works in venture capital?"
+                st.rerun()
+            if st.button("Show me people in tech", key="example_tech", use_container_width=True, type="secondary"):
+                st.session_state['auto_execute_query'] = "Show me people in tech"
+                st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
 
         with col2:
-            st.markdown("""
-<div class='card'>
-<h4 style='margin-bottom: var(--space-3); color: var(--text-primary); font-weight: 600; font-size: 1rem;'>By Role</h4>
-<p style='color: var(--text-secondary); margin-bottom: var(--space-2); font-size: 0.9375rem; line-height: 1.6;'>"Who is an engineer?"</p>
-<p style='color: var(--text-secondary); font-size: 0.9375rem; line-height: 1.6;'>"Show me product managers"</p>
-</div>
-""", unsafe_allow_html=True)
+            st.markdown("<div class='card'><h4 style='margin-bottom: var(--space-3); color: var(--text-primary); font-weight: 600; font-size: 1rem;'>By Role</h4>", unsafe_allow_html=True)
+            if st.button("Who is an engineer?", key="example_engineer", use_container_width=True, type="secondary"):
+                st.session_state['auto_execute_query'] = "Who is an engineer?"
+                st.rerun()
+            if st.button("Show me product managers", key="example_pm", use_container_width=True, type="secondary"):
+                st.session_state['auto_execute_query'] = "Show me product managers"
+                st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
 
         with col3:
-            st.markdown("""
-<div class='card'>
-<h4 style='margin-bottom: var(--space-3); color: var(--text-primary); font-weight: 600; font-size: 1rem;'>By Seniority</h4>
-<p style='color: var(--text-secondary); margin-bottom: var(--space-2); font-size: 0.9375rem; line-height: 1.6;'>"Who is the most senior?"</p>
-<p style='color: var(--text-secondary); font-size: 0.9375rem; line-height: 1.6;'>"Show me top 5 leaders"</p>
-</div>
-""", unsafe_allow_html=True)
+            st.markdown("<div class='card'><h4 style='margin-bottom: var(--space-3); color: var(--text-primary); font-weight: 600; font-size: 1rem;'>By Seniority</h4>", unsafe_allow_html=True)
+            if st.button("Who is the most senior?", key="example_senior", use_container_width=True, type="secondary"):
+                st.session_state['auto_execute_query'] = "Who is the most senior?"
+                st.rerun()
+            if st.button("Show me top 5 leaders", key="example_leaders", use_container_width=True, type="secondary"):
+                st.session_state['auto_execute_query'] = "Show me top 5 leaders"
+                st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
 
         st.markdown("</div>", unsafe_allow_html=True)  # Close max-width container
 
@@ -3517,22 +3522,53 @@ div[data-testid="column"] > div > .stButton > button[kind="secondary"] {
             # Submit button (triggered by Enter or click)
             search_button = st.form_submit_button("Search", type="primary")
 
-        # Example questions in expander
+        # Example questions in expander - clickable
         with st.expander("Example Questions", expanded=False):
-            st.markdown("""
-            **Search for People:**
-            - Who works in venture capital?
-            - Show me people in tech companies
-            - Who is the most senior person?
-            - Find engineers at Google
+            st.markdown("**Search for People:**")
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("Who works in venture capital?", key="exp_vc", use_container_width=True):
+                    st.session_state['auto_execute_query'] = "Who works in venture capital?"
+                    st.rerun()
+                if st.button("Who is the most senior person?", key="exp_senior", use_container_width=True):
+                    st.session_state['auto_execute_query'] = "Who is the most senior person?"
+                    st.rerun()
+            with col2:
+                if st.button("Show me people in tech companies", key="exp_tech_companies", use_container_width=True):
+                    st.session_state['auto_execute_query'] = "Show me people in tech companies"
+                    st.rerun()
+                if st.button("Find engineers at Google", key="exp_google_eng", use_container_width=True):
+                    st.session_state['auto_execute_query'] = "Find engineers at Google"
+                    st.rerun()
 
-            **Network Analytics:**
-            - What industry do I have most contacts in?
-            - How many people work at tech companies?
-            - Which companies are most represented?
-            - What percentage of my contacts are in finance?
-            - Summarize my network for me
-            """)
+            st.markdown("**Network Analytics:**")
+            col3, col4 = st.columns(2)
+            with col3:
+                if st.button("What industry do I have most contacts in?", key="exp_industry", use_container_width=True):
+                    st.session_state['auto_execute_query'] = "What industry do I have most contacts in?"
+                    st.rerun()
+                if st.button("Which companies are most represented?", key="exp_companies", use_container_width=True):
+                    st.session_state['auto_execute_query'] = "Which companies are most represented?"
+                    st.rerun()
+                if st.button("Summarize my network for me", key="exp_summary", use_container_width=True):
+                    st.session_state['auto_execute_query'] = "Summarize my network for me"
+                    st.rerun()
+            with col4:
+                if st.button("How many people work at tech companies?", key="exp_tech_count", use_container_width=True):
+                    st.session_state['auto_execute_query'] = "How many people work at tech companies?"
+                    st.rerun()
+                if st.button("What percentage of my contacts are in finance?", key="exp_finance_pct", use_container_width=True):
+                    st.session_state['auto_execute_query'] = "What percentage of my contacts are in finance?"
+                    st.rerun()
+
+        # Auto-execute search from example questions
+        auto_query = st.session_state.get('auto_execute_query')
+        if auto_query:
+            # Clear the flag
+            del st.session_state['auto_execute_query']
+            # Set query to execute
+            query = auto_query
+            search_button = True
 
         if search_button and query:
             # === SECURITY: Rate Limiting ===
