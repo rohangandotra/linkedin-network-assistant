@@ -343,12 +343,21 @@ def get_security_logger() -> SecurityLogger:
     """
     Get singleton security logger instance
 
+    Ensures session state is always initialized, even if instance already exists
+
     Returns:
         SecurityLogger instance
     """
     global _security_logger_instance
     if _security_logger_instance is None:
         _security_logger_instance = SecurityLogger()
+
+    # Always ensure security_events is initialized in session state
+    # This handles cases where session state is cleared but instance still exists
+    if 'security_events' not in st.session_state:
+        from collections import defaultdict
+        st.session_state['security_events'] = defaultdict(list)
+
     return _security_logger_instance
 
 
