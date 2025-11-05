@@ -84,20 +84,24 @@ except ImportError as e:
     print(f"⚠️  New search system not available: {e}")
 
 # Phase 4: Import agentic search system
-try:
-    from agentic_search_integration import (
-        agentic_search,
-        agentic_search_with_streaming,
-        display_agent_reasoning,
-        log_search_cost,
-        get_search_cost_summary,
-        initialize_search_caching
-    )
-    HAS_AGENTIC_SEARCH = True
-    print("✅ Agentic search system loaded")
-except ImportError as e:
-    HAS_AGENTIC_SEARCH = False
-    print(f"⚠️  Agentic search not available: {e}")
+# DISABLED: Rolling back to Phase 3B hybrid search (FTS5 + FAISS) for stability
+# try:
+#     from agentic_search_integration import (
+#         agentic_search,
+#         agentic_search_with_streaming,
+#         display_agent_reasoning,
+#         log_search_cost,
+#         get_search_cost_summary,
+#         initialize_search_caching
+#     )
+#     HAS_AGENTIC_SEARCH = True
+#     print("✅ Agentic search system loaded")
+# except ImportError as e:
+#     HAS_AGENTIC_SEARCH = False
+#     print(f"⚠️  Agentic search not available: {e}")
+
+HAS_AGENTIC_SEARCH = False
+print("🔄 Using Phase 3B hybrid search (FTS5 + FAISS) - agentic search disabled")
 
 # Initialize OpenAI client - works both locally and on Streamlit Cloud
 def get_openai_api_key():
