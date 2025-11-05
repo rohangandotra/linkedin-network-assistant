@@ -758,6 +758,27 @@ def clear_tool_cache():
         st.session_state['tool_cache_timestamps'] = {}
 
 
+def clear_all_caches():
+    """Clear both search cache and tool cache"""
+    if 'search_cache' in st.session_state:
+        st.session_state['search_cache'] = {}
+    clear_tool_cache()
+    print("All search caches cleared")
+
+
+# Version marker to force cache clear on code updates
+SEARCH_VERSION = "v2.0"  # Increment this when search logic changes
+
+def check_and_clear_old_cache():
+    """Clear cache if code version has changed"""
+    if 'search_version' not in st.session_state:
+        st.session_state['search_version'] = SEARCH_VERSION
+        clear_all_caches()
+    elif st.session_state['search_version'] != SEARCH_VERSION:
+        st.session_state['search_version'] = SEARCH_VERSION
+        clear_all_caches()
+
+
 def get_cache_stats() -> Dict[str, Any]:
     """
     Get statistics about search and tool caches

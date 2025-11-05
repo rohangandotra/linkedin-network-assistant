@@ -15,7 +15,8 @@ from services.search_agent import (
     NetworkSearchAgent,
     pre_cache_popular_queries,
     clear_tool_cache,
-    get_cache_stats
+    get_cache_stats,
+    check_and_clear_old_cache
 )
 
 
@@ -33,6 +34,9 @@ def agentic_search(query: str, contacts_df: pd.DataFrame, openai_client) -> Dict
     Returns:
         Dict with results compatible with existing app.py format
     """
+    # Clear old cache if code version changed
+    check_and_clear_old_cache()
+
     if not query or query.strip() == '':
         return {
             'success': False,
@@ -316,5 +320,6 @@ __all__ = [
     'initialize_search_caching',
     'pre_cache_popular_queries',
     'clear_tool_cache',
-    'get_cache_stats'
+    'get_cache_stats',
+    'check_and_clear_old_cache'
 ]
