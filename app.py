@@ -83,6 +83,20 @@ except ImportError as e:
     HAS_NEW_SEARCH = False
     print(f"⚠️  New search system not available: {e}")
 
+# Phase 4: Import agentic search system
+try:
+    from agentic_search_integration import (
+        agentic_search,
+        display_agent_reasoning,
+        log_search_cost,
+        get_search_cost_summary
+    )
+    HAS_AGENTIC_SEARCH = True
+    print("✅ Agentic search system loaded")
+except ImportError as e:
+    HAS_AGENTIC_SEARCH = False
+    print(f"⚠️  Agentic search not available: {e}")
+
 # Initialize OpenAI client - works both locally and on Streamlit Cloud
 def get_openai_api_key():
     """Get OpenAI API key from Streamlit secrets or environment variable"""
@@ -3616,40 +3630,30 @@ div[data-testid="column"] > div > .stButton > button[kind="secondary"] {
 
                 # Only proceed if we have contacts to search
                 if search_contacts_df is not None and not search_contacts_df.empty:
-                    # Phase 3B: Use new hybrid search for 95% cost reduction + 25x speed
-                    if HAS_NEW_SEARCH:
-                        with st.spinner(spinner_text):
+                    # Phase 4: Use agentic search for best quality results
+                    if HAS_AGENTIC_SEARCH:
+                        with st.spinner("🤖 AI is searching your network..."):
                             # Clear any previous analytics result
                             if 'analytics_result' in st.session_state:
                                 del st.session_state['analytics_result']
 
                             try:
-                                # Use new hybrid search
-                                search_result = smart_search(query, search_contacts_df)
+                                # Get OpenAI client
+                                client = get_client()
 
-                                if search_result.get('use_legacy_gpt'):
-                                    # Complex query - fall back to old GPT search
-                                    st.caption("Using AI reasoning for complex query...")
-                                    intent = extract_search_intent(query, contacts_df)
+                                # Use agentic search
+                                search_result = agentic_search(query, search_contacts_df, client)
 
-                                    if intent:
-                                        st.session_state['last_intent'] = intent
-                                        filtered_df = filter_contacts(contacts_df, intent)
-                                        st.session_state['filtered_df'] = filtered_df
-                                        summary = generate_summary(filtered_df, intent)
-                                        st.session_state['summary'] = summary
-                                else:
-                                    # Fast hybrid search result
+                                if search_result.get('success'):
+                                    # Get results
                                     filtered_df = search_result.get('filtered_df', pd.DataFrame())
                                     st.session_state['filtered_df'] = filtered_df
 
                                     # Generate summary
                                     if not filtered_df.empty:
-                                        # Use new search summary
-                                        summary_text = get_search_summary(search_result, query)
-                                        tier_info = f" • Method: {search_result.get('tier_used', 'unknown')}"
-                                        latency_info = f" • Time: {search_result.get('latency_ms', 0):.0f}ms"
-                                        cached_info = " • Cached" if search_result.get('cached') else ""
+                                        tier_info = " • Agentic AI"
+                                        latency_info = f" • {search_result.get('latency_ms', 0):.0f}ms"
+                                        cached_info = " (cached)" if search_result.get('cached') else ""
 
                                         summary = f"""
                                         <strong>Search Results for "{query}"</strong><br>
@@ -3660,11 +3664,58 @@ div[data-testid="column"] > div > .stButton > button[kind="secondary"] {
 
                                     st.session_state['summary'] = summary
 
-                                    # Show performance badge
-                                    if search_result.get('cached'):
-                                        st.success(f"Instant search (cached) • {len(filtered_df)} results")
-                                    elif search_result.get('latency_ms', 0) < 100:
-                                        st.success(f"Lightning fast ({search_result.get('latency_ms', 0):.0f}ms) • {len(filtered_df)} results")
+                                    # Display agent reasoning and performance
+                                    display_agent_reasoning(search_result)
+
+                                    # Log cost
+                                    log_search_cost(
+                                        query=query,
+                                        cost=search_result.get('cost_estimate', 0),
+                                        cached=search_result.get('cached', False)
+                                    )
+                                else:
+                                    st.error(search_result.get('message', 'Search failed'))
+
+                            except Exception as e:
+                                st.error(f"Agentic search error: {e}")
+                                import traceback
+                                traceback.print_exc()
+
+                    # Fallback to Phase 3B hybrid search
+                    elif HAS_NEW_SEARCH:
+                        with st.spinner(spinner_text):
+                            # Clear any previous analytics result
+                            if 'analytics_result' in st.session_state:
+                                del st.session_state['analytics_result']
+
+                            try:
+                                # Use hybrid search
+                                search_result = smart_search(query, search_contacts_df)
+
+                                # Fast hybrid search result
+                                filtered_df = search_result.get('filtered_df', pd.DataFrame())
+                                st.session_state['filtered_df'] = filtered_df
+
+                                # Generate summary
+                                if not filtered_df.empty:
+                                    tier_info = f" • Method: {search_result.get('tier_used', 'unknown')}"
+                                    latency_info = f" • Time: {search_result.get('latency_ms', 0):.0f}ms"
+                                    cached_info = " • Cached" if search_result.get('cached') else ""
+
+                                    summary = f"""
+                                    <strong>Search Results for "{query}"</strong><br>
+                                    Found {len(filtered_df)} matches{tier_info}{latency_info}{cached_info}
+                                    """
+                                else:
+                                    summary = f"No results found for '{query}'"
+
+                                st.session_state['summary'] = summary
+
+                                # Show performance badge
+                                if search_result.get('cached'):
+                                    st.success(f"Instant search (cached) • {len(filtered_df)} results")
+                                elif search_result.get('latency_ms', 0) < 100:
+                                    st.success(f"Lightning fast ({search_result.get('latency_ms', 0):.0f}ms) • {len(filtered_df)} results")
 
                                 # Log search query
                                 analytics.log_search_query(
