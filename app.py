@@ -4001,10 +4001,10 @@ div[data-testid="column"] > div > .stButton > button[kind="secondary"] {
                                 st.session_state['selected_contacts'].discard(actual_idx)
 
                         with col2:
-                            name = row.get('full_name', 'No Name')
-                            job_position = row.get('position', 'No Position')
-                            company = row.get('company', 'No Company')
-                            email = row.get('email', '')
+                            name = row.get('full_name', '').strip() or 'No Name'
+                            job_position = row.get('position', '').strip() or 'No Position'
+                            company = row.get('company', '').strip() or 'No Company'
+                            email = row.get('email', '').strip()
 
                             # === SECURITY: Sanitize all user-generated content to prevent XSS ===
                             safe_name = sanitize_html(name)
