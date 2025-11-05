@@ -22,8 +22,7 @@ import threading
 
 # Import the sophisticated search system components
 try:
-    from services.query_parser import parse_query
-    from services.candidate_generator import DictionaryLoader
+    from services.query_parser import parse_query, DictionaryLoader
     HAS_SMART_SEARCH = True
 except ImportError:
     HAS_SMART_SEARCH = False
@@ -48,15 +47,19 @@ class SearchTools:
         self.contacts_df = contacts_df
         self._init_tool_cache()
 
-        # Load dictionaries for smart search
+        # Load company dictionary as DataFrame for lookups
         if HAS_SMART_SEARCH:
-            self.dict_loader = DictionaryLoader()
-            self.company_dict = self.dict_loader.load_dictionary('company_aliases')
-            self.industries_dict = self.dict_loader.load_dictionary('industries')
+            try:
+                import pandas as pd
+                import os
+                data_dir = os.path.join(os.path.dirname(__file__), '..', 'data')
+                company_csv = os.path.join(data_dir, 'company_aliases.csv')
+                self.company_df = pd.read_csv(company_csv)
+            except Exception as e:
+                print(f"Error loading company dictionary: {e}")
+                self.company_df = None
         else:
-            self.dict_loader = None
-            self.company_dict = None
-            self.industries_dict = None
+            self.company_df = None
 
     def _init_tool_cache(self):
         """Initialize tool result cache in session state"""
@@ -122,17 +125,17 @@ class SearchTools:
         masks = []
 
         # Try smart search with query parser first
-        if HAS_SMART_SEARCH and self.company_dict is not None:
+        if HAS_SMART_SEARCH and self.company_df is not None:
             try:
                 # Parse the query to extract entities
                 parsed = parse_query(keywords)
 
                 # If query mentions an industry, find companies in that industry
-                if parsed.get('industries'):
-                    for industry in parsed['industries']:
+                if parsed.get('targets', {}).get('industries'):
+                    for industry in parsed['targets']['industries']:
                         # Find all companies in this industry
                         industry_companies = []
-                        for _, row in self.company_dict.iterrows():
+                        for _, row in self.company_df.iterrows():
                             if row.get('industry', '').lower() == industry.lower():
                                 # Add both alias and canonical name
                                 industry_companies.append(row.get('alias', '').lower())
@@ -148,16 +151,16 @@ class SearchTools:
                                     masks.append(company_mask)
 
                 # If query mentions specific companies
-                if parsed.get('companies'):
-                    for company in parsed['companies']:
+                if parsed.get('targets', {}).get('companies'):
+                    for company in parsed['targets']['companies']:
                         company_mask = df['Company'].fillna('').str.lower().str.contains(
                             company.lower(), regex=False, na=False
                         )
                         masks.append(company_mask)
 
                 # If query mentions personas/roles
-                if parsed.get('personas'):
-                    for persona in parsed['personas']:
+                if parsed.get('targets', {}).get('personas'):
+                    for persona in parsed['targets']['personas']:
                         position_mask = df['Position'].fillna('').str.lower().str.contains(
                             persona.lower(), regex=False, na=False
                         )
