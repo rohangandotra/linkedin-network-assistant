@@ -191,12 +191,20 @@ def get_csrf_protection() -> CSRFProtection:
     """
     Get singleton CSRF protection instance
 
+    Ensures session state is always initialized, even if instance already exists
+
     Returns:
         CSRFProtection instance
     """
     global _csrf_instance
     if _csrf_instance is None:
         _csrf_instance = CSRFProtection()
+
+    # Always ensure csrf_tokens is initialized in session state
+    # This handles cases where session state is cleared but instance still exists
+    if 'csrf_tokens' not in st.session_state:
+        st.session_state['csrf_tokens'] = {}
+
     return _csrf_instance
 
 
