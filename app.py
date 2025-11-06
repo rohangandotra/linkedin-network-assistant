@@ -362,25 +362,93 @@ st.markdown("""
     }
 
     /* Search input - Clean and minimal */
-    .stTextInput > div > div > input {
+    .stTextInput > div > div > input,
+    .stTextArea > div > div > textarea {
         border-radius: var(--radius-md);
         border: 1px solid var(--border-subtle);
         background: var(--bg-secondary);
         padding: 0.875rem 1.25rem;
         font-size: 0.9375rem;
-        transition: all 0.15s ease;
+        transition: all 0.2s ease;
         color: var(--text-primary);
         box-shadow: var(--shadow-sm);
+        font-family: var(--font-sans);
     }
 
-    .stTextInput > div > div > input:focus {
+    .stTextInput > div > div > input:focus,
+    .stTextArea > div > div > textarea:focus {
         outline: none;
         border-color: var(--primary);
-        box-shadow: var(--shadow-md);
+        box-shadow: 0 0 0 3px rgba(43, 108, 176, 0.1), var(--shadow-md);
     }
 
-    .stTextInput > div > div > input::placeholder {
+    .stTextInput > div > div > input::placeholder,
+    .stTextArea > div > div > textarea::placeholder {
         color: var(--text-tertiary);
+    }
+
+    /* Select boxes - Notion style */
+    .stSelectbox > div > div {
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-subtle);
+        transition: all 0.2s ease;
+    }
+
+    .stSelectbox > div > div:hover {
+        border-color: var(--border-medium);
+    }
+
+    .stSelectbox > div > div:focus-within {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(43, 108, 176, 0.1);
+    }
+
+    /* Multiselect - Clean */
+    .stMultiSelect > div > div {
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-subtle);
+        background: var(--bg-secondary);
+    }
+
+    .stMultiSelect > div > div:focus-within {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(43, 108, 176, 0.1);
+    }
+
+    /* Checkboxes - Notion style */
+    .stCheckbox {
+        padding: 0.25rem 0;
+    }
+
+    .stCheckbox > label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .stCheckbox > label > div:first-child {
+        flex-shrink: 0;
+    }
+
+    /* Radio buttons - Clean */
+    .stRadio > div {
+        gap: 0.5rem;
+    }
+
+    .stRadio > div > label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem;
+        border-radius: var(--radius-sm);
+        transition: background 0.15s ease;
+        cursor: pointer;
+    }
+
+    .stRadio > div > label:hover {
+        background: var(--bg-tertiary);
     }
 
     /* ============================================
@@ -572,16 +640,31 @@ st.markdown("""
     /* Results summary - Clean card */
     .results-summary {
         background: var(--bg-secondary);
-        padding: var(--space-6);
+        padding: var(--space-8);
         border-radius: var(--radius-md);
         border: 1px solid var(--border-subtle);
-        margin: var(--space-4) 0;
+        margin: var(--space-6) 0;
         box-shadow: var(--shadow-sm);
         transition: all 0.15s ease;
     }
 
     .results-summary:hover {
         box-shadow: var(--shadow-md);
+        border-color: var(--border-medium);
+    }
+
+    .results-summary strong {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+
+    .results-summary-meta {
+        color: var(--text-secondary);
+        font-size: 0.9375rem;
+        line-height: 1.6;
     }
 
     /* Download buttons - Standardized secondary style */
@@ -635,6 +718,71 @@ st.markdown("""
         margin: var(--space-8) 0;
     }
 
+    /* Section spacing - Generous whitespace */
+    .section-spacing {
+        margin-top: var(--space-12);
+        margin-bottom: var(--space-12);
+    }
+
+    .section-header {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: var(--space-6);
+        letter-spacing: -0.01em;
+    }
+
+    /* Pagination controls - Notion style */
+    .pagination-button {
+        min-width: 40px !important;
+        height: 40px !important;
+        padding: 0.5rem !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    .pagination-current {
+        background: var(--primary) !important;
+        color: white !important;
+        font-weight: 600;
+        padding: 0.5rem 1rem;
+        border-radius: var(--radius-sm);
+        display: inline-block;
+        text-align: center;
+    }
+
+    /* Upload card - Premium styling */
+    .upload-section {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-lg);
+        padding: var(--space-8);
+        margin: var(--space-8) 0;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.2s ease;
+    }
+
+    .upload-section:hover {
+        border-color: var(--primary);
+        box-shadow: var(--shadow-md);
+    }
+
+    .upload-header {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: var(--space-4);
+        text-align: center;
+    }
+
+    .upload-subtitle {
+        color: var(--text-secondary);
+        font-size: 0.9375rem;
+        text-align: center;
+        margin-bottom: var(--space-6);
+    }
+
     /* Card component */
     .card {
         background: var(--bg-secondary);
@@ -647,6 +795,117 @@ st.markdown("""
 
     .card:hover {
         box-shadow: var(--shadow-md);
+    }
+
+    /* ============================================
+       NOTION-INSPIRED CONTACT CARDS
+       ============================================ */
+
+    .contact-card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        padding: var(--space-6);
+        margin-bottom: var(--space-3);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: var(--shadow-sm);
+        position: relative;
+        cursor: pointer;
+    }
+
+    .contact-card:hover {
+        border-color: var(--primary);
+        box-shadow: 0 4px 12px rgba(43, 108, 176, 0.12);
+        transform: translateY(-2px);
+    }
+
+    .contact-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: var(--radius-md);
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 1.125rem;
+        flex-shrink: 0;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .contact-name {
+        font-weight: 600;
+        font-size: 1rem;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+        line-height: 1.4;
+    }
+
+    .contact-position {
+        color: var(--text-secondary);
+        font-size: 0.9375rem;
+        margin-bottom: 0.25rem;
+        line-height: 1.5;
+    }
+
+    .contact-company {
+        color: var(--text-tertiary);
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+    }
+
+    .contact-email {
+        color: var(--primary);
+        font-size: 0.8125rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        margin-top: 0.5rem;
+        padding: 0.25rem 0.5rem;
+        background: var(--primary-light);
+        border-radius: var(--radius-sm);
+    }
+
+    .contact-info-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-top: 0.5rem;
+    }
+
+    /* Extended network contact card */
+    .extended-contact-card {
+        background: #f0f9ff;
+        border: 1px solid #bfdbfe;
+        border-left: 4px solid #3b82f6;
+        border-radius: var(--radius-md);
+        padding: var(--space-6);
+        margin-bottom: var(--space-3);
+        transition: all 0.2s ease;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .extended-contact-card:hover {
+        border-left-color: #2563eb;
+        box-shadow: var(--shadow-md);
+        transform: translateY(-2px);
+    }
+
+    .extended-badge {
+        background: white;
+        padding: 0.375rem 0.75rem;
+        border-radius: var(--radius-sm);
+        color: #0369a1;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        display: inline-block;
+        margin-top: 0.75rem;
+        box-shadow: var(--shadow-sm);
     }
 
     /* Top navigation bar */
@@ -664,6 +923,17 @@ st.markdown("""
         padding: 0 var(--space-8);
         z-index: 1000;
         box-shadow: var(--shadow-sm);
+    }
+
+    .header-title {
+        font-family: var(--font-serif);
+        font-size: 1.5rem !important;
+        font-weight: 700 !important;
+        color: var(--text-primary) !important;
+        text-decoration: none;
+        line-height: 2.5rem !important;
+        margin: 0 !important;
+        letter-spacing: -0.01em;
     }
 
     .top-nav-logo {
@@ -690,6 +960,30 @@ st.markdown("""
 
     .top-nav-link:hover {
         color: var(--text-primary);
+    }
+
+    /* Select contacts header */
+    .select-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: var(--space-6);
+        padding: var(--space-4);
+        background: var(--bg-tertiary);
+        border-radius: var(--radius-md);
+    }
+
+    .select-header h3 {
+        margin: 0 !important;
+        font-size: 1.25rem !important;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .page-info {
+        color: var(--text-secondary);
+        font-size: 0.9375rem;
+        font-weight: 500;
     }
 
     .top-nav-cta {
@@ -3960,22 +4254,20 @@ div[data-testid="column"] > div > .stButton > button[kind="secondary"] {
                             company = row.get('company', 'No Company')
                             owner_name = row.get('owner_name', 'Unknown')
 
+                            # === SECURITY: Sanitize extended network contact data ===
+                            safe_name = sanitize_html(name)
+                            safe_position = sanitize_html(job_position)
+                            safe_company = sanitize_html(company)
+                            safe_owner = sanitize_html(owner_name)
+
+                            # Notion-inspired extended network card
                             st.markdown(f"""
-                            <div style='background: #f0f9ff; padding: 1.5rem; border-radius: 10px;
-                                        border-left: 4px solid #3b82f6; margin-bottom: 1rem;'>
-                                <div style='font-weight: 600; font-size: 1.05rem; color: #1a1a1a; margin-bottom: 0.5rem;'>
-                                    {name}
-                                </div>
-                                <div style='color: #666666; font-size: 0.95rem; margin-bottom: 0.3rem;'>
-                                    {job_position}
-                                </div>
-                                <div style='color: #999999; font-size: 0.9rem; margin-bottom: 0.8rem;'>
-                                    {company}
-                                </div>
-                                <div style='background: white; padding: 0.5rem; border-radius: 6px;'>
-                                    <span style='color: #075985; font-size: 0.85rem; font-weight: 600;'>
-                                        In {owner_name}'s network
-                                    </span>
+                            <div class='extended-contact-card'>
+                                <div class='contact-name'>{safe_name}</div>
+                                <div class='contact-position'>{safe_position}</div>
+                                <div class='contact-company'>🏢 {safe_company}</div>
+                                <div class='extended-badge'>
+                                    In {safe_owner}'s network
                                 </div>
                             </div>
                             """, unsafe_allow_html=True)
@@ -4029,46 +4321,37 @@ div[data-testid="column"] > div > .stButton > button[kind="secondary"] {
                             safe_company = sanitize_html(company)
                             safe_email = sanitize_html(email) if email else ''
 
-                            # Modern contact card with gradient border and hover effects
-                            st.markdown(f"""<div class='contact-card' style='background: white; padding: 1.25rem; border-radius: var(--radius-xl); border: 2px solid var(--gray-200); margin-bottom: 0.75rem; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: var(--shadow-sm); position: relative; overflow: hidden;'>
-<div style='position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--primary-500) 0%, var(--secondary-500) 50%, var(--accent-500) 100%); opacity: 0; transition: opacity 0.3s ease;' class='card-gradient-bar'></div>
-<div style='display: flex; align-items: flex-start; gap: 1rem;'>
-<div style='flex-shrink: 0; width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-500) 0%, var(--secondary-500) 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.25rem; box-shadow: var(--shadow-md);'>{name[0].upper() if name and name != 'No Name' else '?'}</div>
-<div style='flex: 1; min-width: 0;'>
-<div style='font-weight: 700; font-size: 1.1rem; color: var(--gray-900); margin-bottom: 0.35rem; line-height: 1.3;'>{safe_name}</div>
-<div style='color: var(--gray-600); font-size: 0.95rem; font-weight: 500; margin-bottom: 0.35rem; line-height: 1.4;'>{safe_position}</div>
-<div style='display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;'>
-<span style='color: var(--gray-500); font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.25rem;'>🏢 {safe_company}</span>
-{f'<span style="color: var(--gray-400);">•</span><span style="color: var(--primary-600); font-size: 0.85rem; font-weight: 500;">✉️ {safe_email}</span>' if email else ''}
-</div>
-</div>
-</div>
-</div>
-<style>
-.contact-card:hover {{
-transform: translateY(-3px) translateX(4px);
-box-shadow: var(--shadow-xl);
-border-color: var(--primary-300);
-}}
-.contact-card:hover .card-gradient-bar {{
-opacity: 1;
-}}
-</style>""", unsafe_allow_html=True)
+                            # Notion-inspired clean contact card
+                            st.markdown(f"""
+                            <div class='contact-card'>
+                                <div style='display: flex; align-items: flex-start; gap: 1rem;'>
+                                    <div class='contact-avatar'>
+                                        {name[0].upper() if name and name != 'No Name' else '?'}
+                                    </div>
+                                    <div style='flex: 1; min-width: 0;'>
+                                        <div class='contact-name'>{safe_name}</div>
+                                        <div class='contact-position'>{safe_position}</div>
+                                        <div class='contact-info-row'>
+                                            <span class='contact-company'>🏢 {safe_company}</span>
+                                            {f'<span class="contact-email">✉️ {safe_email}</span>' if email else ''}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            """, unsafe_allow_html=True)
 
-                # Pagination controls
+                # Pagination controls - Notion style
                 if total_pages > 1:
-                    st.markdown("<br>", unsafe_allow_html=True)
+                    st.markdown('<div style="margin-top: var(--space-8); margin-bottom: var(--space-6);"></div>', unsafe_allow_html=True)
                     col_prev, col_pages, col_next = st.columns([1, 3, 1])
 
                     with col_prev:
-                        if st.button("⬅️ Previous", disabled=(current_page == 1), use_container_width=True):
+                        if st.button("← Previous", disabled=(current_page == 1), use_container_width=True, type="secondary"):
                             st.session_state['current_page'] = max(1, current_page - 1)
                             st.rerun()
 
                     with col_pages:
                         # Show page numbers
-                        page_buttons = []
-                        # Show first page, current page -1, current page, current page +1, last page
                         pages_to_show = {1, max(1, current_page - 1), current_page, min(total_pages, current_page + 1), total_pages}
                         pages_to_show = sorted(pages_to_show)
 
@@ -4076,18 +4359,18 @@ opacity: 1;
                         for i, page_num in enumerate(pages_to_show):
                             with cols[i]:
                                 if page_num == current_page:
-                                    st.markdown(f"<div style='text-align: center; padding: 0.5rem; background: #1a1a1a; color: white; border-radius: 8px; font-weight: 600;'>{page_num}</div>", unsafe_allow_html=True)
+                                    st.markdown(f"<div class='pagination-current'>{page_num}</div>", unsafe_allow_html=True)
                                 else:
-                                    if st.button(str(page_num), key=f"page_{page_num}", use_container_width=True):
+                                    if st.button(str(page_num), key=f"page_{page_num}", use_container_width=True, type="secondary"):
                                         st.session_state['current_page'] = page_num
                                         st.rerun()
 
                     with col_next:
-                        if st.button("Next ➡️", disabled=(current_page == total_pages), use_container_width=True):
+                        if st.button("Next →", disabled=(current_page == total_pages), use_container_width=True, type="secondary"):
                             st.session_state['current_page'] = min(total_pages, current_page + 1)
                             st.rerun()
 
-                    st.markdown(f"<div style='text-align: center; color: #666; margin-top: 0.5rem; font-size: 0.9rem;'>Showing {start_idx + 1}-{end_idx} of {total_contacts} contacts</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='text-align: center; color: var(--text-tertiary); margin-top: var(--space-4); font-size: 0.9375rem;'>Showing {start_idx + 1}-{end_idx} of {total_contacts} contacts</div>", unsafe_allow_html=True)
 
                 # Show intro request form if extended network contact selected
                 if 'intro_request_contact' in st.session_state:
