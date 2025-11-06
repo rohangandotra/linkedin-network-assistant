@@ -3310,6 +3310,16 @@ div[data-testid="column"] > div > .stButton > button[kind="secondary"] {
                         # === SECURITY: Sanitize CSV Data ===
                         df = sanitize_csv_data(df)
 
+                        # === ENRICHMENT: Infer company from email domains ===
+                        try:
+                            from services.email_enrichment import enrich_contacts_from_email
+                            df, enrichment_stats = enrich_contacts_from_email(df)
+                            if enrichment_stats['enriched'] > 0:
+                                st.success(f"✨ Enriched {enrichment_stats['enriched']} contacts with company info from email domains!")
+                        except Exception as e:
+                            print(f"Email enrichment failed: {e}")
+                            # Continue without enrichment
+
                         st.session_state['contacts_df'] = df
 
                         # Get user_id (for both logged-in and anonymous)
