@@ -83,25 +83,14 @@ except ImportError as e:
     HAS_NEW_SEARCH = False
     print(f"⚠️  New search system not available: {e}")
 
-# Phase 4: Import agentic search system
-# DISABLED: Rolling back to Phase 3B hybrid search (FTS5 + FAISS) for stability
-# try:
-#     from agentic_search_integration import (
-#         agentic_search,
-#         agentic_search_with_streaming,
-#         display_agent_reasoning,
-#         log_search_cost,
-#         get_search_cost_summary,
-#         initialize_search_caching
-#     )
-#     HAS_AGENTIC_SEARCH = True
-#     print("✅ Agentic search system loaded")
-# except ImportError as e:
-#     HAS_AGENTIC_SEARCH = False
-#     print(f"⚠️  Agentic search not available: {e}")
-
-HAS_AGENTIC_SEARCH = False
-print("🔄 Using Phase 3B hybrid search (FTS5 + FAISS) - agentic search disabled")
+# Phase 4: Import AI search agent (NEW - rebuilt from scratch)
+try:
+    from services.ai_search_agent import create_ai_search_agent
+    HAS_AI_AGENT = True
+    print("✅ AI Search Agent loaded (GPT-4 powered)")
+except ImportError as e:
+    HAS_AI_AGENT = False
+    print(f"⚠️  AI Search Agent not available: {e}")
 
 # Initialize OpenAI client - works both locally and on Streamlit Cloud
 def get_openai_api_key():
@@ -3690,8 +3679,8 @@ div[data-testid="column"] > div > .stButton > button[kind="secondary"] {
 
                 # Only proceed if we have contacts to search
                 if search_contacts_df is not None and not search_contacts_df.empty:
-                    # Phase 4: Use agentic search for best quality results
-                    if HAS_AGENTIC_SEARCH:
+                    # Phase 4: Use AI search agent for complex queries
+                    if HAS_AI_AGENT:
                         # Clear any previous analytics result
                         if 'analytics_result' in st.session_state:
                             del st.session_state['analytics_result']
@@ -3700,54 +3689,63 @@ div[data-testid="column"] > div > .stButton > button[kind="secondary"] {
                             # Get OpenAI client
                             client = get_client()
 
-                            # Create status container for streaming updates
-                            status_container = st.empty()
+                            with st.spinner("AI is analyzing your query..."):
+                                # Create AI agent
+                                agent = create_ai_search_agent(client, search_contacts_df)
 
-                            # Use agentic search with streaming
-                            search_result = agentic_search_with_streaming(query, search_contacts_df, client, status_container)
+                                # Execute search
+                                search_result = agent.search(query)
 
-                            # Clear status container after search completes
-                            status_container.empty()
+                            if search_result['success']:
+                                # Convert results to DataFrame
+                                if search_result['results']:
+                                    # Convert AI results to DataFrame format
+                                    results_data = []
+                                    for r in search_result['results']:
+                                        results_data.append({
+                                            'full_name': r.get('name', ''),
+                                            'company': r.get('company', ''),
+                                            'position': r.get('position', ''),
+                                            'email': r.get('email', ''),
+                                        })
+                                    filtered_df = pd.DataFrame(results_data)
+                                else:
+                                    filtered_df = pd.DataFrame()
 
-                            if search_result.get('success'):
-                                # Get results
-                                filtered_df = search_result.get('filtered_df', pd.DataFrame())
                                 st.session_state['filtered_df'] = filtered_df
 
                                 # Generate summary
                                 if not filtered_df.empty:
-                                    tier_info = " • Agentic AI"
-                                    latency_info = f" • {search_result.get('latency_ms', 0):.0f}ms"
-                                    cached_info = " (cached)" if search_result.get('cached') else ""
-
                                     summary = f"""
                                     <strong>Search Results for "{query}"</strong><br>
-                                    Found {len(filtered_df)} matches{tier_info}{latency_info}{cached_info}
+                                    Found {len(filtered_df)} matches • AI Search • ${search_result['cost_estimate']:.4f}
                                     """
                                 else:
                                     summary = f"No results found for '{query}'"
 
                                 st.session_state['summary'] = summary
 
-                                # Display agent reasoning and performance
-                                display_agent_reasoning(search_result)
-
-                                # Log cost
-                                log_search_cost(
-                                    query=query,
-                                    cost=search_result.get('cost_estimate', 0),
-                                    cached=search_result.get('cached', False)
-                                )
+                                # Display AI reasoning
+                                if search_result.get('reasoning'):
+                                    with st.expander("How AI found these results", expanded=False):
+                                        st.markdown(search_result['reasoning'])
+                                        if search_result.get('tool_calls'):
+                                            st.markdown("**Tools used:**")
+                                            for tc in search_result['tool_calls']:
+                                                st.markdown(f"- `{tc['tool']}` → {tc['results_count']} results")
                             else:
-                                st.error(search_result.get('message', 'Search failed'))
+                                st.warning(f"AI search didn't find results. Trying regular search...")
+                                # Fall through to regular search
 
                         except Exception as e:
-                            st.error(f"Agentic search error: {e}")
+                            st.warning(f"AI search error: {e}. Using regular search...")
+                            print(f"AI search error: {e}")
                             import traceback
                             traceback.print_exc()
+                            # Fall through to regular search
 
                     # Fallback to Phase 3B hybrid search
-                    elif HAS_NEW_SEARCH:
+                    if HAS_NEW_SEARCH and ('filtered_df' not in st.session_state or st.session_state.get('filtered_df') is None or st.session_state['filtered_df'].empty):
                         with st.spinner(spinner_text):
                             # Clear any previous analytics result
                             if 'analytics_result' in st.session_state:
