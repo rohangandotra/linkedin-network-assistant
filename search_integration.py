@@ -137,6 +137,53 @@ def smart_search(query: str, contacts_df: pd.DataFrame) -> Dict[str, Any]:
             'message': 'Empty query'
         }
 
+    # === INDUSTRY EXPANSION: Check if query contains vague industry terms ===
+    try:
+        from services.industry_expansion import expand_industry_query
+        expansion = expand_industry_query(query)
+
+        if expansion['should_expand'] and expansion['companies']:
+            # Query contains industry terms like "tech", "VC", "AI"
+            # Do simple company name search instead of complex pipeline
+            import numpy as np
+
+            companies = expansion['companies']
+            query_lower = query.lower()
+
+            # Build mask: match any of the expanded companies
+            mask = pd.Series([False] * len(contacts_df), index=contacts_df.index)
+
+            for company in companies:
+                company_lower = company.lower()
+                company_mask = contacts_df['company'].fillna('').str.lower().str.contains(
+                    company_lower, regex=False, na=False
+                )
+                mask = mask | company_mask
+
+            filtered_df = contacts_df[mask].head(20)
+
+            if not filtered_df.empty:
+                print(f"Industry expansion: '{query}' → {len(companies)} companies → {len(filtered_df)} results")
+                return {
+                    'success': True,
+                    'results': [],
+                    'filtered_df': filtered_df,
+                    'tier_used': 'industry_expansion',
+                    'latency_ms': 0,
+                    'cached': False,
+                    'result_count': len(filtered_df),
+                    'expansion_terms': expansion['expansion_terms'],
+                    'companies_searched': len(companies)
+                }
+            else:
+                # No results with expansion, fall through to regular search
+                print(f"Industry expansion found no results, falling back to regular search")
+    except Exception as e:
+        print(f"Industry expansion failed: {e}, using regular search")
+        # Fall through to regular search
+
+    # === REGULAR SEARCH: Use existing 4-stage pipeline ===
+
     # Get user info
     user_id = st.session_state.get('user', {}).get('id', 'default_user')
 
