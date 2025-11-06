@@ -3973,8 +3973,21 @@ div[data-testid="column"] > div > .stButton > button[kind="secondary"] {
 
                 # Only proceed if we have contacts to search
                 if search_contacts_df is not None and not search_contacts_df.empty:
-                    # Phase 4: Use AI search agent for complex queries
-                    if HAS_AI_AGENT:
+                    # Check for industry expansion FIRST (before AI agent)
+                    # This ensures queries like "finance", "tech", "VC" use company-based search
+                    should_use_industry_expansion = False
+                    if HAS_NEW_SEARCH:
+                        try:
+                            from services.industry_expansion import expand_industry_query
+                            expansion = expand_industry_query(query)
+                            if expansion['should_expand'] and expansion['companies']:
+                                should_use_industry_expansion = True
+                                print(f"✅ Industry expansion triggered for '{query}': {len(expansion['companies'])} companies")
+                        except Exception as e:
+                            print(f"Industry expansion check failed: {e}")
+
+                    # Phase 4: Use AI search agent for complex queries (SKIP if industry expansion is better)
+                    if HAS_AI_AGENT and not should_use_industry_expansion:
                         # Clear any previous analytics result
                         if 'analytics_result' in st.session_state:
                             del st.session_state['analytics_result']
@@ -4321,24 +4334,24 @@ div[data-testid="column"] > div > .stButton > button[kind="secondary"] {
                             safe_company = sanitize_html(company)
                             safe_email = sanitize_html(email) if email else ''
 
+                            # Build email span only if email exists
+                            email_html = f'<span class="contact-email">✉️ {safe_email}</span>' if email else ''
+
                             # Notion-inspired clean contact card
-                            st.markdown(f"""
-                            <div class='contact-card'>
-                                <div style='display: flex; align-items: flex-start; gap: 1rem;'>
-                                    <div class='contact-avatar'>
-                                        {name[0].upper() if name and name != 'No Name' else '?'}
-                                    </div>
-                                    <div style='flex: 1; min-width: 0;'>
-                                        <div class='contact-name'>{safe_name}</div>
-                                        <div class='contact-position'>{safe_position}</div>
-                                        <div class='contact-info-row'>
-                                            <span class='contact-company'>🏢 {safe_company}</span>
-                                            {f'<span class="contact-email">✉️ {safe_email}</span>' if email else ''}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            """, unsafe_allow_html=True)
+                            contact_card_html = f"""<div class='contact-card'>
+    <div style='display: flex; align-items: flex-start; gap: 1rem;'>
+        <div class='contact-avatar'>{name[0].upper() if name and name != 'No Name' else '?'}</div>
+        <div style='flex: 1; min-width: 0;'>
+            <div class='contact-name'>{safe_name}</div>
+            <div class='contact-position'>{safe_position}</div>
+            <div class='contact-info-row'>
+                <span class='contact-company'>🏢 {safe_company}</span>
+                {email_html}
+            </div>
+        </div>
+    </div>
+</div>"""
+                            st.markdown(contact_card_html, unsafe_allow_html=True)
 
                 # Pagination controls - Notion style
                 if total_pages > 1:
