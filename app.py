@@ -3654,7 +3654,7 @@ div[data-testid="column"] > div > .stButton > button[kind="secondary"] {
                                 st.warning(f"Could not build search indexes: {e}")
 
                         # Phase 4: Pre-cache popular queries for instant search
-                        if HAS_AGENTIC_SEARCH:
+                        if HAS_AI_AGENT:
                             try:
                                 client = get_client()
                                 initialize_search_caching(client, df)
