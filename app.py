@@ -4334,23 +4334,15 @@ div[data-testid="column"] > div > .stButton > button[kind="secondary"] {
                             safe_company = sanitize_html(company)
                             safe_email = sanitize_html(email) if email else ''
 
-                            # Build email span only if email exists
-                            email_html = f'<span class="contact-email">✉️ {safe_email}</span>' if email else ''
+                            # Build contact card HTML (simplified to avoid rendering issues)
+                            avatar_initial = name[0].upper() if name and name != 'No Name' else '?'
 
-                            # Notion-inspired clean contact card
-                            contact_card_html = f"""<div class='contact-card'>
-    <div style='display: flex; align-items: flex-start; gap: 1rem;'>
-        <div class='contact-avatar'>{name[0].upper() if name and name != 'No Name' else '?'}</div>
-        <div style='flex: 1; min-width: 0;'>
-            <div class='contact-name'>{safe_name}</div>
-            <div class='contact-position'>{safe_position}</div>
-            <div class='contact-info-row'>
-                <span class='contact-company'>🏢 {safe_company}</span>
-                {email_html}
-            </div>
-        </div>
-    </div>
-</div>"""
+                            # Build the HTML without nested conditionals
+                            if email:
+                                contact_card_html = f"""<div class='contact-card'><div style='display: flex; align-items: flex-start; gap: 1rem;'><div class='contact-avatar'>{avatar_initial}</div><div style='flex: 1; min-width: 0;'><div class='contact-name'>{safe_name}</div><div class='contact-position'>{safe_position}</div><div class='contact-info-row'><span class='contact-company'>🏢 {safe_company}</span><span class='contact-email'>✉️ {safe_email}</span></div></div></div></div>"""
+                            else:
+                                contact_card_html = f"""<div class='contact-card'><div style='display: flex; align-items: flex-start; gap: 1rem;'><div class='contact-avatar'>{avatar_initial}</div><div style='flex: 1; min-width: 0;'><div class='contact-name'>{safe_name}</div><div class='contact-position'>{safe_position}</div><div class='contact-info-row'><span class='contact-company'>🏢 {safe_company}</span></div></div></div></div>"""
+
                             st.markdown(contact_card_html, unsafe_allow_html=True)
 
                 # Pagination controls - Notion style
