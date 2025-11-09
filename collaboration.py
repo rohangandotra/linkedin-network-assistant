@@ -108,7 +108,8 @@ def send_connection_request(user_id: str, target_user_id: str, request_message: 
             'user_id': user_id,
             'connected_user_id': target_user_id,
             'status': 'pending',
-            'network_sharing_enabled': True
+            'requester_shares_network': True,  # Requester defaults to sharing
+            'accepter_shares_network': True    # Accepter choice will be set on accept
         }
 
         if request_message:
@@ -199,7 +200,7 @@ def accept_connection_request(connection_id: str, share_network: bool = True) ->
         response = supabase.table('user_connections').update({
             'status': 'accepted',
             'accepted_at': datetime.now().isoformat(),
-            'network_sharing_enabled': share_network
+            'accepter_shares_network': share_network  # Accepter's choice to share
         }).eq('id', connection_id).execute()
 
         if response.data and len(response.data) > 0:
@@ -348,6 +349,8 @@ def get_user_connections(user_id: str, status: str = 'accepted') -> List[Dict[st
         # Combine and format
         all_connections = []
 
+        # For connections where current user is the REQUESTER:
+        # We want to know if the ACCEPTER shares their network with us
         for conn in connections_as_requester:
             all_connections.append({
                 'connection_id': conn['id'],
@@ -355,10 +358,12 @@ def get_user_connections(user_id: str, status: str = 'accepted') -> List[Dict[st
                 'email': conn['users']['email'],
                 'full_name': conn['users']['full_name'],
                 'organization': conn['users'].get('organization'),
-                'network_sharing_enabled': conn['network_sharing_enabled'],
+                'network_sharing_enabled': conn.get('accepter_shares_network', True),  # Does OTHER user share?
                 'connected_at': conn.get('accepted_at', conn.get('created_at'))
             })
 
+        # For connections where current user is the ACCEPTER:
+        # We want to know if the REQUESTER shares their network with us
         for conn in connections_as_target:
             all_connections.append({
                 'connection_id': conn['id'],
@@ -366,7 +371,7 @@ def get_user_connections(user_id: str, status: str = 'accepted') -> List[Dict[st
                 'email': conn['users']['email'],
                 'full_name': conn['users']['full_name'],
                 'organization': conn['users'].get('organization'),
-                'network_sharing_enabled': conn['network_sharing_enabled'],
+                'network_sharing_enabled': conn.get('requester_shares_network', True),  # Does OTHER user share?
                 'connected_at': conn.get('accepted_at', conn.get('created_at'))
             })
 
@@ -462,13 +467,14 @@ def get_sent_connection_requests(user_id: str, status: str = 'pending') -> List[
         return []
 
 
-def update_network_sharing(connection_id: str, share_network: bool) -> Dict[str, Any]:
+def update_network_sharing(connection_id: str, share_network: bool, user_id: str = None) -> Dict[str, Any]:
     """
     Update network sharing permission for a connection
 
     Args:
         connection_id: ID of connection to update
         share_network: Whether to share network
+        user_id: Current user's ID (to determine which field to update)
 
     Returns:
         dict with 'success' boolean and 'message'
@@ -476,8 +482,33 @@ def update_network_sharing(connection_id: str, share_network: bool) -> Dict[str,
     supabase = auth.get_supabase_client()
 
     try:
+        # Get connection to determine which field to update
+        conn = supabase.table('user_connections').select('user_id, connected_user_id').eq('id', connection_id).execute()
+
+        if not conn.data or len(conn.data) == 0:
+            return {
+                'success': False,
+                'message': 'Connection not found'
+            }
+
+        connection = conn.data[0]
+
+        # Determine which field to update based on current user's role
+        if user_id == connection['user_id']:
+            # Current user is the requester
+            field_to_update = 'requester_shares_network'
+        elif user_id == connection['connected_user_id']:
+            # Current user is the accepter
+            field_to_update = 'accepter_shares_network'
+        else:
+            return {
+                'success': False,
+                'message': 'You are not part of this connection'
+            }
+
+        # Update the appropriate field
         response = supabase.table('user_connections').update({
-            'network_sharing_enabled': share_network
+            field_to_update: share_network
         }).eq('id', connection_id).execute()
 
         if response.data and len(response.data) > 0:

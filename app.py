@@ -2596,7 +2596,7 @@ def show_connections_page():
                     )
 
                     if new_sharing != conn['network_sharing_enabled']:
-                        result = collaboration.update_network_sharing(conn['connection_id'], new_sharing)
+                        result = collaboration.update_network_sharing(conn['connection_id'], new_sharing, user_id)
                         if result['success']:
                             st.success("Updated")
                             st.rerun()
