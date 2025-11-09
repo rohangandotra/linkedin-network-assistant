@@ -329,8 +329,9 @@ def get_user_connections(user_id: str, status: str = 'accepted') -> List[Dict[st
 
     try:
         # Get connections where user is either the requester or the target
+        # IMPORTANT: Select the new bidirectional sharing fields
         response = supabase.table('user_connections')\
-            .select('*, users!user_connections_connected_user_id_fkey(id, email, full_name, organization)')\
+            .select('id, user_id, connected_user_id, status, requester_shares_network, accepter_shares_network, accepted_at, created_at, users!user_connections_connected_user_id_fkey(id, email, full_name, organization)')\
             .eq('user_id', user_id)\
             .eq('status', status)\
             .execute()
@@ -339,7 +340,7 @@ def get_user_connections(user_id: str, status: str = 'accepted') -> List[Dict[st
 
         # Also get connections where user is the target
         response2 = supabase.table('user_connections')\
-            .select('*, users!user_connections_user_id_fkey(id, email, full_name, organization)')\
+            .select('id, user_id, connected_user_id, status, requester_shares_network, accepter_shares_network, accepted_at, created_at, users!user_connections_user_id_fkey(id, email, full_name, organization)')\
             .eq('connected_user_id', user_id)\
             .eq('status', status)\
             .execute()
@@ -352,26 +353,30 @@ def get_user_connections(user_id: str, status: str = 'accepted') -> List[Dict[st
         # For connections where current user is the REQUESTER:
         # We want to know if the ACCEPTER shares their network with us
         for conn in connections_as_requester:
+            accepter_shares = conn.get('accepter_shares_network', True)
+            print(f"DEBUG - As requester: connected_user_id={conn['connected_user_id']}, accepter_shares_network={accepter_shares}")
             all_connections.append({
                 'connection_id': conn['id'],
                 'user_id': conn['connected_user_id'],
                 'email': conn['users']['email'],
                 'full_name': conn['users']['full_name'],
                 'organization': conn['users'].get('organization'),
-                'network_sharing_enabled': conn.get('accepter_shares_network', True),  # Does OTHER user share?
+                'network_sharing_enabled': accepter_shares,  # Does OTHER user share?
                 'connected_at': conn.get('accepted_at', conn.get('created_at'))
             })
 
         # For connections where current user is the ACCEPTER:
         # We want to know if the REQUESTER shares their network with us
         for conn in connections_as_target:
+            requester_shares = conn.get('requester_shares_network', True)
+            print(f"DEBUG - As accepter: user_id={conn['user_id']}, requester_shares_network={requester_shares}")
             all_connections.append({
                 'connection_id': conn['id'],
                 'user_id': conn['user_id'],
                 'email': conn['users']['email'],
                 'full_name': conn['users']['full_name'],
                 'organization': conn['users'].get('organization'),
-                'network_sharing_enabled': conn.get('requester_shares_network', True),  # Does OTHER user share?
+                'network_sharing_enabled': requester_shares,  # Does OTHER user share?
                 'connected_at': conn.get('accepted_at', conn.get('created_at'))
             })
 
@@ -550,21 +555,33 @@ def get_contacts_from_connected_users(user_id: str) -> pd.DataFrame:
         # Get accepted connections with network sharing enabled
         connections = get_user_connections(user_id, status='accepted')
 
+        print(f"DEBUG - get_contacts_from_connected_users for user {user_id}")
+        print(f"DEBUG - Total connections: {len(connections)}")
+        for conn in connections:
+            print(f"DEBUG - Connection: user_id={conn['user_id']}, sharing={conn['network_sharing_enabled']}, name={conn['full_name']}")
+
         # Filter for connections with network sharing enabled
         sharing_connections = [c for c in connections if c['network_sharing_enabled']]
 
+        print(f"DEBUG - Sharing connections: {len(sharing_connections)}")
+
         if not sharing_connections:
+            print(f"DEBUG - No sharing connections found for user {user_id}")
             return pd.DataFrame()
 
         # Get contacts from all sharing connections
         all_contacts = []
 
         for conn in sharing_connections:
+            print(f"DEBUG - Fetching contacts for user_id: {conn['user_id']} (name: {conn['full_name']})")
+
             # Get contacts for this user
             response = supabase.table('contacts')\
                 .select('*')\
                 .eq('user_id', conn['user_id'])\
                 .execute()
+
+            print(f"DEBUG - Found {len(response.data) if response.data else 0} contacts for {conn['full_name']}")
 
             if response.data:
                 for contact in response.data:
