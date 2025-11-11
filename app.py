@@ -239,27 +239,30 @@ st.markdown("""
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Crimson+Pro:wght@400;600;700&display=swap');
 
     :root {
-        /* SaaS-style modern color palette */
-        /* Primary brand color - professional blue */
-        --primary: #2B6CB0;
-        --primary-hover: #2C5282;
-        --primary-light: #dbeafe;
+        /* Wispr Flow inspired color palette - warm neutrals + subtle green */
+        /* Primary brand color - subtle green (Wispr Flow style) */
+        --primary: #16a34a;
+        --primary-hover: #15803d;
+        --primary-light: #dcfce7;
+        --primary-glow: rgba(34, 197, 94, 0.15);
 
-        /* Soft neutral backgrounds */
+        /* Soft neutral backgrounds (warm, not clinical) */
         --bg-primary: #fafaf9;
         --bg-secondary: #ffffff;
         --bg-tertiary: #f5f5f4;
+        --bg-hover: #f9fafb;
 
         /* Text hierarchy - AA contrast compliant */
-        --text-primary: #18181b;
-        --text-secondary: #52525b;
-        --text-tertiary: #a1a1aa;
+        --text-primary: #1c1917;    /* Warmer near-black */
+        --text-secondary: #57534e;  /* Warmer gray */
+        --text-tertiary: #a8a29e;   /* Muted warm gray */
 
-        /* Borders - subtle 1px */
+        /* Borders - subtle warm tones */
         --border-subtle: #e7e5e4;
         --border-medium: #d6d3d1;
+        --border-light: #f5f5f4;
 
-        /* Feedback colors */
+        /* Feedback colors - harmonious palette */
         --success: #16a34a;
         --error: #dc2626;
         --warning: #ea580c;
@@ -369,22 +372,49 @@ st.markdown("""
         background: var(--bg-secondary);
         padding: 0.875rem 1.25rem;
         font-size: 0.9375rem;
-        transition: all 0.2s ease;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         color: var(--text-primary);
         box-shadow: var(--shadow-sm);
         font-family: var(--font-sans);
+    }
+
+    /* Main search input - Make it PROMINENT (Happenstance style) */
+    #unified_search_query {
+        font-size: 1.125rem !important;
+        padding: 1.125rem 1.5rem !important;
+        border-radius: var(--radius-lg) !important;
+        border: 2px solid var(--border-medium) !important;
+        box-shadow: var(--shadow-md) !important;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+
+    #unified_search_query:hover {
+        border-color: var(--border-medium) !important;
+        box-shadow: var(--shadow-lg) !important;
+    }
+
+    #unified_search_query:focus {
+        outline: none !important;
+        border-color: var(--primary) !important;
+        box-shadow: 0 0 0 4px var(--primary-glow), var(--shadow-lg) !important;
+        transform: scale(1.01) !important;
     }
 
     .stTextInput > div > div > input:focus,
     .stTextArea > div > div > textarea:focus {
         outline: none;
         border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(43, 108, 176, 0.1), var(--shadow-md);
+        box-shadow: 0 0 0 3px var(--primary-glow), var(--shadow-md);
     }
 
     .stTextInput > div > div > input::placeholder,
     .stTextArea > div > div > textarea::placeholder {
         color: var(--text-tertiary);
+    }
+
+    #unified_search_query::placeholder {
+        color: var(--text-tertiary) !important;
+        font-weight: 400 !important;
     }
 
     /* Select boxes - Notion style */
@@ -400,7 +430,7 @@ st.markdown("""
 
     .stSelectbox > div > div:focus-within {
         border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(43, 108, 176, 0.1);
+        box-shadow: 0 0 0 3px var(--primary-glow);
     }
 
     /* Multiselect - Clean */
@@ -412,7 +442,7 @@ st.markdown("""
 
     .stMultiSelect > div > div:focus-within {
         border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(43, 108, 176, 0.1);
+        box-shadow: 0 0 0 3px var(--primary-glow);
     }
 
     /* Checkboxes - Notion style */
@@ -3484,12 +3514,13 @@ div[data-testid="column"] > div > .stButton > button[kind="secondary"] {
         # Add spacing below nav
         st.markdown('<div style="height: 24px;"></div>', unsafe_allow_html=True)
 
-    # Hero section - Flow-inspired minimal design (only show when NOT on profile page)
+    # Hero section - Happenstance inspired: Search as the centerpiece (only show when NOT on profile page)
     if not st.session_state.get('show_profile'):
         st.markdown("""
-<div style='text-align: center; padding: var(--space-24) 0 var(--space-16) 0;'>
-<h1 class='hero-title'>Get the most out of your network<br>using our advanced AI solution</h1>
-<p class='hero-subtitle'>Search your network naturally. Find the right person, instantly.</p>
+<div style='text-align: center; padding: var(--space-16) 0 var(--space-12) 0;'>
+<h1 style='font-family: var(--font-serif); font-size: 2.5rem; font-weight: 600; color: var(--text-primary); letter-spacing: -0.02em; line-height: 1.2; margin-bottom: var(--space-3);'>Find anyone in your network</h1>
+<p style='font-family: var(--font-sans); font-size: 1.0625rem; font-weight: 400; color: var(--text-secondary); line-height: 1.6; margin-bottom: var(--space-2);'>Search using natural language</p>
+<p style='font-family: var(--font-sans); font-size: 0.875rem; color: var(--text-tertiary);'>Try: <span style='color: var(--text-secondary);'>"PM at Google"</span>, <span style='color: var(--text-secondary);'>"VCs in NYC"</span>, <span style='color: var(--text-secondary);'>"engineers at Meta"</span></p>
 </div>
 """, unsafe_allow_html=True)
 
