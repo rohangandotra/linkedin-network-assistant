@@ -834,9 +834,9 @@ st.markdown("""
     .contact-card {
         background: var(--bg-secondary);
         border: 1px solid var(--border-subtle);
-        border-radius: var(--radius-md);
+        border-radius: var(--radius-lg);
         padding: var(--space-6);
-        margin-bottom: var(--space-3);
+        margin-bottom: var(--space-4);
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         box-shadow: var(--shadow-sm);
         position: relative;
@@ -845,23 +845,23 @@ st.markdown("""
 
     .contact-card:hover {
         border-color: var(--primary);
-        box-shadow: 0 4px 12px rgba(43, 108, 176, 0.12);
-        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(22, 163, 74, 0.12), var(--shadow-md);
+        transform: translateY(-4px);
     }
 
     .contact-avatar {
-        width: 44px;
-        height: 44px;
-        border-radius: var(--radius-md);
+        width: 48px;
+        height: 48px;
+        border-radius: var(--radius-lg);
         background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
         display: flex;
         align-items: center;
         justify-content: center;
         color: white;
         font-weight: 600;
-        font-size: 1.125rem;
+        font-size: 1.25rem;
         flex-shrink: 0;
-        box-shadow: var(--shadow-sm);
+        box-shadow: 0 2px 4px rgba(22, 163, 74, 0.2);
     }
 
     .contact-name {
@@ -908,34 +908,81 @@ st.markdown("""
         margin-top: 0.5rem;
     }
 
-    /* Extended network contact card */
+    /* Extended network contact card - harmonized with new green palette */
     .extended-contact-card {
-        background: #f0f9ff;
-        border: 1px solid #bfdbfe;
-        border-left: 4px solid #3b82f6;
-        border-radius: var(--radius-md);
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-left: 4px solid var(--primary);
+        border-radius: var(--radius-lg);
         padding: var(--space-6);
-        margin-bottom: var(--space-3);
-        transition: all 0.2s ease;
+        margin-bottom: var(--space-4);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         box-shadow: var(--shadow-sm);
     }
 
     .extended-contact-card:hover {
-        border-left-color: #2563eb;
-        box-shadow: var(--shadow-md);
-        transform: translateY(-2px);
+        border-left-color: var(--primary-hover);
+        box-shadow: 0 4px 16px rgba(22, 163, 74, 0.12), var(--shadow-md);
+        transform: translateY(-4px);
     }
 
     .extended-badge {
         background: white;
         padding: 0.375rem 0.75rem;
         border-radius: var(--radius-sm);
-        color: #0369a1;
+        color: var(--primary-hover);
         font-size: 0.8125rem;
         font-weight: 600;
         display: inline-block;
         margin-top: 0.75rem;
         box-shadow: var(--shadow-sm);
+    }
+
+    /* Match score badge - Happenstance style */
+    .match-score {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.625rem;
+        background: var(--primary-light);
+        color: var(--primary-hover);
+        font-size: 0.75rem;
+        font-weight: 600;
+        border-radius: var(--radius-pill);
+        margin-left: 0.5rem;
+    }
+
+    /* Match explanation - transparent AI */
+    .match-explanation {
+        margin-top: var(--space-3);
+        padding: var(--space-3);
+        background: var(--bg-tertiary);
+        border-radius: var(--radius-sm);
+        border-left: 3px solid var(--primary-light);
+    }
+
+    .match-explanation-title {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: var(--space-2);
+    }
+
+    .match-reason {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        line-height: 1.5;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .match-reason-icon {
+        color: var(--primary);
+        flex-shrink: 0;
+        margin-top: 0.125rem;
     }
 
     /* Top navigation bar */
@@ -4365,14 +4412,52 @@ div[data-testid="column"] > div > .stButton > button[kind="secondary"] {
                             safe_company = sanitize_html(company)
                             safe_email = sanitize_html(email) if email else ''
 
-                            # Build contact card HTML (simplified to avoid rendering issues)
+                            # Build contact card HTML (Happenstance style with match explanations)
                             avatar_initial = name[0].upper() if name and name != 'No Name' else '?'
 
-                            # Build the HTML without nested conditionals
-                            if email:
-                                contact_card_html = f"""<div class='contact-card'><div style='display: flex; align-items: flex-start; gap: 1rem;'><div class='contact-avatar'>{avatar_initial}</div><div style='flex: 1; min-width: 0;'><div class='contact-name'>{safe_name}</div><div class='contact-position'>{safe_position}</div><div class='contact-info-row'><span class='contact-company'>🏢 {safe_company}</span><span class='contact-email'>✉️ {safe_email}</span></div></div></div></div>"""
-                            else:
-                                contact_card_html = f"""<div class='contact-card'><div style='display: flex; align-items: flex-start; gap: 1rem;'><div class='contact-avatar'>{avatar_initial}</div><div style='flex: 1; min-width: 0;'><div class='contact-name'>{safe_name}</div><div class='contact-position'>{safe_position}</div><div class='contact-info-row'><span class='contact-company'>🏢 {safe_company}</span></div></div></div></div>"""
+                            # Build match explanation if we have query context
+                            match_explanation = ""
+                            if query and query.strip():
+                                query_lower = query.lower()
+                                reasons = []
+
+                                # Check for company match
+                                if company and company != 'No Company':
+                                    if any(word in company.lower() for word in query_lower.split()):
+                                        reasons.append(f"<div class='match-reason'><span class='match-reason-icon'>✓</span><span>Company: <strong>{safe_company}</strong></span></div>")
+
+                                # Check for position match
+                                if job_position and job_position != 'No Position':
+                                    if any(word in job_position.lower() for word in query_lower.split()):
+                                        reasons.append(f"<div class='match-reason'><span class='match-reason-icon'>✓</span><span>Position: <strong>{safe_position}</strong></span></div>")
+
+                                # Check for name match
+                                if name and name != 'No Name':
+                                    if any(word in name.lower() for word in query_lower.split()):
+                                        reasons.append(f"<div class='match-reason'><span class='match-reason-icon'>✓</span><span>Name match</span></div>")
+
+                                if reasons:
+                                    match_explanation = f"""<div class='match-explanation'><div class='match-explanation-title'>Why this match</div>{''.join(reasons)}</div>"""
+
+                            # Build the HTML (clean, no emojis - Wispr Flow style)
+                            email_badge = f"<span class='contact-email'>{safe_email}</span>" if email else ""
+
+                            contact_card_html = f"""
+<div class='contact-card'>
+    <div style='display: flex; align-items: flex-start; gap: 1rem;'>
+        <div class='contact-avatar'>{avatar_initial}</div>
+        <div style='flex: 1; min-width: 0;'>
+            <div class='contact-name'>{safe_name}</div>
+            <div class='contact-position'>{safe_position}</div>
+            <div class='contact-info-row'>
+                <span class='contact-company'>{safe_company}</span>
+                {email_badge}
+            </div>
+            {match_explanation}
+        </div>
+    </div>
+</div>
+"""
 
                             st.markdown(contact_card_html, unsafe_allow_html=True)
 
