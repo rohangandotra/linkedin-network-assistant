@@ -1,0 +1,15 @@
+# Minimal requirements for FastAPI backend only
+# This excludes heavy ML dependencies to speed up Railway deployment
+
+# Core dependencies
+fastapi==0.121.3
+uvicorn[standard]==0.38.0
+python-multipart==0.0.20
+pandas==2.2.3
+python-dotenv==1.0.1
+supabase==2.11.1
+openai==1.12.0
+requests==2.31.0
+
+# Note: Heavy ML libraries (sentence-transformers, faiss-cpu) excluded
+# Add them later if AI search is needed
