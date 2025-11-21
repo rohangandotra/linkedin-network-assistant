@@ -6,6 +6,11 @@ requests>=2.31.0
 supabase>=2.0.0
 bcrypt>=4.0.0
 
+# FastAPI Backend
+fastapi>=0.121.3
+uvicorn[standard]>=0.38.0
+python-multipart>=0.0.20
+
 # Phase 3B: Search Improvements
 symspellpy>=6.7.7
 sentence-transformers>=2.2.2
